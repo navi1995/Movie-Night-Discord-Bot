@@ -9,10 +9,8 @@
   "author": "Navi Jador",
   "license": "ISC",
   "dependencies": {
-    "@keyv/mongo": "^1.1.0",
     "discord.js": "^12.2.0",
     "eslint": "^7.0.0",
-    "keyv": "^4.0.1",
     "moment": "^2.25.3",
     "mongoose": "^5.9.13",
     "node-fetch": "^2.6.0"
