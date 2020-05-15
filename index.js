@@ -10,6 +10,8 @@
 	8. Test duplicates **
 	9. Get details for specific movie, either in DB or general search. **
 	10. Custom poll message
+	11. Remove any duplicate votes **
+	12. Split 'get' into multiple messages if limit reached.
 */
 const fs = require("fs");
 const Discord = require("discord.js");
@@ -17,6 +19,7 @@ const fetch = require("node-fetch");
 const moment = require("moment");
 const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin } = require("./config.json");
+const emojis = require("./emojis.json");
 const client = new Discord.Client();
 const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
 const cooldowns = new Discord.Collection();
@@ -58,26 +61,153 @@ for (const file of commandFiles) {
 }
 
 client.on("message", async message => {
-	if (message.guild && message.content == "get") {
-		//10 limit embeds per image
+	if (message.guild && message.content == "test") {
+		var embeddedMessages = [];
+		var number = 1;
+		var totalCount = 0;
+		var description = "";
+		var searchOptions = searchMovieDatabaseObject(message.guild.id, "");
+		var movieEmbed = new Discord.MessageEmbed().setTitle("Submitted Movies");
+		var movieMap = {}
+
+		//2048 limit
+		await movieModel.find(searchOptions, function (error, docs) {
+			if (docs && docs.length > 0) {
+				var movies = getRandomFromArray(docs, 10);
+
+				totalCount = movies.length;
+
+				for (var movie of movies) {
+					var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
+					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
+
+					if (description.length + stringConcat.length > 2048) {
+						movieEmbed.setDescription(description);
+						embeddedMessages.push(movieEmbed);
+						description = "";
+						movieEmbed = new Discord.MessageEmbed().setTitle("Submitted Movies (Cont...)");
+					} 
+
+					description += `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
+						**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
+					movies[number-1].number = number;
+					movieMap[number] = movie;
+					number++;		
+				}
+			}
+
+			movieEmbed.setDescription(description);
+			embeddedMessages.push(movieEmbed);
+
+			for (var i = 0; i < embeddedMessages.length; i++) {
+				var embeddedMessage = embeddedMessages[i];
+
+				if (i != embeddedMessages.length - 1) {
+					message.channel.send(embeddedMessage);
+				} else {
+					const filter = m => m;
+					var emojiMap = {};
+
+					message.channel.send(embeddedMessage).then(async (message) => {
+						const collector = message.createReactionCollector(filter, { time: 10000 + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
+
+						for (var i = 1; i <= totalCount; i++) {
+							emojiMap[emojis[i]] = i;
+							await message.react(emojis[i]);
+						}
+			
+						await collector.on('collect', (messageReact, user) => {
+							if (user.id != client.user.id) {
+								console.log("REACT");
+								const duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
+			
+								for (const reaction of duplicateReactions.values()) {
+									reaction.users.remove(user.id);
+								}
+							}
+						});
+				
+						await collector.on('end', m => {
+							const highestReact = m.reduce((p, c) => p.count > c.count ? p : c, 0);
+							var winner = movieMap[emojiMap[highestReact.emoji.name]];
+
+							if (highestReact.count == 1) {
+								return message.channel.send("No votes were cast, so no movie has been chosen.");
+							}						
+
+							message.channel.send(`A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`);
+						});
+					});
+				}
+			}
+		});
+	}
+
+	//Return a random film from the selection (use findOne for random select)
+	if (message.guild && message.content == "getone") {
 		const movieEmbed = new Discord.MessageEmbed().setTitle("Submitted Movies");
 		var number = 1;
 		var description = "";
 		var searchOptions = searchMovieDatabaseObject(message.guild.id, "");
 
-		//25 embed limit for fields
+		return movieModel.count({}, function(err, count) {
+			if (!err) {
+				var random = Math.floor(Math.random() * count);
+
+				movieModel.find(searchOptions).skip(random).limit(1).exec(function (error, docs) {
+					console.log(docs);
+					if (docs && docs.length > 0) {
+						docs.forEach(function(movie) {
+							description += `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
+								**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
+							number++;
+						});
+					}
+		
+					movieEmbed.setDescription(description);
+					message.channel.send(movieEmbed);		
+				});
+
+			}
+		});
+	}
+
+	if (message.guild && message.content == "get") {
+		var embeddedMessages = [];
+		var number = 1;
+		var description = "";
+		var searchOptions = searchMovieDatabaseObject(message.guild.id, "");
+		var movieEmbed = new Discord.MessageEmbed().setTitle("Submitted Movies");
+
+		//2048 limit
 		return movieModel.find(searchOptions, function (error, docs) {
 			console.log(docs);
 			if (docs && docs.length > 0) {
-				docs.forEach(function(movie) {
+				for (var movie of docs) {
+					var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
+					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
+
+					if (description.length + stringConcat.length > 2048) {
+						movieEmbed.setDescription(description);
+						embeddedMessages.push(movieEmbed);
+						description = "";
+						movieEmbed = new Discord.MessageEmbed().setTitle("Submitted Movies (Cont...)");
+					} 
+
 					description += `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
 						**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
-					number++;
-				});
+					number++;		
+					
+					if (docs.length == number-1) {
+						movieEmbed.setDescription(description);
+						embeddedMessages.push(movieEmbed);
+					}
+				}
 			}
 
-			movieEmbed.setDescription(description);
-			message.channel.send(movieEmbed);		
+			for (var embeddedMessage of embeddedMessages) {
+				message.channel.send(embeddedMessage);
+			}
 		});
 	}
 
@@ -222,9 +352,10 @@ function searchMovieDatabaseObject(guildID, movie) {
 }
 
 function buildSingleMovieEmbed(movie, subtitle) {
+	console.log(movie);
 	var embed = new Discord.MessageEmbed()
 		.setTitle(movie.name)
-		.setURL(`https://www.imdb.com/title/${movie.imdb_id}`)
+		.setURL(`https://www.imdb.com/title/${movie.imdbID}`)
 		.setDescription(movie.overview)
 		.setThumbnail(movie.posterURL)
 		.addFields(
@@ -282,8 +413,8 @@ async function searchNewMovie(search, message) {
 	});
 }
 
+function getRandomFromArray(array, count) {
+	const shuffled = array.sort(() => 0.5 - Math.random());
 
-	// if (movie.indexOf("imdb.com") > 0) {
-	// 	movie = movie.substr(movie.indexOf("/tt")).replace(/\//ig, "");
-	// 	searchObj.imdbID = movie;
-	// } else 
+	return shuffled.slice(0, count);
+}
