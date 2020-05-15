@@ -9,6 +9,7 @@
 	7. Auto-delete mode
 	8. Test duplicates **
 	9. Get details for specific movie, either in DB or general search. **
+	10. Custom poll message
 */
 const fs = require("fs");
 const Discord = require("discord.js");
