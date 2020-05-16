@@ -11,7 +11,7 @@
 	9. Get details for specific movie, either in DB or general search. **
 	10. Custom poll message
 	11. Remove any duplicate votes **
-	12. Split 'get' into multiple messages if limit reached.
+	12. Split 'get' into multiple messages if limit reached. **
 	13. Check for TIES
 */
 const fs = require("fs");
@@ -20,10 +20,10 @@ const fetch = require("node-fetch");
 const moment = require("moment");
 const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin } = require("./config.json");
-const emojis = require("./emojis.json");
 const client = new Discord.Client();
 const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
 const cooldowns = new Discord.Collection();
+const guildSettings = new Discord.Collection();
 const Schema = mongoose.Schema;
 const ObjectId = Schema.ObjectId;
 const Movie = new Schema({
@@ -41,7 +41,16 @@ const Movie = new Schema({
 	submittedBy: String,
 	submitted: { type: Date, default: Date.now }
 });
+const Settings = new Schema({
+	id: ObjectId,
+	guildID: { type: String, unique: true, index: true },
+	prefix: {type: String, default: "--" },
+	pollTime: {type: Number, default: 60000 },
+	pollMessage: {type: String, default: "Poll has begun!" },
+	autoDelete: {type: Boolean, default: false }
+});
 const movieModel = mongoose.model("Movie", Movie);
+const setting = mongoose.model("Settings", Settings);
 var main = {};
 
 client.commands = new Discord.Collection();
@@ -49,6 +58,15 @@ mongoose.connect(mongoLogin);
 
 client.once("ready", () => {
 	console.log("Ready!");
+});
+
+client.on("guildCreate", async guild => {
+	new setting({guildID: guild.id}).save(function(err) {
+		if (err) {
+			console.log("Guild create", err);
+			client.message.send("Could not create settings.");
+		}
+	});
 });
 
 client.on("guildDelete", async guild => {
@@ -62,201 +80,25 @@ for (const file of commandFiles) {
 	client.commands.set(command.name, command);
 }
 
-client.on("message", async message => {
-	if (message.guild && message.content == "test") {
-		var embeddedMessages = [];
-		var number = 1;
-		var totalCount = 0;
-		var description = "";
-		var searchOptions = searchMovieDatabaseObject(message.guild.id, "");
-		var movieEmbed = new Discord.MessageEmbed().setTitle("Submitted Movies");
-		var movieMap = {}
+client.on("message", async message => {	
+	var guildID = message.guild ? message.guild.id : -1;
 
-		//2048 limit
-		await movieModel.find(searchOptions, function (error, docs) {
-			if (docs && docs.length > 0) {
-				var movies = getRandomFromArray(docs, 10);
-
-				totalCount = movies.length;
-
-				for (var movie of movies) {
-					var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
-					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
-
-					if (description.length + stringConcat.length > 2048) {
-						movieEmbed.setDescription(description);
-						embeddedMessages.push(movieEmbed);
-						description = "";
-						movieEmbed = new Discord.MessageEmbed().setTitle("Submitted Movies (Cont...)");
-					} 
-
-					description += `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
-						**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
-					movies[number-1].number = number;
-					movieMap[number] = movie;
-					number++;		
-				}
-			}
-
-			movieEmbed.setDescription(description);
-			embeddedMessages.push(movieEmbed);
-
-			for (var i = 0; i < embeddedMessages.length; i++) {
-				var embeddedMessage = embeddedMessages[i];
-
-				if (i != embeddedMessages.length - 1) {
-					message.channel.send(embeddedMessage);
-				} else {
-					const filter = m => m;
-					var emojiMap = {};
-
-					message.channel.send(embeddedMessage).then(async (message) => {
-						const collector = message.createReactionCollector(filter, { time: 10000 + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
-
-						await collector.on('collect', (messageReact, user) => {
-							if (user.id != client.user.id) {
-								console.log("REACT");
-								const duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
-			
-								for (const reaction of duplicateReactions.values()) {
-									try {
-										reaction.users.remove(user.id);
-									} catch (e) {
-										console.log("Error removing reaction");
-										console.log(e);
-									}
-								}
-							}
-						});
-
-						for (var i = 1; i <= totalCount; i++) {
-							emojiMap[emojis[i]] = i;
-							await message.react(emojis[i]);
-						}
-				
-						await collector.on('end', m => {
-							const highestReact = m.reduce((p, c) => p.count > c.count ? p : c, 0);
-							var winner = movieMap[emojiMap[highestReact.emoji.name]];
-							//var tieCount = {};
-
-							if (highestReact.count == 1) {
-								return message.channel.send("No votes were cast, so no movie has been chosen.");
-							}						
-							//Check for ties
-
-							message.channel.send(buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));	
-						});
-					});
-				}
-			}
+	if (message.guild) {
+		await getSettings(message.guild.id).then(function(settings) {
+			guildSettings.set(message.guild.id, settings);
 		});
 	}
 
-	//Return a random film from the selection (use findOne for random select)
-	if (message.guild && message.content == "getone") {
-		const movieEmbed = new Discord.MessageEmbed().setTitle("Submitted Movies");
-		var number = 1;
-		var description = "";
-		var searchOptions = searchMovieDatabaseObject(message.guild.id, "");
+	var settings = guildSettings.get(guildID) || {};
+	var currentPrefix = settings.prefix || prefix;
 
-		//Returning empty sometimes when just 2 movies 
-		return movieModel.count({guildID: message.guild.id }, function(err, count) {
-			if (!err) {
-				var random = Math.floor(Math.random() * count);
+	if (!message.content.startsWith(currentPrefix) || message.author.bot) return;
 
-				movieModel.find(searchOptions).skip(random).limit(1).exec(function (error, docs) {
-					console.log(docs);
-					if (docs && docs.length > 0) {
-						docs.forEach(function(movie) {
-							description += `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
-								**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
-							number++;
-						});
-					}
-		
-					movieEmbed.setDescription(description);
-					message.channel.send(movieEmbed);		
-				});
-
-			}
-		});
-	}
-
-	if (message.guild && message.content.startsWith("getspecific")) {
-		//10 limit embeds per image
-		var movie = message.content.replace("getspecific", "").trimStart();
-		var searchOptions = searchMovieDatabaseObject(message.guild.id, movie);
-		var movieEmbed;
-
-		//25 embed limit for fields
-		return movieModel.findOne(searchOptions, function (error, movie) {
-			if (movie) {
-				movieEmbed = buildSingleMovieEmbed(movie);
-				message.channel.send(movieEmbed);		
-			}
-		});
-	}
-
-	if (message.guild && message.content == "deleteall") {
-		movieModel.deleteMany({guildID: message.guild.id}, function(err) {
-			if (!err) {
-				return message.channel.send("All movies have been deleted.");
-			}
-		});
-	}
-
-	if (message.guild &&  message.content.startsWith("deletespecific")) {
-		var movie = message.content.replace("deletespecific", "").trimStart();
-		var searchOptions = searchMovieDatabaseObject(message.guild.id, movie);
-		
-		if (movie != "") {
-			return movieModel.findOneAndDelete(searchOptions, function(err, movie) {
-				if (err || !movie) {
-					message.channel.send("Movie could not be found!");
-				} else {
-					message.channel.send(`Movie deleted: ${movie.name}`);
-				}
-			});
-		} else {
-			return message.channel.send("No empty args");
-		}
-	}
-
-	if (message.guild && message.content.startsWith("addmovie")) {
-		var search = message.content.replace("addmovie", "").trimStart();
-		var newMovie = await searchNewMovie(search, message);
-		
-		if (newMovie) {
-			newMovie.save(function(err) {
-				if (err && err.name == "MongoError") {
-					message.channel.send("Movie already exists in the list.");
-				}
-
-				if (!err) {
-					const movieEmbed = buildSingleMovieEmbed(newMovie, "Movie Added!");
-
-					message.channel.send(movieEmbed);
-				}
-			});
-		}		
-	}
-
-	if (message.guild && message.content.startsWith("search")) {
-		var search = message.content.replace("search", "").trimStart();
-		var newMovie = await searchNewMovie(search, message);
-		
-		if (newMovie) {
-			const movieEmbed = buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)");
-			
-			message.channel.send(movieEmbed);
-		}		
-	}
-
-	if (!message.content.startsWith(prefix) || message.author.bot) return;
-
-	const args = message.content.slice(prefix.length).split(/ +/);
+	const args = message.content.slice(currentPrefix.length).split(/ +/);
 	const commandName = args.shift().toLowerCase();
 	const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+
+	if (!command) return;
 
 	if (!cooldowns.has(command.name)) {
 		cooldowns.set(command.name, new Discord.Collection());
@@ -273,10 +115,10 @@ client.on("message", async message => {
 	}
 	
 	if (command.args && !args.length) {
-		var reply = `You didn't provide any arguments, ${message.author}!`;
+		var reply = `Incorrect command usage., ${message.author}!`;
 
 		if (command.usage) {
-			reply += `\nThe proper usage would be: \`${prefix}${command.name} ${command.usage}\``;
+			reply += `\nThe proper usage would be: \`${currentPrefix}${command.name} ${command.usage}\``;
 		}
 
 		return message.channel.send(reply);
@@ -330,7 +172,7 @@ function buildSingleMovieEmbed(movie, subtitle) {
 		.setTitle(movie.name)
 		.setURL(`https://www.imdb.com/title/${movie.imdbID}`)
 		.setDescription(movie.overview)
-		.setThumbnail(movie.posterURL)
+		.setImage(movie.posterURL)
 		.addFields(
 			{ name: "Release Date", value: moment(movie.releaseDate).format("DD MMM YYYY"), inline: true },
 			{ name: "Runtime", value: movie.runtime + " Minutes", inline: true },
@@ -392,5 +234,16 @@ function getRandomFromArray(array, count) {
 	return shuffled.slice(0, count);
 }
 
+function getSettings(guildID) {
+	return setting.findOne({guildID: guildID }).exec();
+}
+
+//Namespace functions and variables for modules
 main.movieModel = movieModel;
 main.searchMovieDatabaseObject = searchMovieDatabaseObject;
+main.buildSingleMovieEmbed = buildSingleMovieEmbed;
+main.searchNewMovie = searchNewMovie;
+main.setting = setting;
+main.guildSettings = guildSettings;
+main.getRandomFromArray = getRandomFromArray;
+main.client = client;
