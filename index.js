@@ -12,6 +12,7 @@
 	10. Custom poll message
 	11. Remove any duplicate votes **
 	12. Split 'get' into multiple messages if limit reached.
+	13. Check for TIES
 */
 const fs = require("fs");
 const Discord = require("discord.js");
@@ -41,6 +42,7 @@ const Movie = new Schema({
 	submitted: { type: Date, default: Date.now }
 });
 const movieModel = mongoose.model("Movie", Movie);
+var main = {};
 
 client.commands = new Discord.Collection();
 mongoose.connect(mongoLogin);
@@ -111,31 +113,38 @@ client.on("message", async message => {
 					message.channel.send(embeddedMessage).then(async (message) => {
 						const collector = message.createReactionCollector(filter, { time: 10000 + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 
-						for (var i = 1; i <= totalCount; i++) {
-							emojiMap[emojis[i]] = i;
-							await message.react(emojis[i]);
-						}
-			
 						await collector.on('collect', (messageReact, user) => {
 							if (user.id != client.user.id) {
 								console.log("REACT");
 								const duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
 			
 								for (const reaction of duplicateReactions.values()) {
-									reaction.users.remove(user.id);
+									try {
+										reaction.users.remove(user.id);
+									} catch (e) {
+										console.log("Error removing reaction");
+										console.log(e);
+									}
 								}
 							}
 						});
+
+						for (var i = 1; i <= totalCount; i++) {
+							emojiMap[emojis[i]] = i;
+							await message.react(emojis[i]);
+						}
 				
 						await collector.on('end', m => {
 							const highestReact = m.reduce((p, c) => p.count > c.count ? p : c, 0);
 							var winner = movieMap[emojiMap[highestReact.emoji.name]];
+							//var tieCount = {};
 
 							if (highestReact.count == 1) {
 								return message.channel.send("No votes were cast, so no movie has been chosen.");
 							}						
+							//Check for ties
 
-							message.channel.send(`A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`);
+							message.channel.send(buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));	
 						});
 					});
 				}
@@ -150,7 +159,8 @@ client.on("message", async message => {
 		var description = "";
 		var searchOptions = searchMovieDatabaseObject(message.guild.id, "");
 
-		return movieModel.count({}, function(err, count) {
+		//Returning empty sometimes when just 2 movies 
+		return movieModel.count({guildID: message.guild.id }, function(err, count) {
 			if (!err) {
 				var random = Math.floor(Math.random() * count);
 
@@ -168,45 +178,6 @@ client.on("message", async message => {
 					message.channel.send(movieEmbed);		
 				});
 
-			}
-		});
-	}
-
-	if (message.guild && message.content == "get") {
-		var embeddedMessages = [];
-		var number = 1;
-		var description = "";
-		var searchOptions = searchMovieDatabaseObject(message.guild.id, "");
-		var movieEmbed = new Discord.MessageEmbed().setTitle("Submitted Movies");
-
-		//2048 limit
-		return movieModel.find(searchOptions, function (error, docs) {
-			console.log(docs);
-			if (docs && docs.length > 0) {
-				for (var movie of docs) {
-					var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
-					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
-
-					if (description.length + stringConcat.length > 2048) {
-						movieEmbed.setDescription(description);
-						embeddedMessages.push(movieEmbed);
-						description = "";
-						movieEmbed = new Discord.MessageEmbed().setTitle("Submitted Movies (Cont...)");
-					} 
-
-					description += `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
-						**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
-					number++;		
-					
-					if (docs.length == number-1) {
-						movieEmbed.setDescription(description);
-						embeddedMessages.push(movieEmbed);
-					}
-				}
-			}
-
-			for (var embeddedMessage of embeddedMessages) {
-				message.channel.send(embeddedMessage);
 			}
 		});
 	}
@@ -286,9 +257,14 @@ client.on("message", async message => {
 	const args = message.content.slice(prefix.length).split(/ +/);
 	const commandName = args.shift().toLowerCase();
 	const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+
+	if (!cooldowns.has(command.name)) {
+		cooldowns.set(command.name, new Discord.Collection());
+	}
+
 	const now = Date.now();
 	const timestamps = cooldowns.get(command.name);
-	const cooldownAmount = (command.cooldown || 3) * 1000;
+	const cooldownAmount = (command.cooldown || 0) * 1000;
 
 	if (!command) return;
 
@@ -306,10 +282,6 @@ client.on("message", async message => {
 		return message.channel.send(reply);
 	}
 
-	if (!cooldowns.has(command.name)) {
-		cooldowns.set(command.name, new Discord.Collection());
-	}
-
 	if (timestamps.has(message.author.id)) {
 		const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
 
@@ -324,8 +296,9 @@ client.on("message", async message => {
 	setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
 	try {
-		command.execute(message, args);
+		command.execute(message, args, main);
 	} catch (error) {
+		console.log(error);
 		message.reply("There was an error trying to execute that command!");
 	}
 });
@@ -418,3 +391,6 @@ function getRandomFromArray(array, count) {
 
 	return shuffled.slice(0, count);
 }
+
+main.movieModel = movieModel;
+main.searchMovieDatabaseObject = searchMovieDatabaseObject;
