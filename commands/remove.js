@@ -24,18 +24,14 @@ module.exports = {
 			return main.movieModel.findOne(searchOptions, function(err, movie) {
 				if (err || !movie) {
 					message.channel.send("Movie could not be found!");
+				} else if ("<@" + message.member.user.id + ">" == movie.submittedBy || message.member.hasPermission("ADMINISTRATOR")) {
+					movie.remove(function(err) {
+						if (!err) {
+							message.channel.send(`Movie deleted: ${movie.name}`);
+						}
+					});
 				} else {
-					console.log(movie.submittedBy);
-					console.log(message.member.user);
-					if ("<@" + message.member.user.id + ">" == movie.submittedBy || message.member.hasPermission("ADMINISTRATOR")) {
-						movie.remove(function(err) {
-							if (!err) {
-								message.channel.send(`Movie deleted: ${movie.name}`);
-							}
-						});
-					} else {
-						message.channel.send("Non-administrators can only delete movies they have submitted");
-					}
+					message.channel.send("Non-administrators can only delete movies they have submitted");
 				}
 			});
 		} else {

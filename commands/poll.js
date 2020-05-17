@@ -11,7 +11,7 @@ module.exports = {
 		var number = 1;
 		var totalCount = 0;
 		var description = "";
-		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "");
+		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
 		var movieEmbed = new MessageEmbed().setTitle("Poll has begun!");
 		var movieMap = {}
 		var settings = main.guildSettings.get(message.guild.id);
@@ -20,9 +20,11 @@ module.exports = {
 
 		//2048 limit
 		await main.movieModel.find(searchOptions, function (error, docs) {
+			if (docs.length == 0) return message.channel.send("Cannot start poll. List of unviewed movies is empty.");
+			
 			if (docs && docs.length > 0) {
 				//Setting for poll amount
-				var movies = main.getRandomFromArray(docs, 10);
+				var movies = main.getRandomFromArray(docs, settings.pollSize);
 
 				totalCount = movies.length;
 
@@ -37,9 +39,7 @@ module.exports = {
 						movieEmbed = new MessageEmbed().setTitle("Poll has begun! (Cont...)");
 					} 
 
-					description += `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
-						**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
-					movies[number-1].number = number;
+					description += stringConcat;
 					movieMap[number] = movie;
 					number++;		
 				}
@@ -91,7 +91,17 @@ module.exports = {
 							}						
 							//Check for ties
 
-							message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));	
+							if (settings.autoViewed) {
+								main.movieModel.updateOne({guildID: message.guild.id, movieID: winner.movieID}, { viewed: true, viewedDate: new Date() }, function(err) {
+									if (!err) {
+										winner.viewed = true; winner.viewedDate = new Date();
+
+										return message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
+									}
+								});
+							} else {
+								return message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
+							}
 						});
 					});
 				}

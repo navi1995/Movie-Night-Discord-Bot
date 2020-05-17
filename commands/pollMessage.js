@@ -6,7 +6,7 @@ module.exports = {
 	async execute(message, args, main) {
 		var pollMessage = args.join(" ").trim();
 
-		main.setting.update({guildID: message.guild.id}, {
+		main.setting.updateOne({guildID: message.guild.id}, {
 			"pollMessage": pollMessage
 		}, function(err) {
 			if (!err) {

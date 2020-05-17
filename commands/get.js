@@ -9,13 +9,13 @@ module.exports = {
 		var embeddedMessages = [];
 		var number = 1;
 		var description = "";
-		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "");
+		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
 		var movieEmbed = new MessageEmbed().setTitle("Submitted Movies");
 
 		if (!args.length) {
 			//2048 limit
 			return main.movieModel.find(searchOptions, function (error, docs) {
-				console.log(docs);
+				if (docs.length == 0) return message.channel.send("List of unviewed movies is currently empty.");
 				if (docs && docs.length > 0) {
 					for (var movie of docs) {
 						var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
@@ -28,8 +28,7 @@ module.exports = {
 							movieEmbed = new MessageEmbed().setTitle("Submitted Movies (Cont...)");
 						} 
 
-						description += `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
-							**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
+						description += stringConcat
 						number++;
 					}
 				}

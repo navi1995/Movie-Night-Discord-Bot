@@ -28,8 +28,8 @@ const Schema = mongoose.Schema;
 const ObjectId = Schema.ObjectId;
 const Movie = new Schema({
 	id: ObjectId,
-	primaryKey: {type: String, unique: true },
-	guildID: {type: String, index: true },
+	primaryKey: { type: String, unique: true },
+	guildID: { type: String, index: true },
 	movieID: String,
 	imdbID: String,
 	name: String,
@@ -39,15 +39,18 @@ const Movie = new Schema({
 	runtime: Number,
 	rating: Number,
 	submittedBy: String,
-	submitted: { type: Date, default: Date.now }
+	submitted: { type: Date, default: Date.now },
+	viewed: { type: Boolean, default: false },
+	viewedDate: { type: Date, default: null }
 });
 const Settings = new Schema({
 	id: ObjectId,
 	guildID: { type: String, unique: true, index: true },
-	prefix: {type: String, default: "--" },
-	pollTime: {type: Number, default: 60000 },
-	pollMessage: {type: String, default: "Poll has begun!" },
-	autoDelete: {type: Boolean, default: false }
+	prefix: { type: String, default: "--" },
+	pollTime: { type: Number, default: 60000 },
+	pollMessage: { type: String, default: "Poll has begun!" },
+	pollSize: { type: Number, min: 1, max: 10, default: 10 },
+	autoViewed: { type: Boolean, default: false }
 });
 const movieModel = mongoose.model("Movie", Movie);
 const setting = mongoose.model("Settings", Settings);
@@ -69,7 +72,7 @@ client.on("guildCreate", async guild => {
 	});
 });
 
-client.on("guildDelete", async guild => {
+client.on("guildDelete", guild => {
 	movieModel.deleteMany({guildID: guild.id}, handleError);
 });
 
@@ -154,13 +157,17 @@ function handleError(err, message) {
 }
 
 //Movie can be string or IMDB link
-function searchMovieDatabaseObject(guildID, movie) {
+function searchMovieDatabaseObject(guildID, movie, hideViewed) {
 	var searchObj = {
 		guildID: guildID
 	}
 	
 	if (movie != "" && movie) {
 		searchObj.name = new RegExp(".*" + movie + ".*", "i");
+	}
+
+	if (hideViewed) {
+		searchObj.viewed = false;
 	}
 
 	return searchObj;
@@ -177,7 +184,9 @@ function buildSingleMovieEmbed(movie, subtitle) {
 			{ name: "Release Date", value: moment(movie.releaseDate).format("DD MMM YYYY"), inline: true },
 			{ name: "Runtime", value: movie.runtime + " Minutes", inline: true },
 			{ name: "Rating", value: movie.rating, inline: true },
-			{ name: "Submitted By", value: movie.submittedBy, inline: true }
+			{ name: "Submitted By", value: movie.submittedBy, inline: true },
+			{ name: "Submitted On", value: moment(movie.submitted).format("DD MMM YYYY"), inline: true },
+			{ name: "Viewed", value: movie.viewed ? moment(movie.viewedDate).format("DD MMM YYYY") : "No", inline: true }
 		);
 
 	if (subtitle) {
@@ -187,7 +196,7 @@ function buildSingleMovieEmbed(movie, subtitle) {
 	return embed;
 }
 
-async function searchNewMovie(search, message) {
+async function searchNewMovie(search, message, callback) {
 	var failedSearch = false;
 	var data = false;
 	var isImdbSearch = search.indexOf("imdb.com") > 0;
@@ -195,7 +204,7 @@ async function searchNewMovie(search, message) {
 
 	if (searchTerm == "" || !searchTerm) {
 		message.channel.send("Please enter a valid search."); 
-		return;
+		return callback();
 	}
 
 	var initialData = !isImdbSearch ? await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${movieDbAPI}&query=${encodeURIComponent(searchTerm)}&page=1`).then(response => response.json()) : await fetch(`https://api.themoviedb.org/3/find/${encodeURIComponent(searchTerm)}?api_key=${movieDbAPI}&external_source=imdb_id`).then(response => response.json());
@@ -210,10 +219,10 @@ async function searchNewMovie(search, message) {
 
 	if (!data || failedSearch) {
 		message.channel.send("Couldn't find any movies. Sorry!");
-		return;
+		return callback(null, data);
 	} 
 
-	return new movieModel({
+	callback(new movieModel({
 		primaryKey: message.guild.id + data.id,
 		guildID: message.guild.id,
 		movieID: data.id,
@@ -225,7 +234,7 @@ async function searchNewMovie(search, message) {
 		runtime: data.runtime,
 		rating: data.vote_average,
 		submittedBy: message.member.user
-	});
+	}), initialData);
 }
 
 function getRandomFromArray(array, count) {

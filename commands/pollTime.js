@@ -9,7 +9,7 @@ module.exports = {
 		} else {
 			var pollTime = Number(args[0]) * 1000
 
-			main.setting.update({guildID: message.guild.id}, {
+			main.setting.updateOne({guildID: message.guild.id}, {
 				"pollTime": pollTime
 			}, function(err) {
 				if (!err) {
