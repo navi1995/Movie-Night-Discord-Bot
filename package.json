@@ -4,7 +4,9 @@
   "description": "Discord bot for commands related to organising movie nights!",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start":  "node index.js",
+    "end": ". exit"
   },
   "author": "Navi Jador",
   "license": "ISC",

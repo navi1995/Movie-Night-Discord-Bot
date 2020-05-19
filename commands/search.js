@@ -6,12 +6,14 @@ module.exports = {
 	args: true,
 	async execute(message, args, main) {
 		var search = args.join(" ");
-		var newMovie = await main.searchNewMovie(search, message);
+
+		await main.searchNewMovie(search, message, function(newMovie) {
+			if (newMovie) {
+				message.channel.send(main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)"));
+			} else {
+				message.channel.send("Could not find movie, sorry!");
+			}
+		});
 		
-		if (newMovie) {
-			message.channel.send(main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)"));
-		} else {
-			message.channel.send("Could not find movie, sorry!");
-		}
 	}		
 };

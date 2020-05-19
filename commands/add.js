@@ -9,7 +9,6 @@ module.exports = {
 	async execute(message, args, main) {
 		var search = args.join(" ");
 		await main.searchNewMovie(search, message, function(newMovie, data) {
-			console.log(data);
 			if (newMovie) {
 				newMovie.save(function(err) {
 					if (err && err.name == "MongoError") {

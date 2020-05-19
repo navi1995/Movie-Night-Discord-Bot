@@ -49,6 +49,8 @@ module.exports = {
 		return main.movieModel.findOne(searchOptions, function (error, movie) {
 			if (movie) {
 				message.channel.send(main.buildSingleMovieEmbed(movie));		
+			} else {
+				message.channel.send("Could not find movie in your list. Perhaps try using the search command instead?");
 			}
 		});
 	},
