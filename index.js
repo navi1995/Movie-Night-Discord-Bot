@@ -60,7 +60,11 @@ client.commands = new Discord.Collection();
 mongoose.connect(mongoLogin);
 
 client.once("ready", () => {
+	client.user.setActivity('movies with friends.', { type: 'WATCHING' });
 	console.log("Ready!");
+	movieModel.find({}, function(err, doc) {
+		console.log(doc);
+	})
 });
 
 client.on("guildCreate", async guild => {
