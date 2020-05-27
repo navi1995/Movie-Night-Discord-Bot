@@ -47,7 +47,7 @@ const setting = mongoose.model("Settings", Settings);
 var main = {};
 
 client.commands = new Discord.Collection();
-mongoose.connect(mongoLogin);
+mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
 
 client.once("ready", () => {
 	client.user.setActivity('movies with friends at https://movienightbot.xyz/', { type: 'WATCHING' });
