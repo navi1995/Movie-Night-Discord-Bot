@@ -1,10 +1,10 @@
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed } = require("discord.js");
 const moment = require("moment");
 
 module.exports = {
-	name: 'viewed',
-	description: 'Returns list of all movies that have been marked as viewed for server.',
-	aliases: ['getviewed', 'viewedlist'],
+	name: "viewed",
+	description: "Returns list of all movies that have been marked as viewed for server.",
+	aliases: ["getviewed", "viewedlist"],
 	execute(message, args, main) {
 		var embeddedMessages = [];
 		var number = 1;
@@ -16,12 +16,16 @@ module.exports = {
 
 		//2048 limit
 		return main.movieModel.find(searchOptions, function (error, docs) {
-			console.log(docs);
+			if (docs.length == 0) {
+				return message.channel.send("List of unviewed movies is currently empty.");
+			}
+
 			if (docs && docs.length > 0) {
 				for (var movie of docs) {
 					var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
 					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
 
+					//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
 					if (description.length + stringConcat.length > 2048) {
 						movieEmbed.setDescription(description);
 						embeddedMessages.push(movieEmbed);

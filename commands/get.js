@@ -1,26 +1,33 @@
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed } = require("discord.js");
 const moment = require("moment");
 
 module.exports = {
-	name: 'get',
-	description: 'Returns list of all movies in current watch list for server, or if search is specified it will attempt to search the servers list for the movie.',
-	aliases: ['list', 'getmovie'],
+	name: "get",
+	description: "Returns list of all movies in current watch list for server, or if search is specified it will attempt to search the servers list for the movie.",
+	aliases: ["list", "getmovie"],
 	execute(message, args, main) {
 		var embeddedMessages = [];
 		var number = 1;
 		var description = "";
 		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
 		var movieEmbed = new MessageEmbed().setTitle("Submitted Movies");
+		var movie = args ? args.join(" ") : null;
 
 		if (!args.length) {
-			//2048 limit
-			return main.movieModel.find(searchOptions, function (error, docs) {
-				if (docs.length == 0) return message.channel.send("List of unviewed movies is currently empty.");
-				if (docs && docs.length > 0) {
-					for (var movie of docs) {
+			//return to avoid hitting logic below.
+			return main.movieModel.find(searchOptions, function (error, movies) {
+				if (error) {
+					return message.channel.send("Could not  return list of movies, an error occured.");
+				}
+				
+				if (movies.length == 0) { 
+					return message.channel.send("List of unviewed movies is currently empty.");
+				} else if (movies && movies.length > 0) {
+					for (var movie of movies) {
 						var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
 						**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
 
+						//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
 						if (description.length + stringConcat.length > 2048) {
 							movieEmbed.setDescription(description);
 							embeddedMessages.push(movieEmbed);
@@ -28,7 +35,7 @@ module.exports = {
 							movieEmbed = new MessageEmbed().setTitle("Submitted Movies (Cont...)");
 						} 
 
-						description += stringConcat
+						description += stringConcat;
 						number++;
 					}
 				}
@@ -42,7 +49,6 @@ module.exports = {
 			});
 		}
 
-		var movie = args.join(" ");
 		searchOptions = main.searchMovieDatabaseObject(message.guild.id, movie);
 
 		//25 embed limit for fields

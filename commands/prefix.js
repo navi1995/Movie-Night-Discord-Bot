@@ -1,15 +1,14 @@
 module.exports = {
-	name: 'prefix',
-	description: 'Updates prefix to chosen string.',
-	usage: '[prefix chosen]',
+	name: "prefix",
+	description: "Updates prefix to chosen string.",
+	usage: "[prefix chosen]",
 	args: true,
+	admin: true,
 	async execute(message, args, main) {
 		if (args.length > 1) {
 			return message.channel.send("No spaces allowed in command prefix.");
 		} else {
-			main.setting.updateOne({guildID: message.guild.id}, {
-				"prefix":  args[0].trim()
-			}, function(err) {
+			main.setting.updateOne({guildID: message.guild.id}, { "prefix":  args[0].trim()	}, function(err) {
 				if (!err) {
 					var settings = main.guildSettings.get(message.guild.id);
 

@@ -8,6 +8,6 @@
 		"ecmaVersion": 2019
 	},
 	"rules": {
-
+		"semi": [2, "always"]
 	}
 }

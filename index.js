@@ -1,18 +1,7 @@
 /*
-	TODOS/Approach
-	1. Running polls, grab random 10 movies from list and gather reacts, if repoll react hit with admin then re-roll.fail
-	2. Delete specific movie **
-	3. Confirmation if search results > 1?
-	4. Allow IMDB links to be submitted  **
-	5. Move commands into self files
-	6. Roulette mode
-	7. Auto-delete mode
-	8. Test duplicates **
-	9. Get details for specific movie, either in DB or general search. **
-	10. Custom poll message
-	11. Remove any duplicate votes **
-	12. Split 'get' into multiple messages if limit reached. **
-	13. Check for TIES
+	TODOS
+	1. Check for TIES
+	2. Add reaction check if user wants to delete all movies
 */
 const fs = require("fs");
 const Discord = require("discord.js");
@@ -50,7 +39,8 @@ const Settings = new Schema({
 	pollTime: { type: Number, default: 60000 },
 	pollMessage: { type: String, default: "Poll has begun!" },
 	pollSize: { type: Number, min: 1, max: 10, default: 10 },
-	autoViewed: { type: Boolean, default: false }
+	autoViewed: { type: Boolean, default: false },
+	addMoviesRole: { type: String, default: null }
 });
 const movieModel = mongoose.model("Movie", Movie);
 const setting = mongoose.model("Settings", Settings);
@@ -60,14 +50,12 @@ client.commands = new Discord.Collection();
 mongoose.connect(mongoLogin);
 
 client.once("ready", () => {
-	client.user.setActivity('movies with friends.', { type: 'WATCHING' });
+	client.user.setActivity('movies with friends at https://movienightbot.xyz/', { type: 'WATCHING' });
 	console.log("Ready!");
-	movieModel.find({}, function(err, doc) {
-		console.log(doc);
-	})
 });
 
-client.on("guildCreate", async guild => {
+client.on("guildCreate", async function(guild) {
+	//Whenever the bot is added to a guild, instantiate default settings into our database. 
 	new setting({guildID: guild.id}).save(function(err) {
 		if (err) {
 			console.log("Guild create", err);
@@ -76,8 +64,9 @@ client.on("guildCreate", async guild => {
 	});
 });
 
-client.on("guildDelete", guild => {
+client.on("guildDelete", function(guild) {
 	movieModel.deleteMany({guildID: guild.id}, handleError);
+	setting.deleteMany({guildID: guild.id}, handleError);
 });
 
 
@@ -87,10 +76,11 @@ for (const file of commandFiles) {
 	client.commands.set(command.name, command);
 }
 
-client.on("message", async message => {	
+client.on("message", async function(message) {	
 	var guildID = message.guild ? message.guild.id : -1;
 
-	if (message.guild) {
+	//Do not ask database for settings if we already have them stored, any updates to settings are handled within the settings modules.
+	if (message.guild && !guildSettings.has(message.guild.id)) {
 		await getSettings(message.guild.id).then(function(settings) {
 			guildSettings.set(message.guild.id, settings);
 		});
@@ -99,6 +89,7 @@ client.on("message", async message => {
 	var settings = guildSettings.get(guildID) || {};
 	var currentPrefix = settings.prefix || prefix;
 
+	//If message doesn't have the prefix from settings, ignore the message.
 	if (!message.content.startsWith(currentPrefix) || message.author.bot) return;
 
 	const args = message.content.slice(currentPrefix.length).split(/ +/);
@@ -115,12 +106,14 @@ client.on("message", async message => {
 	const timestamps = cooldowns.get(command.name);
 	const cooldownAmount = (command.cooldown || 0) * 1000;
 
-	if (!command) return;
-
 	if (command.name != "help" && message.channel.type !== "text") {
 		return message.reply("I can't execute that command inside DMs!");
 	}
+
+	//If the command has been flagged as admin only, do not process it.
+	if (command.admin && !message.member.hasPermission("ADMINISTRATOR")) return message.channel.send("This commands requires the user to have an administrator role in the server.");
 	
+	//Tell user usage if command has been flagged as an argument based command.
 	if (command.args && !args.length) {
 		var reply = `Incorrect command usage., ${message.author}!`;
 
@@ -131,6 +124,7 @@ client.on("message", async message => {
 		return message.channel.send(reply);
 	}
 
+	//Handle cooldowns on command.
 	if (timestamps.has(message.author.id)) {
 		const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
 
@@ -144,6 +138,7 @@ client.on("message", async message => {
 	timestamps.set(message.author.id, now);
 	setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
+	//Send message, arguments and additional functions/variables required to the command.
 	try {
 		command.execute(message, args, main);
 	} catch (error) {
@@ -164,7 +159,7 @@ function handleError(err, message) {
 function searchMovieDatabaseObject(guildID, movie, hideViewed) {
 	var searchObj = {
 		guildID: guildID
-	}
+	};
 	
 	if (movie != "" && movie) {
 		searchObj.name = new RegExp(".*" + movie + ".*", "i");
@@ -178,7 +173,6 @@ function searchMovieDatabaseObject(guildID, movie, hideViewed) {
 }
 
 function buildSingleMovieEmbed(movie, subtitle) {
-	console.log(movie);
 	var embed = new Discord.MessageEmbed()
 		.setTitle(movie.name)
 		.setURL(`https://www.imdb.com/title/${movie.imdbID}`)
@@ -194,7 +188,7 @@ function buildSingleMovieEmbed(movie, subtitle) {
 		);
 
 	if (subtitle) {
-		embed.setAuthor(subtitle)
+		embed.setAuthor(subtitle);
 	}
 
 	return embed;
@@ -208,21 +202,25 @@ async function searchNewMovie(search, message, callback) {
 
 	if (searchTerm == "" || !searchTerm) {
 		message.channel.send("Please enter a valid search."); 
+
 		return callback();
 	}
 
+	//If not a IMDB link, do a general search else we use a different endpoint.
 	var initialData = !isImdbSearch ? await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${movieDbAPI}&query=${encodeURIComponent(searchTerm)}&page=1`).then(response => response.json()) : await fetch(`https://api.themoviedb.org/3/find/${encodeURIComponent(searchTerm)}?api_key=${movieDbAPI}&external_source=imdb_id`).then(response => response.json());
 
 	if (!initialData || initialData.total_results == 0 || (initialData.movie_results && initialData.movie_results.length == 0)) {
 		failedSearch = true;
 	}
 
+	//Get the FIRST result from the initial search
 	if (!failedSearch) {
 		data = await fetch(`https://api.themoviedb.org/3/movie/${isImdbSearch ? initialData.movie_results[0].id : initialData.results[0].id}?api_key=${movieDbAPI}`).then(response => response.json());
 	}
 
 	if (!data || failedSearch) {
 		message.channel.send("Couldn't find any movies. Sorry!");
+
 		return callback(null, data);
 	} 
 
