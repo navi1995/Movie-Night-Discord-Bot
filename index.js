@@ -49,11 +49,14 @@ var main = {};
 client.commands = new Discord.Collection();
 mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
 
+function setMessage() {
+	client.user.setActivity("movies with friends at https://movienightbot.xyz/", { type: "WATCHING" });
+}
+
 client.once("ready", () => {
 	//Every hour update activity to avoid getting it cleared.
-	setInterval(function() {
-		client.user.setActivity("movies with friends at https://movienightbot.xyz/", { type: "WATCHING" });
-	}, 1000 * 60 * 60 ); 
+	setMessage();
+	setInterval(setMessage, 1000 * 60 * 60 ); 
 	console.log("Ready!");
 });
 
