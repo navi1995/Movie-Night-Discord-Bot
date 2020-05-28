@@ -10,7 +10,7 @@ module.exports = {
 		var number = 1;
 		var description = "";
 		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
-		var movieEmbed = new MessageEmbed().setTitle("Submitted Movies");
+		var movieEmbed = new MessageEmbed().setTitle("Submitted Movies").setColor("#6441a3");
 		var movie = args ? args.join(" ") : null;
 
 		if (!args.length) {
@@ -32,7 +32,7 @@ module.exports = {
 							movieEmbed.setDescription(description);
 							embeddedMessages.push(movieEmbed);
 							description = "";
-							movieEmbed = new MessageEmbed().setTitle("Submitted Movies (Cont...)");
+							movieEmbed = new MessageEmbed().setTitle("Submitted Movies (Cont...)").setColor("#6441a3");
 						} 
 
 						description += stringConcat;

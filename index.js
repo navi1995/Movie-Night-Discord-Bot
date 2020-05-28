@@ -50,7 +50,10 @@ client.commands = new Discord.Collection();
 mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
 
 client.once("ready", () => {
-	client.user.setActivity('movies with friends at https://movienightbot.xyz/', { type: 'WATCHING' });
+	//Every hour update activity to avoid getting it cleared.
+	setInterval(function() {
+		client.user.setActivity("movies with friends at https://movienightbot.xyz/", { type: "WATCHING" });
+	}, 1000 * 60 * 60 ); 
 	console.log("Ready!");
 });
 
@@ -65,8 +68,8 @@ client.on("guildCreate", async function(guild) {
 });
 
 client.on("guildDelete", function(guild) {
-	movieModel.deleteMany({guildID: guild.id}, handleError);
-	setting.deleteMany({guildID: guild.id}, handleError);
+	movieModel.deleteMany({ guildID: guild.id }, handleError);
+	setting.deleteMany({ guildID: guild.id }, handleError);
 });
 
 
@@ -178,6 +181,7 @@ function buildSingleMovieEmbed(movie, subtitle) {
 		.setURL(`https://www.imdb.com/title/${movie.imdbID}`)
 		.setDescription(movie.overview)
 		.setImage(movie.posterURL)
+		.setColor("#6441a3")
 		.addFields(
 			{ name: "Release Date", value: moment(movie.releaseDate).format("DD MMM YYYY"), inline: true },
 			{ name: "Runtime", value: movie.runtime + " Minutes", inline: true },

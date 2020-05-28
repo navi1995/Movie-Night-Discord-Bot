@@ -10,7 +10,7 @@ module.exports = {
 		var number = 1;
 		var description = "";
 		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "");
-		var movieEmbed = new MessageEmbed().setTitle("Submitted Movies");
+		var movieEmbed = new MessageEmbed().setTitle("Viewed Movies").setColor("#6441a3");
 
 		searchOptions.viewed = true;
 
@@ -22,7 +22,7 @@ module.exports = {
 
 			if (docs && docs.length > 0) {
 				for (var movie of docs) {
-					var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
+					var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy}, viewed on ${moment(movie.viewedDate).format("DD MMM YYYY")}\n
 					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
 
 					//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
@@ -30,7 +30,7 @@ module.exports = {
 						movieEmbed.setDescription(description);
 						embeddedMessages.push(movieEmbed);
 						description = "";
-						movieEmbed = new MessageEmbed().setTitle("Submitted Movies (Cont...)");
+						movieEmbed = new MessageEmbed().setTitle("Viewed Movies (Cont...)").setColor("#6441a3");
 					} 
 
 					description += stringConcat;

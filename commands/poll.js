@@ -13,7 +13,7 @@ module.exports = {
 		var totalCount = 0;
 		var description = "";
 		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
-		var movieEmbed = new MessageEmbed().setTitle("Poll has begun!");
+		var movieEmbed = new MessageEmbed().setTitle("Poll has begun!").setColor("#6441a3");
 		var movieMap = {};
 		var settings = main.guildSettings.get(message.guild.id);
 
@@ -42,7 +42,7 @@ module.exports = {
 						movieEmbed.setDescription(description);
 						embeddedMessages.push(movieEmbed);
 						description = "";
-						movieEmbed = new MessageEmbed().setTitle("Poll has begun! (Cont...)");
+						movieEmbed = new MessageEmbed().setTitle("Poll has begun! (Cont...)").setColor("#6441a3");
 					} 
 
 					description += stringConcat;
