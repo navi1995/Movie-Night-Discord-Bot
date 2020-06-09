@@ -93,7 +93,19 @@ client.on("message", async function(message) {
 	//Do not ask database for settings if we already have them stored, any updates to settings are handled within the settings modules.
 	if (message.guild && !guildSettings.has(message.guild.id)) {
 		await getSettings(message.guild.id).then(function(settings) {
-			guildSettings.set(message.guild.id, settings);
+			if (!settings) {
+				//If no settings exist (during downtime of bot) we instantiate some settings before processing command.
+				new setting({guildID: guildID}).save(function(err, setting) {
+					if (err) {
+						console.log("Guild create", err);
+						client.message.send("Could not create settings.");
+					} else {
+						guildSettings.set(message.guild.id, setting);
+					}
+				});
+			} else {
+				guildSettings.set(message.guild.id, settings);
+			}
 		});
 	}
 
@@ -183,7 +195,7 @@ function searchMovieDatabaseObject(guildID, movie, hideViewed) {
 	return searchObj;
 }
 
-function buildSingleMovieEmbed(movie, subtitle) {
+function buildSingleMovieEmbed(movie, subtitle, hideSubmitted) {
 	var embed = new Discord.MessageEmbed()
 		.setTitle(movie.name)
 		.setURL(`https://www.imdb.com/title/${movie.imdbID}`)
@@ -193,11 +205,16 @@ function buildSingleMovieEmbed(movie, subtitle) {
 		.addFields(
 			{ name: "Release Date", value: moment(movie.releaseDate).format("DD MMM YYYY"), inline: true },
 			{ name: "Runtime", value: movie.runtime + " Minutes", inline: true },
-			{ name: "Rating", value: movie.rating, inline: true },
+			{ name: "Rating", value: movie.rating, inline: true }
+		);
+
+	if (!hideSubmitted) {
+		embed.addFields(
 			{ name: "Submitted By", value: movie.submittedBy, inline: true },
 			{ name: "Submitted On", value: moment(movie.submitted).format("DD MMM YYYY"), inline: true },
 			{ name: "Viewed", value: movie.viewed ? moment(movie.viewedDate).format("DD MMM YYYY") : "No", inline: true }
 		);
+	}
 
 	if (subtitle) {
 		embed.setAuthor(subtitle);

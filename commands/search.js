@@ -10,7 +10,7 @@ module.exports = {
 		await main.searchNewMovie(search, message, function(newMovie) {
 			//No need for else, searchNewMovie alerts user if no movie found.
 			if (newMovie) {
-				message.channel.send(main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)"));
+				message.channel.send(main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)", true));
 			}
 		});
 		
