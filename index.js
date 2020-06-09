@@ -8,8 +8,10 @@ const Discord = require("discord.js");
 const fetch = require("node-fetch");
 const moment = require("moment");
 const mongoose = require("mongoose");
-const { prefix, token, movieDbAPI, mongoLogin } = require("./config.json");
+const { prefix, token, movieDbAPI, mongoLogin, topggAPI } = require("./config.json");
 const client = new Discord.Client();
+const DBL = require("dblapi.js");
+const dbl = new DBL(topggAPI, client);
 const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
 const cooldowns = new Discord.Collection();
 const guildSettings = new Discord.Collection();
@@ -56,7 +58,10 @@ function setMessage() {
 client.once("ready", () => {
 	//Every hour update activity to avoid getting it cleared.
 	setMessage();
-	setInterval(setMessage, 1000 * 60 * 60 ); 
+	setInterval(setMessage, 1000 * 60 * 60 );
+	setInterval(function() {
+		dbl.postStats(client.guilds.cache.size);
+	}, 1800000);
 	console.log("Ready!");
 });
 
