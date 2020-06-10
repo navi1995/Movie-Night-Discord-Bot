@@ -90,10 +90,13 @@ module.exports = {
 				
 						await collector.on("end", m => {
 							//Check for ties in future version.
-							const highestReact = m.reduce((p, c) => p.count > c.count ? p : c, 0);
+							var highestValidReactions = m.filter(function(a) {
+								return emojiMap[a.emoji.name];
+							});
+							var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0);
 							var winner = movieMap[emojiMap[highestReact.emoji.name]];
 
-							if (highestReact.count == 1) {
+							if (highestReact.count == 1 || highestReact.count == 0) {
 								return message.channel.send("No votes were cast, so no movie has been chosen.");
 							}
 
