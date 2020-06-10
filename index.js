@@ -58,7 +58,7 @@ function setMessage() {
 function postStatsDBL() {
 	try {
 		dbl.postStats(client.guilds.cache.size);	
-	} catch (e) { console.log(e); }
+	} catch (e) { console.error("Could not post DBL stats", e); }
 }
 
 client.once("ready", () => {
@@ -74,7 +74,7 @@ client.on("guildCreate", async function(guild) {
 	//Whenever the bot is added to a guild, instantiate default settings into our database. 
 	new setting({guildID: guild.id}).save(function(err) {
 		if (err) {
-			console.log("Guild create", err);
+			console.error("Guild create", err);
 			client.message.send("Could not create settings.");
 		}
 	});
@@ -102,7 +102,7 @@ client.on("message", async function(message) {
 				//If no settings exist (during downtime of bot) we instantiate some settings before processing command.
 				new setting({guildID: guildID}).save(function(err, setting) {
 					if (err) {
-						console.log("Guild create", err);
+						console.error("Guild create", err);
 						client.message.send("Could not create settings.");
 					} else {
 						guildSettings.set(message.guild.id, setting);
@@ -178,7 +178,7 @@ client.on("message", async function(message) {
 	try {
 		command.execute(message, args, main);
 	} catch (error) {
-		console.log(error);
+		console.error("Problem executing command", error);
 		message.reply("There was an error trying to execute that command!");
 	}
 });
@@ -187,7 +187,7 @@ client.login(token);
 
 function handleError(err, message) {
 	if (err) {
-		console.log(message);
+		console.error(message, err);
 	}
 }
 

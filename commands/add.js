@@ -63,7 +63,7 @@ module.exports = {
 				}
 			});
 		} catch (e) {
-			console.log(e);
+			console.error("Add.js", e);
 			return message.channel.send("Something went wrong.");
 		}
 	}		

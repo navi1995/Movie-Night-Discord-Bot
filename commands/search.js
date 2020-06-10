@@ -15,7 +15,7 @@ module.exports = {
 				}
 			});
 		} catch (e) {
-			console.log(e);
+			console.error("Search.js", e);
 			return message.channel.send("Something went wrong.");
 		}		
 	}		

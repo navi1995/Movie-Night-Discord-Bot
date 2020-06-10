@@ -77,7 +77,7 @@ module.exports = {
 									try {
 										reaction.users.remove(user.id);
 									} catch (e) {
-										console.log("Error removing reaction");
+										console.error("Error removing reaction", e);
 									}
 								}
 							}

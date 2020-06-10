@@ -22,7 +22,7 @@ module.exports = {
 				})
 				.catch(error => {
 					console.error(`Could not send help DM to ${message.author.tag}.\n`, error);
-					message.reply("it seems like I can't DM you!");
+					message.reply("it seems like I can't DM you! Check your discord privacy settings to allow server members to DM you.");
 				});
 		}
 
