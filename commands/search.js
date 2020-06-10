@@ -7,12 +7,16 @@ module.exports = {
 	async execute(message, args, main) {
 		var search = args.join(" ");
 
-		await main.searchNewMovie(search, message, function(newMovie) {
-			//No need for else, searchNewMovie alerts user if no movie found.
-			if (newMovie) {
-				message.channel.send(main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)", true));
-			}
-		});
-		
+		try {
+			await main.searchNewMovie(search, message, function(newMovie) {
+				//No need for else, searchNewMovie alerts user if no movie found.
+				if (newMovie) {
+					message.channel.send(main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)", true));
+				}
+			});
+		} catch (e) {
+			console.log(e);
+			return message.channel.send("Something went wrong.");
+		}		
 	}		
 };

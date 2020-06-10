@@ -55,13 +55,18 @@ function setMessage() {
 	client.user.setActivity("movies with friends at https://movienightbot.xyz/", { type: "WATCHING" });
 }
 
+function postStatsDBL() {
+	try {
+		dbl.postStats(client.guilds.cache.size);	
+	} catch (e) { console.log(e); }
+}
+
 client.once("ready", () => {
 	//Every hour update activity to avoid getting it cleared.
 	setMessage();
+	postStatsDBL();
 	setInterval(setMessage, 1000 * 60 * 60 );
-	setInterval(function() {
-		dbl.postStats(client.guilds.cache.size);
-	}, 1800000);
+	setInterval(postStatsDBL, 1800000);
 	console.log("Ready!");
 });
 
@@ -109,7 +114,15 @@ client.on("message", async function(message) {
 		});
 	}
 
-	var settings = guildSettings.get(guildID) || {};
+	//Defaults in case mongoDB connection is down
+	var settings = guildSettings.get(guildID) || {
+		prefix: prefix,
+		pollTime: "60000",
+		pollMessage: "Poll has begun!",
+		pollSize: 10,
+		autoViewed: false,
+		addMoviesRole: null
+	};
 	var currentPrefix = settings.prefix || prefix;
 
 	//If message doesn't have the prefix from settings, ignore the message.
@@ -277,6 +290,21 @@ function getRandomFromArray(array, count) {
 function getSettings(guildID) {
 	return setting.findOne({guildID: guildID }).exec();
 }
+
+// function syncUpAfterDowntime() {
+// 	setting.find({}).exec(function(err, docs) { 
+// 		var missingSettings = Array.from(client.guilds.cache.keys()).filter(function(val) {
+// 			return docs.map(a => a.guildID).indexOf(val) == -1;
+// 		});
+// 		missingSettings = missingSettings.map(function(a) {
+// 			return { "guildID": a };
+// 		});
+		
+// 		setting.insertMany(missingSettings, function(error, docs) {
+// 			if (error) console.log(error);
+// 		});
+// 	});
+// }
 
 //Namespace functions and variables for modules
 main.movieModel = movieModel;
