@@ -75,7 +75,6 @@ client.on("guildCreate", async function(guild) {
 	new setting({guildID: guild.id}).save(function(err) {
 		if (err) {
 			console.error("Guild create", err);
-			client.message.send("Could not create settings.");
 		}
 	});
 });

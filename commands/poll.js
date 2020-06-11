@@ -94,9 +94,14 @@ module.exports = {
 								return emojiMap[a.emoji.name];
 							});
 							var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0);
+
+							if (!highestReact.emoji) {
+								return message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
+							}
+
 							var winner = movieMap[emojiMap[highestReact.emoji.name]];
 
-							if (highestReact.count == 1 || highestReact.count == 0) {
+							if (highestReact.count <= 1) {
 								return message.channel.send("No votes were cast, so no movie has been chosen.");
 							}
 
