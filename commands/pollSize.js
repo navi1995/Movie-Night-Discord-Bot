@@ -15,7 +15,7 @@ module.exports = {
 					if (!err) {
 						var settings = main.guildSettings.get(message.guild.id);
 		
-						settings.pollTime = pollSize;
+						settings.pollSize = pollSize;
 						main.guildSettings.set(message.guild.id, settings);
 						message.channel.send(`Poll size has now been set to: ${pollSize}`);
 					} else {
