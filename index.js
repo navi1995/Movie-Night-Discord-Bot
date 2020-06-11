@@ -124,6 +124,13 @@ client.on("message", async function(message) {
 	};
 	var currentPrefix = settings.prefix || prefix;
 
+	//If bot cant SEND MESSAGES, try to DM. If not then bots broken.
+	//ADDS_REACTIONS needed for ADD and POLL
+	//SEND_MESSAGES needed for ALL
+	//MANAGE_MESSAGES needed for POLL
+	//EMBED LINKS needed for SEARCH/ADD/POLL
+	//READ_MESSAGES needed for all.
+
 	//If message doesn't have the prefix from settings, ignore the message.
 	if (!message.content.startsWith(currentPrefix) || message.author.bot) return;
 
@@ -145,8 +152,20 @@ client.on("message", async function(message) {
 		return message.reply("I can't execute that command inside DMs!");
 	}
 
+	//If no permissions
+	if (!message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES")) {
+		return message.author.send("This bot needs permissions for SENDING MESSAGES in the channel you've requested a command. Please update bots permissions for the channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.")
+			.catch(error => {
+				console.error(`Could not send help DM to ${message.author.tag}.\n`, error);
+		});
+	}
+
 	//If the command has been flagged as admin only, do not process it.
 	if (command.admin && !message.member.hasPermission("ADMINISTRATOR")) return message.channel.send("This commands requires the user to have an administrator role in the server.");
+
+	if (!message.channel.permissionsFor(message.guild.me).has(["ADD_REACTIONS", "MANAGE_MESSAGES", "EMBED_LINKS", "READ_MESSAGE_HISTORY"])) {
+		return message.reply("Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.");
+	}
 	
 	//Tell user usage if command has been flagged as an argument based command.
 	if (command.args && !args.length) {
@@ -270,7 +289,7 @@ async function searchNewMovie(search, message, callback) {
 		guildID: message.guild.id,
 		movieID: data.id,
 		imdbID: data.imdb_id,
-		name: data.original_title,
+		name: data.title || data.original_title,
 		posterURL: `https://image.tmdb.org/t/p/original/${data.poster_path}`,
 		overview: data.overview,
 		releaseDate: new Date(data.release_date),
