@@ -46,7 +46,7 @@ module.exports = {
 											return removeMovie(newMovie);
 										}
 									}).catch(() => {
-										message.channel.send("Movie will not be added, you didn't respond in time.");
+										message.channel.send("Movie will not be added, you didn't respond in time. Try using an IMDB link instead?");
 
 										return removeMovie(newMovie);
 									});

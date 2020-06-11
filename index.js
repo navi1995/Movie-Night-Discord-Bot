@@ -153,7 +153,7 @@ client.on("message", async function(message) {
 	}
 
 	//If no permissions
-	if (!message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES")) {
+	if (message.channel.type == "text" && !message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES")) {
 		return message.author.send("This bot needs permissions for SENDING MESSAGES in the channel you've requested a command. Please update bots permissions for the channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.")
 			.catch(error => {
 				console.error(`Could not send help DM to ${message.author.tag}.\n`, error);
@@ -163,7 +163,7 @@ client.on("message", async function(message) {
 	//If the command has been flagged as admin only, do not process it.
 	if (command.admin && !message.member.hasPermission("ADMINISTRATOR")) return message.channel.send("This commands requires the user to have an administrator role in the server.");
 
-	if (!message.channel.permissionsFor(message.guild.me).has(["ADD_REACTIONS", "MANAGE_MESSAGES", "EMBED_LINKS", "READ_MESSAGE_HISTORY"])) {
+	if (message.channel.type == "text" && !message.channel.permissionsFor(message.guild.me).has(["ADD_REACTIONS", "MANAGE_MESSAGES", "EMBED_LINKS", "READ_MESSAGE_HISTORY"])) {
 		return message.reply("Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.");
 	}
 	
