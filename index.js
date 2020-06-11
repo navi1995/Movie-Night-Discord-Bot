@@ -102,7 +102,6 @@ client.on("message", async function(message) {
 				new setting({guildID: guildID}).save(function(err, setting) {
 					if (err) {
 						console.error("Guild create", err);
-						client.message.send("Could not create settings.");
 					} else {
 						guildSettings.set(message.guild.id, setting);
 					}
