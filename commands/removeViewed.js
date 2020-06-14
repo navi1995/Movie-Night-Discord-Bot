@@ -4,14 +4,16 @@ module.exports = {
 	aliases: ["deleteviewed", "clearviewed"],
 	usage: "[movie name for specific delete, else just the command to remove all viewed movies]",
 	admin: true,
-	execute(message, args, main) {
+	execute(message, args, main, callback) {
 		if (!args.length) {
 			return main.movieModel.deleteMany({guildID: message.guild.id, viewed: true }, function(err) {
 				if (!err) {
-					return message.channel.send("All movies have been deleted.");
+					message.channel.send("All movies have been deleted.");
 				} else {
-					return message.channel.send("An error occured while trying to delete all movies");
+					message.channel.send("An error occured while trying to delete all movies");
 				}
+
+				return callback();
 			});
 		}
 
@@ -25,18 +27,22 @@ module.exports = {
 			return main.movieModel.findOne(searchOptions, function(err, movie) {
 				if (err || !movie) {
 					message.channel.send("Movie could not be found!");
+					return callback();
 				} else {
-					movie.remove(function(err) {
+					return movie.remove(function(err) {
 						if (!err) {
 							message.channel.send(`Movie deleted: ${movie.name}`);
 						} else {
 							message.channel.send("Could not remove movie, something went wrong.");
 						}
+
+						return callback();
 					});
 				}
 			});
 		} else {
-			return message.channel.send("Specify a movie or remove space.");
+			message.channel.send("Specify a movie or remove space.");
+			return callback();
 		}
 	},
 };

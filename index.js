@@ -8,12 +8,46 @@ const Discord = require("discord.js");
 const fetch = require("node-fetch");
 const moment = require("moment");
 const mongoose = require("mongoose");
-const { prefix, token, movieDbAPI, mongoLogin, topggAPI } = require("./config.json");
-const client = new Discord.Client();
+const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
+const client = new Discord.Client({
+    messageCacheMaxSize:1,
+    messageCacheLifetime:30,
+    messageSweepInterval:60,
+    disabledEvents: [
+	'GUILD_UPDATE'
+	,'GUILD_MEMBER_ADD'
+	,'GUILD_MEMBER_REMOVE'
+	,'GUILD_MEMBER_UPDATE'
+	,'GUILD_MEMBERS_CHUNK'
+	,'GUILD_ROLE_CREATE'
+	,'GUILD_ROLE_DELETE'
+	,'GUILD_ROLE_UPDATE'
+	,'GUILD_BAN_ADD'
+	,'GUILD_BAN_REMOVE'
+	,'GUILD_EMOJIS_UPDATE'
+	,'GUILD_INTEGRATIONS_UPDATE'
+	,'CHANNEL_CREATE'
+	,'CHANNEL_DELETE'
+	,'CHANNEL_UPDATE'
+	,'CHANNEL_PINS_UPDATE'
+	,'MESSAGE_CREATE'
+	,'MESSAGE_DELETE'
+	,'MESSAGE_UPDATE'
+	,'MESSAGE_DELETE_BULK'
+    ,'MESSAGE_REACTION_ADD'
+	,'MESSAGE_REACTION_REMOVE'
+	,'MESSAGE_REACTION_REMOVE_ALL'
+	,'USER_UPDATE'
+	,'PRESENCE_UPDATE'
+	,'TYPING_START'
+	,'VOICE_STATE_UPDATE'
+	,'VOICE_SERVER_UPDATE'
+    ,'WEBHOOKS_UPDATE'
+    ]
+});
 const DBL = require("dblapi.js");
 const dbl = new DBL(topggAPI, client);
 const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
-const cooldowns = new Discord.Collection();
 const guildSettings = new Discord.Collection();
 const Schema = mongoose.Schema;
 const ObjectId = Schema.ObjectId;
@@ -64,19 +98,26 @@ function postStatsDBL() {
 client.once("ready", () => {
 	//Every hour update activity to avoid getting it cleared.
 	setMessage();
-	postStatsDBL();
+
+	if (!testing) {
+		postStatsDBL();
+		setInterval(postStatsDBL, 1800000);
+	}
+
 	setInterval(setMessage, 1000 * 60 * 60 );
-	setInterval(postStatsDBL, 1800000);
+
 	console.log("Ready!");
 });
 
+function guildCreateError(err) {
+	if (err) {
+		console.error("Guild create", err);
+	}
+}
+
 client.on("guildCreate", async function(guild) {
 	//Whenever the bot is added to a guild, instantiate default settings into our database. 
-	new setting({guildID: guild.id}).save(function(err) {
-		if (err) {
-			console.error("Guild create", err);
-		}
-	});
+	new setting({guildID: guild.id}).save(guildCreateError);
 });
 
 client.on("guildDelete", function(guild) {
@@ -113,7 +154,7 @@ client.on("message", async function(message) {
 	}
 
 	//Defaults in case mongoDB connection is down
-	var settings = guildSettings.get(guildID) || {
+	const settings = guildSettings.get(guildID) || {
 		prefix: prefix,
 		pollTime: "60000",
 		pollMessage: "Poll has begun!",
@@ -121,7 +162,7 @@ client.on("message", async function(message) {
 		autoViewed: false,
 		addMoviesRole: null
 	};
-	var currentPrefix = settings.prefix || prefix;
+	const currentPrefix = settings.prefix || prefix;
 
 	//If bot cant SEND MESSAGES, try to DM. If not then bots broken.
 	//ADDS_REACTIONS needed for ADD and POLL
@@ -131,21 +172,15 @@ client.on("message", async function(message) {
 	//READ_MESSAGES needed for all.
 
 	//If message doesn't have the prefix from settings, ignore the message.
+	if ((!message.content.startsWith(currentPrefix) && message.channel.type == "text") || (message.author.bot && message.channel.type == "text")) return guildSettings.delete(message.guild.id);	
 	if (!message.content.startsWith(currentPrefix) || message.author.bot) return;
 
 	const args = message.content.slice(currentPrefix.length).split(/ +/);
 	const commandName = args.shift().toLowerCase();
 	const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
+	if (!command && message.channel.type == "text") return guildSettings.delete(message.guild.id);	
 	if (!command) return;
-
-	if (!cooldowns.has(command.name)) {
-		cooldowns.set(command.name, new Discord.Collection());
-	}
-
-	const now = Date.now();
-	const timestamps = cooldowns.get(command.name);
-	const cooldownAmount = (command.cooldown || 0) * 1000;
 
 	if (command.name != "help" && message.channel.type !== "text") {
 		return message.reply("I can't execute that command inside DMs!");
@@ -153,6 +188,8 @@ client.on("message", async function(message) {
 
 	//If no permissions
 	if (message.channel.type == "text" && !message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES")) {
+		guildSettings.delete(message.guild.id);	
+
 		return message.author.send("This bot needs permissions for SENDING MESSAGES in the channel you've requested a command. Please update bots permissions for the channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.")
 			.catch(error => {
 				console.error(`Could not send help DM to ${message.author.tag}.\n`, error);
@@ -160,9 +197,15 @@ client.on("message", async function(message) {
 	}
 
 	//If the command has been flagged as admin only, do not process it.
-	if (command.admin && !message.member.hasPermission("ADMINISTRATOR")) return message.channel.send("This commands requires the user to have an administrator role in the server.");
+	if (command.admin && !message.member.hasPermission("ADMINISTRATOR")) {
+		guildSettings.delete(message.guild.id);	
+
+		return message.channel.send("This commands requires the user to have an administrator role in the server.");
+	}
 
 	if (message.channel.type == "text" && !message.channel.permissionsFor(message.guild.me).has(["ADD_REACTIONS", "MANAGE_MESSAGES", "EMBED_LINKS", "READ_MESSAGE_HISTORY"])) {
+		guildSettings.delete(message.guild.id);	
+		
 		return message.reply("Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.");
 	}
 	
@@ -174,29 +217,22 @@ client.on("message", async function(message) {
 			reply += `\nThe proper usage would be: \`${currentPrefix}${command.name} ${command.usage}\``;
 		}
 
+		guildSettings.delete(message.guild.id);	
+
 		return message.channel.send(reply);
 	}
 
-	//Handle cooldowns on command.
-	if (timestamps.has(message.author.id)) {
-		const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
-
-		if (now < expirationTime) {
-			const timeLeft = (expirationTime - now) / 1000;
-
-			return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
-		}
-	}
-
-	timestamps.set(message.author.id, now);
-	setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
-
 	//Send message, arguments and additional functions/variables required to the command.
 	try {
-		command.execute(message, args, main);
+		console.log(command.name);
+		await command.execute(message, args, main, function() {
+			guildSettings.delete(message.guild.id);	
+		}, settings);
 	} catch (error) {
 		console.error("Problem executing command", error);
-		message.reply("There was an error trying to execute that command!");
+		guildSettings.delete(message.guild.id);	
+
+		return message.reply("There was an error trying to execute that command!");
 	}
 });
 
@@ -283,7 +319,7 @@ async function searchNewMovie(search, message, callback) {
 		return callback(null, data);
 	} 
 
-	callback(new movieModel({
+	return callback(new movieModel({
 		primaryKey: message.guild.id + data.id,
 		guildID: message.guild.id,
 		movieID: data.id,
@@ -305,7 +341,7 @@ function getRandomFromArray(array, count) {
 }
 
 function getSettings(guildID) {
-	return setting.findOne({guildID: guildID }).exec();
+	return setting.findOne({guildID: guildID }).lean().exec();
 }
 
 // function syncUpAfterDowntime() {

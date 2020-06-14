@@ -4,19 +4,23 @@ module.exports = {
 	aliases: ["find", "details"],
 	usage: "[movie name or search]",
 	args: true,
-	async execute(message, args, main) {
+	async execute(message, args, main, callback) {
 		var search = args.join(" ");
 
 		try {
-			await main.searchNewMovie(search, message, function(newMovie) {
+			//await 
+			return main.searchNewMovie(search, message, function(newMovie) {
 				//No need for else, searchNewMovie alerts user if no movie found.
 				if (newMovie) {
 					message.channel.send(main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)", true));
 				}
+
+				return callback();
 			});
 		} catch (e) {
 			console.error("Search.js", e);
-			return message.channel.send("Something went wrong.");
+			message.channel.send("Something went wrong.");
+			return callback();
 		}		
 	}		
 };

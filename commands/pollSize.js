@@ -4,26 +4,26 @@ module.exports = {
 	usage: "[number of movies to show in poll]",
 	args: true,
 	admin: true,
-	async execute(message, args, main) {
+	async execute(message, args, main, callback) {
 		if (args.length > 1 || isNaN(Number(args[0]))) {
-			return message.channel.send("Please only specify a number.");
+			message.channel.send("Please only specify a number.");
+			return callback();
 		} else {
 			var pollSize = Number(args[0]).toFixed(0);
 
 			if (pollSize >= 1 || pollSize <= 10) {
-				main.setting.updateOne({guildID: message.guild.id}, { "pollSize": pollSize }, function(err) {
+				return main.setting.updateOne({guildID: message.guild.id}, { "pollSize": pollSize }, function(err) {
 					if (!err) {
-						var settings = main.guildSettings.get(message.guild.id);
-		
-						settings.pollSize = pollSize;
-						main.guildSettings.set(message.guild.id, settings);
 						message.channel.send(`Poll size has now been set to: ${pollSize}`);
 					} else {
 						message.channel.send("Couldn't set Poll size, something went wrong");
 					}
+
+					return callback();
 				});
 			} else {
-				return message.channel.send("Poll size must be atleast 1 and a maximum of 10");
+				message.channel.send("Poll size must be atleast 1 and a maximum of 10");
+				return callback();
 			}
 		}
 	}

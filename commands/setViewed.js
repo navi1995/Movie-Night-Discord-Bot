@@ -4,13 +4,14 @@ module.exports = {
 	usage: "[Movie name to set as viewed]",
 	args: true,
 	admin: true,
-	async execute(message, args, main) {
+	async execute(message, args, main, callback) {
 		var movie = args.join(" ");
 		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, movie);
 
 		return main.movieModel.findOne(searchOptions, function(err, movie) {
 			if (err || !movie) {
 				message.channel.send("Movie could not be found!");
+				return callback();
 			} else {
 				movie.updateOne({ viewed: !movie.viewed, viewedDate: movie.viewed ? null : new Date() }, function(err) {
 					if (!err) {
@@ -18,6 +19,8 @@ module.exports = {
 					} else {
 						message.channel.send("Could not set movie to viewed, something went wrong.");
 					}
+
+					return callback();
 				});
 			} 
 		});

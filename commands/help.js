@@ -5,7 +5,6 @@ module.exports = {
 	description: "List all of my commands or info about a specific command.",
 	aliases: ["commands"],
 	usage: "[command name]",
-	cooldown: 5,
 	execute(message, args) {
 		const data = [];
 		const { commands } = message.client;
@@ -18,11 +17,11 @@ module.exports = {
 			return message.author.send(data, { split: true })
 				.then(() => {
 					if (message.channel.type === "dm") return;
-					message.reply("I've sent you a DM with all my commands!");
+					return message.reply("I've sent you a DM with all my commands!");
 				})
 				.catch(error => {
 					console.error(`Could not send help DM to ${message.author.tag}.\n`, error);
-					message.reply("it seems like I can't DM you! Check your discord privacy settings to allow server members to DM you.");
+					return message.reply("it seems like I can't DM you! Check your discord privacy settings to allow server members to DM you.");
 				});
 		}
 
@@ -39,7 +38,6 @@ module.exports = {
 		if (command.description) data.push(`**Description:** ${command.description}`);
 		if (command.usage) data.push(`**Usage:** ${prefix}${command.name} ${command.usage}`);
 
-		data.push(`**Cooldown:** ${command.cooldown || 3} second(s)`);
-		message.channel.send(data, { split: true });
+		return message.channel.send(data, { split: true });
 	},
 };

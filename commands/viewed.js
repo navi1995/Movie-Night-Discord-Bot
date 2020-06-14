@@ -5,7 +5,7 @@ module.exports = {
 	name: "viewed",
 	description: "Returns list of all movies that have been marked as viewed for server.",
 	aliases: ["getviewed", "viewedlist"],
-	execute(message, args, main) {
+	execute(message, args, main, callback) {
 		var embeddedMessages = [];
 		var number = 1;
 		var description = "";
@@ -17,6 +17,7 @@ module.exports = {
 		//2048 limit
 		return main.movieModel.find(searchOptions, function (error, docs) {
 			if (docs.length == 0) {
+				callback();
 				return message.channel.send("List of unviewed movies is currently empty.");
 			}
 
@@ -44,6 +45,9 @@ module.exports = {
 			for (var embeddedMessage of embeddedMessages) {
 				message.channel.send(embeddedMessage);
 			}
-		});
+
+			callback();
+			return;
+		}).lean();
 	},
 };

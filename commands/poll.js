@@ -7,7 +7,7 @@ module.exports = {
 	description: "Begins a poll.",
 	aliases: ["begin", "start"],
 	admin: true,
-	async execute(message, args, main) {
+	async execute(message, args, main, callback, settings) {
 		var embeddedMessages = [];
 		var number = 1;
 		var totalCount = 0;
@@ -15,18 +15,21 @@ module.exports = {
 		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
 		var movieEmbed = new MessageEmbed().setTitle("Poll has begun!").setColor("#6441a3");
 		var movieMap = {};
-		var settings = main.guildSettings.get(message.guild.id);
 
 		message.channel.send(settings.pollMessage);
 
 		//2048 limit
-		await main.movieModel.find(searchOptions, function (error, docs) {
+		return await main.movieModel.find(searchOptions, function (error, docs) {
 			if (error) {
-				return message.channel.send("Could not  return list of movies, an error occured.");
+				message.channel.send("Could not  return list of movies, an error occured.");
+
+				return callback();
 			}
 			
 			if (docs.length == 0) {
-				return message.channel.send("Cannot start poll. List of unviewed movies is empty.");
+				message.channel.send("Cannot start poll. List of unviewed movies is empty.");
+
+				return callback();
 			} else if (docs && docs.length > 0) {
 				//Gets random assortment of movies depending on poll size setting and number of movies in the servers list.
 				var movies = main.getRandomFromArray(docs, settings.pollSize);
@@ -67,7 +70,8 @@ module.exports = {
 					message.channel.send(embeddedMessage).then(async (message) => {
 						const collector = message.createReactionCollector(filter, { time: settings.pollTime + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 
-						await collector.on("collect", (messageReact, user) => {
+						console.log("Poll started" + message.guild.id);
+						collector.on("collect", (messageReact, user) => {
 							if (user.id != main.client.user.id) {
 								const duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
 			
@@ -88,41 +92,47 @@ module.exports = {
 							await message.react(emojis[i]);
 						}
 				
-						await collector.on("end", m => {
+						collector.on("end", m => {
+							console.log("Poll end" + message.guild.id);
 							//Check for ties in future version.
 							var highestValidReactions = m.filter(function(a) {
 								return emojiMap[a.emoji.name];
 							});
-							var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0);
+							const highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0);
 
 							if (!highestReact.emoji) {
-								return message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
+								message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
+								return callback();
 							}
 
 							var winner = movieMap[emojiMap[highestReact.emoji.name]];
 
 							if (highestReact.count <= 1) {
-								return message.channel.send("No votes were cast, so no movie has been chosen.");
+								message.channel.send("No votes were cast, so no movie has been chosen.");
+								return callback();
 							}
-
+							
 							//If auto viewed is set, update movie to be entered into the VIEWED list. 
 							if (settings.autoViewed) {
 								main.movieModel.updateOne({ guildID: message.guild.id, movieID: winner.movieID }, { viewed: true, viewedDate: new Date() }, function(err) {
 									if (!err) {
 										winner.viewed = true; winner.viewedDate = new Date();
-
-										return message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
+										message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
 									} else {
-										return message.channel.send("Something went wrong, could not get winner. Try removing auto-view setting.");
+										message.channel.send("Something went wrong, could not get winner. Try removing auto-view setting.");
 									}
+
+									return callback();
 								});
 							} else {
-								return message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
+								message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
+
+								return callback();
 							}
 						});
 					});
 				}
 			}
-		});
+		}).lean();
 	},
 };

@@ -4,22 +4,22 @@ module.exports = {
 	usage: "[on or off]",
 	args: true,
 	admin: true,
-	async execute(message, args, main) {
+	async execute(message, args, main, callback) {
 		if (args.length > 1 || (args[0].toLowerCase() != "on" && args[0].toLowerCase() != "off")) {
-			return message.channel.send("Please only specify on or off.");
+			message.channel.send("Please only specify on or off.");
+
+			return callback();
 		} else {
 			var autoView = args[0].toLowerCase() == "on";
 
-			main.setting.updateOne({ guildID: message.guild.id }, { "autoViewed": autoView }, function(err) {
+			return main.setting.updateOne({ guildID: message.guild.id }, { "autoViewed": autoView }, function(err) {
 				if (!err) {
-					var settings = main.guildSettings.get(message.guild.id);
-
-					settings.autoViewed = autoView;
-					main.guildSettings.set(message.guild.id, settings);
 					message.channel.send(`Auto view has now been set to: ${autoView ? "On" : "Off"}`);
 				} else {
 					message.channel.send("Couldn't set auto view, something went wrong");
 				}
+
+				return callback();
 			});
 
 		}

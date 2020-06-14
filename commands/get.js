@@ -5,7 +5,7 @@ module.exports = {
 	name: "get",
 	description: "Returns list of all movies in current watch list for server, or if search is specified it will attempt to search the servers list for the movie.",
 	aliases: ["list", "getmovie"],
-	execute(message, args, main) {
+	execute(message, args, main, callback) {
 		var embeddedMessages = [];
 		var number = 1;
 		var description = "";
@@ -17,11 +17,15 @@ module.exports = {
 			//return to avoid hitting logic below.
 			return main.movieModel.find(searchOptions, function (error, movies) {
 				if (error) {
-					return message.channel.send("Could not  return list of movies, an error occured.");
+					message.channel.send("Could not  return list of movies, an error occured.");
+
+					return callback();
 				}
 				
 				if (movies.length == 0) { 
-					return message.channel.send("List of unviewed movies is currently empty.");
+					message.channel.send("List of unviewed movies is currently empty.");
+
+					return callback();
 				} else if (movies && movies.length > 0) {
 					for (var movie of movies) {
 						var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
@@ -46,7 +50,9 @@ module.exports = {
 				for (var embeddedMessage of embeddedMessages) {
 					message.channel.send(embeddedMessage);
 				}
-			});
+
+				return callback();
+			}).lean();
 		}
 
 		searchOptions = main.searchMovieDatabaseObject(message.guild.id, movie);
@@ -58,6 +64,8 @@ module.exports = {
 			} else {
 				message.channel.send("Could not find movie in your list. Perhaps try using the search command instead?");
 			}
-		});
+
+			return callback();
+		}).lean();
 	},
 };
