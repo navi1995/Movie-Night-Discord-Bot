@@ -7,6 +7,7 @@ module.exports = {
 	execute(message, args, main, callback) {
 		if (!args.length && !message.member.hasPermission("ADMINISTRATOR")) {
 			message.channel.send("Sorry, only Administrators can delete all movies.");
+
 			return callback();
 		}
 
@@ -31,6 +32,7 @@ module.exports = {
 			return main.movieModel.findOne(searchOptions, function(err, movie) {
 				if (err || !movie) {
 					message.channel.send("Movie could not be found! It may be in the viewed list. Use removeviewed instead.");
+
 					return callback();
 				} else if ("<@" + message.member.user.id + ">" == movie.submittedBy || message.member.hasPermission("ADMINISTRATOR")) {
 					return movie.remove(function(err) {
@@ -44,11 +46,13 @@ module.exports = {
 					});
 				} else {
 					message.channel.send("Non-administrators can only delete movies they have submitted");
+
 					return callback();
 				}
 			});
 		} else {
 			message.channel.send("Specify a movie or remove space.");
+			
 			return callback();
 		}
 	},

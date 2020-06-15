@@ -17,8 +17,9 @@ module.exports = {
 		//2048 limit
 		return main.movieModel.find(searchOptions, function (error, docs) {
 			if (docs.length == 0) {
-				callback();
-				return message.channel.send("List of unviewed movies is currently empty.");
+				message.channel.send("List of unviewed movies is currently empty.");
+
+				return callback();
 			}
 
 			if (docs && docs.length > 0) {
@@ -46,8 +47,7 @@ module.exports = {
 				message.channel.send(embeddedMessage);
 			}
 
-			callback();
-			return;
+			return callback();
 		}).lean();
 	},
 };

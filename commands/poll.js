@@ -102,6 +102,7 @@ module.exports = {
 
 							if (!highestReact.emoji) {
 								message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
+
 								return callback();
 							}
 
@@ -109,6 +110,7 @@ module.exports = {
 
 							if (highestReact.count <= 1) {
 								message.channel.send("No votes were cast, so no movie has been chosen.");
+								
 								return callback();
 							}
 							

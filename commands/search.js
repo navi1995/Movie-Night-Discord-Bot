@@ -20,6 +20,7 @@ module.exports = {
 		} catch (e) {
 			console.error("Search.js", e);
 			message.channel.send("Something went wrong.");
+			
 			return callback();
 		}		
 	}		

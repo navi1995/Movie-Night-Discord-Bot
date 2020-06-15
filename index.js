@@ -10,40 +10,40 @@ const moment = require("moment");
 const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Discord.Client({
-    messageCacheMaxSize:1,
-    messageCacheLifetime:30,
-    messageSweepInterval:60,
-    disabledEvents: [
-	'GUILD_UPDATE'
-	,'GUILD_MEMBER_ADD'
-	,'GUILD_MEMBER_REMOVE'
-	,'GUILD_MEMBER_UPDATE'
-	,'GUILD_MEMBERS_CHUNK'
-	,'GUILD_ROLE_CREATE'
-	,'GUILD_ROLE_DELETE'
-	,'GUILD_ROLE_UPDATE'
-	,'GUILD_BAN_ADD'
-	,'GUILD_BAN_REMOVE'
-	,'GUILD_EMOJIS_UPDATE'
-	,'GUILD_INTEGRATIONS_UPDATE'
-	,'CHANNEL_CREATE'
-	,'CHANNEL_DELETE'
-	,'CHANNEL_UPDATE'
-	,'CHANNEL_PINS_UPDATE'
-	,'MESSAGE_CREATE'
-	,'MESSAGE_DELETE'
-	,'MESSAGE_UPDATE'
-	,'MESSAGE_DELETE_BULK'
-    ,'MESSAGE_REACTION_ADD'
-	,'MESSAGE_REACTION_REMOVE'
-	,'MESSAGE_REACTION_REMOVE_ALL'
-	,'USER_UPDATE'
-	,'PRESENCE_UPDATE'
-	,'TYPING_START'
-	,'VOICE_STATE_UPDATE'
-	,'VOICE_SERVER_UPDATE'
-    ,'WEBHOOKS_UPDATE'
-    ]
+	messageCacheMaxSize:1,
+	messageCacheLifetime:30,
+	messageSweepInterval:60,
+	disabledEvents: [
+		'GUILD_UPDATE'
+		,'GUILD_MEMBER_ADD'
+		,'GUILD_MEMBER_REMOVE'
+		,'GUILD_MEMBER_UPDATE'
+		,'GUILD_MEMBERS_CHUNK'
+		,'GUILD_ROLE_CREATE'
+		,'GUILD_ROLE_DELETE'
+		,'GUILD_ROLE_UPDATE'
+		,'GUILD_BAN_ADD'
+		,'GUILD_BAN_REMOVE'
+		,'GUILD_EMOJIS_UPDATE'
+		,'GUILD_INTEGRATIONS_UPDATE'
+		,'CHANNEL_CREATE'
+		,'CHANNEL_DELETE'
+		,'CHANNEL_UPDATE'
+		,'CHANNEL_PINS_UPDATE'
+		,'MESSAGE_CREATE'
+		,'MESSAGE_DELETE'
+		,'MESSAGE_UPDATE'
+		,'MESSAGE_DELETE_BULK'
+		,'MESSAGE_REACTION_ADD'
+		,'MESSAGE_REACTION_REMOVE'
+		,'MESSAGE_REACTION_REMOVE_ALL'
+		,'USER_UPDATE'
+		,'PRESENCE_UPDATE'
+		,'TYPING_START'
+		,'VOICE_STATE_UPDATE'
+		,'VOICE_SERVER_UPDATE'
+		,'WEBHOOKS_UPDATE'
+	]
 });
 const DBL = require("dblapi.js");
 const dbl = new DBL(topggAPI, client);
@@ -134,6 +134,8 @@ for (const file of commandFiles) {
 
 client.on("message", async function(message) {	
 	var guildID = message.guild ? message.guild.id : -1;
+
+	//Put in a check for all commands and aliases, if not apart of message dont continue
 
 	//Do not ask database for settings if we already have them stored, any updates to settings are handled within the settings modules.
 	if (message.guild && !guildSettings.has(message.guild.id)) {

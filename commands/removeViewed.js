@@ -27,6 +27,7 @@ module.exports = {
 			return main.movieModel.findOne(searchOptions, function(err, movie) {
 				if (err || !movie) {
 					message.channel.send("Movie could not be found!");
+					
 					return callback();
 				} else {
 					return movie.remove(function(err) {
@@ -42,6 +43,7 @@ module.exports = {
 			});
 		} else {
 			message.channel.send("Specify a movie or remove space.");
+
 			return callback();
 		}
 	},

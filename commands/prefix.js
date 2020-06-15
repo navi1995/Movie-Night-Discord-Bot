@@ -7,6 +7,7 @@ module.exports = {
 	async execute(message, args, main, callback) {
 		if (args.length > 1) {
 			message.channel.send("No spaces allowed in command prefix.");
+			
 			return callback();
 		} else {
 			return main.setting.updateOne({guildID: message.guild.id}, { "prefix":  args[0].trim()	}, function(err) {

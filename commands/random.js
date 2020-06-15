@@ -30,15 +30,18 @@ module.exports = {
 							});
 						} else {
 							message.channel.send(main.buildSingleMovieEmbed(docs[0]));
+
 							return callback();
 						}
 					} else {
 						message.channel.send("Your movie list is empty, so a random movie cannot be found.");
+
 						return callback();
 					}
 				});
 			} else {
 				message.channel.send("Something went wrong.");
+				
 				return callback();
 			}
 		});

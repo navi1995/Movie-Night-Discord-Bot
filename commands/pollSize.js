@@ -7,6 +7,7 @@ module.exports = {
 	async execute(message, args, main, callback) {
 		if (args.length > 1 || isNaN(Number(args[0]))) {
 			message.channel.send("Please only specify a number.");
+			
 			return callback();
 		} else {
 			var pollSize = Number(args[0]).toFixed(0);
@@ -23,6 +24,7 @@ module.exports = {
 				});
 			} else {
 				message.channel.send("Poll size must be atleast 1 and a maximum of 10");
+
 				return callback();
 			}
 		}

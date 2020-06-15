@@ -11,6 +11,7 @@ module.exports = {
 		return main.movieModel.findOne(searchOptions, function(err, movie) {
 			if (err || !movie) {
 				message.channel.send("Movie could not be found!");
+				
 				return callback();
 			} else {
 				movie.updateOne({ viewed: !movie.viewed, viewedDate: movie.viewed ? null : new Date() }, function(err) {

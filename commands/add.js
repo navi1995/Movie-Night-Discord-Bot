@@ -10,7 +10,7 @@ module.exports = {
 		var search = args.join(" ");
 
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set. 
-		if (settings.addMoviesRole && !message.member.roles.cache.has(settings.addMoviesRole)) {
+		if (settings.addMoviesRole && !message.member.roles.cache.has(settings.addMoviesRole) && !message.member.hasPermission("ADMINISTRATOR")) {
 			message.channel.send(`Movies can only be added by administrators or users with the role <@&${settings.addMoviesRole}>`);
 
 			return callback();
@@ -74,6 +74,7 @@ module.exports = {
 			});
 		} catch (e) {
 			console.error("Add.js", e);
+			
 			return message.channel.send("Something went wrong.");
 		}
 	}	
