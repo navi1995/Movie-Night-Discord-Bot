@@ -19,7 +19,7 @@ module.exports = {
 		message.channel.send(settings.pollMessage);
 
 		//2048 limit
-		return await main.movieModel.find(searchOptions, function (error, docs) {
+		await main.movieModel.find(searchOptions, function (error, docs) {
 			if (error) {
 				message.channel.send("Could not  return list of movies, an error occured.");
 
@@ -64,20 +64,20 @@ module.exports = {
 				if (i != embeddedMessages.length - 1) {
 					message.channel.send(embeddedMessage);
 				} else {
-					const filter = m => m;
 					var emojiMap = {};
 
 					message.channel.send(embeddedMessage).then(async (message) => {
-						const collector = message.createReactionCollector(filter, { time: settings.pollTime + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
+						var collector = message.createReactionCollector(m => m, { time: settings.pollTime + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 
 						console.log("Poll started" + message.guild.id);
 						collector.on("collect", (messageReact, user) => {
+							console.log("Collect");
 							if (user.id != main.client.user.id) {
-								const duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
+								var duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
 			
 								//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
 								//This block of code exists before the reactions are added to ensure as the bot adds reactions to the message, users are not able to duplicate votes during this time.
-								for (const reaction of duplicateReactions.values()) {
+								for (var reaction of duplicateReactions.values()) {
 									try {
 										reaction.users.remove(user.id);
 									} catch (e) {
@@ -98,7 +98,7 @@ module.exports = {
 							var highestValidReactions = m.filter(function(a) {
 								return emojiMap[a.emoji.name];
 							});
-							const highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0);
+							var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0);
 
 							if (!highestReact.emoji) {
 								message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
