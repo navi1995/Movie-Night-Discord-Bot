@@ -17,7 +17,7 @@ module.exports = {
 			//return to avoid hitting logic below.
 			return main.movieModel.find(searchOptions, function (error, movies) {
 				if (error) {
-					message.channel.send("Could not  return list of movies, an error occured.");
+					message.channel.send("Could not return list of movies, an error occured.");
 
 					return callback();
 				}
@@ -29,7 +29,7 @@ module.exports = {
 				} else if (movies && movies.length > 0) {
 					for (var movie of movies) {
 						var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
-						**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
+						**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
 
 						//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
 						if (description.length + stringConcat.length > 2048) {

@@ -12,7 +12,7 @@ const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./
 const client = new Discord.Client({
 	// messageCacheMaxSize:1,
 	// messageCacheLifetime:30,
-	messageSweepInterval:60,
+	//messageSweepInterval:60,
 	disabledEvents: [
 		'GUILD_UPDATE'
 		,'GUILD_MEMBER_ADD'

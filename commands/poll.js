@@ -38,7 +38,7 @@ module.exports = {
 
 				for (var movie of movies) {
 					var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
-					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
+					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
 
 					//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
 					if (description.length + stringConcat.length > 2048) {
@@ -100,6 +100,7 @@ module.exports = {
 							});
 							var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0);
 
+							console.log(highestReact);
 							if (!highestReact.emoji) {
 								message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
 
