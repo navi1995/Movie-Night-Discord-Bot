@@ -10,8 +10,8 @@ const moment = require("moment");
 const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Discord.Client({
-	messageCacheMaxSize:1,
-	messageCacheLifetime:30,
+	// messageCacheMaxSize:1,
+	// messageCacheLifetime:30,
 	messageSweepInterval:60,
 	disabledEvents: [
 		'GUILD_UPDATE'
