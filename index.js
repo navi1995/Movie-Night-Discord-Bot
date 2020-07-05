@@ -10,9 +10,9 @@ const moment = require("moment");
 const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Discord.Client({
-	// messageCacheMaxSize:1,
-	// messageCacheLifetime:30,
-	//messageSweepInterval:60,
+	messageCacheMaxSize: 50,
+	messageCacheLifetime: 12000 ,
+	messageSweepInterval: 60,
 	disabledEvents: [
 		'GUILD_UPDATE'
 		,'GUILD_MEMBER_ADD'
@@ -370,3 +370,4 @@ main.setting = setting;
 main.guildSettings = guildSettings;
 main.getRandomFromArray = getRandomFromArray;
 main.client = client;
+main.maxPollTime = 10800;
