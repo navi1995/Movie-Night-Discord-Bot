@@ -16,7 +16,7 @@ module.exports = {
 		var movieEmbed = new MessageEmbed().setTitle("Poll has begun!").setColor("#6441a3");
 		var movieMap = {};
 
-		message.channel.send(settings.pollTime >= 10800 ? settings.pollMessage + "\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO TWO HOURS DUE TO A TECHNICAL ISSUE. THIS WILL BE FIXED SOON)" : settings.pollMessage);
+		message.channel.send(settings.pollTime >= 10800*1000 ? settings.pollMessage + "\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO TWO HOURS DUE TO A TECHNICAL ISSUE. THIS WILL BE FIXED SOON)" : settings.pollMessage);
 
 		//2048 limit
 		await main.movieModel.find(searchOptions, function (error, docs) {
@@ -67,7 +67,7 @@ module.exports = {
 					var emojiMap = {};
 
 					message.channel.send(embeddedMessage).then(async (message) => {
-						var collector = message.createReactionCollector(m => m, { time: (settings.pollTime >= 10800 ? 10800 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
+						var collector = message.createReactionCollector(m => m, { time: (settings.pollTime >= 10800*1000 ? 10800*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 
 						console.log("Poll started" + message.guild.id);
 						collector.on("collect", (messageReact, user) => {

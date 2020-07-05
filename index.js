@@ -11,7 +11,7 @@ const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Discord.Client({
 	messageCacheMaxSize: 50,
-	messageCacheLifetime: 12000 ,
+	messageCacheLifetime: 12000*1000 ,
 	messageSweepInterval: 60,
 	disabledEvents: [
 		'GUILD_UPDATE'
