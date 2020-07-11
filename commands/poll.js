@@ -98,10 +98,12 @@ module.exports = {
 							var highestValidReactions = m.filter(function(a) {
 								return emojiMap[a.emoji.name];
 							});
-							var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0);
+							var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c);
 
-							console.log(highestReact);
 							if (!highestReact.emoji) {
+								console.log(highestReact);
+								console.log(highestValidReactions);
+								console.log(highestReact.emoji);
 								message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
 
 								return callback();
