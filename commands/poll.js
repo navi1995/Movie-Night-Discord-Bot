@@ -101,6 +101,7 @@ module.exports = {
 							var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0);
 
 							if (!highestReact._emoji) {
+								console.log(m);
 								console.log(highestReact);
 								console.log(highestValidReactions);
 								console.log(highestReact._emoji);
