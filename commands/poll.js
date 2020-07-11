@@ -96,20 +96,20 @@ module.exports = {
 							console.log("Poll end" + message.guild.id);
 							//Check for ties in future version.
 							var highestValidReactions = m.filter(function(a) {
-								return emojiMap[a.emoji.name];
+								return emojiMap[a._emoji.name] > 0;
 							});
-							var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c);
+							var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0);
 
-							if (!highestReact.emoji) {
+							if (!highestReact._emoji) {
 								console.log(highestReact);
 								console.log(highestValidReactions);
-								console.log(highestReact.emoji);
+								console.log(highestReact._emoji);
 								message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
 
 								return callback();
 							}
 
-							var winner = movieMap[emojiMap[highestReact.emoji.name]];
+							var winner = movieMap[emojiMap[highestReact._emoji.name]];
 
 							if (highestReact.count <= 1) {
 								message.channel.send("No votes were cast, so no movie has been chosen.");
