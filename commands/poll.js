@@ -94,47 +94,53 @@ module.exports = {
 				
 						collector.on("end", m => {
 							console.log("Poll end" + message.guild.id);
-							//Check for ties in future version.
-							var highestValidReactions = m.filter(function(a) {
-								return emojiMap[a._emoji.name] > 0;
-							});
-							var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0);
+							message.fetch().then(function(updatedMessage) {
+								var reactionsCache = updatedMessage.reactions.cache;
 
-							if (!highestReact._emoji) {
-								console.log(m);
-								console.log(highestReact);
-								console.log(highestValidReactions);
-								console.log(highestReact._emoji);
-								message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
-
-								return callback();
-							}
-
-							var winner = movieMap[emojiMap[highestReact._emoji.name]];
-
-							if (highestReact.count <= 1) {
-								message.channel.send("No votes were cast, so no movie has been chosen.");
-								
-								return callback();
-							}
-							
-							//If auto viewed is set, update movie to be entered into the VIEWED list. 
-							if (settings.autoViewed) {
-								main.movieModel.updateOne({ guildID: message.guild.id, movieID: winner.movieID }, { viewed: true, viewedDate: new Date() }, function(err) {
-									if (!err) {
-										winner.viewed = true; winner.viewedDate = new Date();
-										message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
-									} else {
-										message.channel.send("Something went wrong, could not get winner. Try removing auto-view setting.");
-									}
-
-									return callback();
+								var highestValidReactions = reactionsCache.filter(function(a) {
+									return emojiMap[a._emoji.name] > 0;
 								});
-							} else {
-								message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
-
-								return callback();
-							}
+								var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0) || message.reactions.reduce((p, c) => p.count > c.count ? p : c, 0);
+								// console.log(m.length);
+								// console.log(message.reactions);
+	
+								if (!highestReact._emoji) {
+									console.error("Could not collect reactions");
+									console.error(emojiMap);
+									console.error(highestReact);
+									console.error(highestValidReactions);
+									console.error(highestReact._emoji);
+									message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
+	
+									return callback();
+								}
+	
+								var winner = movieMap[emojiMap[highestReact._emoji.name]];
+	
+								if (highestReact.count <= 1) {
+									message.channel.send("No votes were cast, so no movie has been chosen.");
+									
+									return callback();
+								}
+								
+								//If auto viewed is set, update movie to be entered into the VIEWED list. 
+								if (settings.autoViewed) {
+									main.movieModel.updateOne({ guildID: message.guild.id, movieID: winner.movieID }, { viewed: true, viewedDate: new Date() }, function(err) {
+										if (!err) {
+											winner.viewed = true; winner.viewedDate = new Date();
+											message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
+										} else {
+											message.channel.send("Something went wrong, could not get winner. Try removing auto-view setting.");
+										}
+	
+										return callback();
+									});
+								} else {
+									message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
+	
+									return callback();
+								}								
+							});
 						});
 					});
 				}
