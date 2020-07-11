@@ -2,10 +2,13 @@ module.exports = {
 	name: "pollsize",
 	description: "Updates poll size to chosen number (Max 10).",
 	usage: "[number of movies to show in poll]",
-	args: true,
 	admin: true,
-	async execute(message, args, main, callback) {
-		if (args.length > 1 || isNaN(Number(args[0]))) {
+	async execute(message, args, main, callback, settings) {
+		if (!args.length) {
+			message.channel.send(`Poll size is currently set to: ${settings.pollSize}`);
+
+			return callback();
+		} else if (args.length > 1 || isNaN(Number(args[0]))) {
 			message.channel.send("Please only specify a number.");
 			
 			return callback();

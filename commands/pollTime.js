@@ -2,10 +2,13 @@ module.exports = {
 	name: "polltime",
 	description: "Updates poll time to chosen number.",
 	usage: "[time chosen (in seconds)]",
-	args: true,
 	admin: true,
-	async execute(message, args, main, callback) {
-		if (args.length > 1 || isNaN(Number(args[0]))) {
+	async execute(message, args, main, callback, settings) {
+		if (!args.length) {
+			message.channel.send(`Poll time is currently set to: ${settings.pollTime/1000} seconds`);
+
+			return callback();
+		} else if (args.length > 1 || isNaN(Number(args[0]))) {
 			message.channel.send("Please only specify a number.");
 			
 			return callback();

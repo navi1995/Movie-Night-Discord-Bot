@@ -2,11 +2,10 @@ module.exports = {
 	name: "autoview",
 	description: "Turns on or off auto view after poll is complete (Hides movie from future polls).",
 	usage: "[on or off]",
-	args: true,
 	admin: true,
-	async execute(message, args, main, callback) {
-		if (args.length > 1 || (args[0].toLowerCase() != "on" && args[0].toLowerCase() != "off")) {
-			message.channel.send("Please only specify on or off.");
+	async execute(message, args, main, callback, settings) {
+		if ((args.length > 1 || !args.length) || (args[0].toLowerCase() != "on" && args[0].toLowerCase() != "off")) {
+			message.channel.send(`Please only specify on or off. Currently setting is: ${settings.autoViewed ? 'on' : 'off'}`);
 
 			return callback();
 		} else {

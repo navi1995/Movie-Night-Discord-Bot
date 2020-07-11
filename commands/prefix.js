@@ -2,10 +2,13 @@ module.exports = {
 	name: "prefix",
 	description: "Updates prefix to chosen string.",
 	usage: "[prefix chosen]",
-	args: true,
 	admin: true,
-	async execute(message, args, main, callback) {
-		if (args.length > 1) {
+	async execute(message, args, main, callback, settings) {
+		if (!args.length) {
+			message.channel.send(`Prefix is currently set to: ${settings.prefix}`);
+
+			return callback();
+		} else if (args.length > 1) {
 			message.channel.send("No spaces allowed in command prefix.");
 			
 			return callback();
