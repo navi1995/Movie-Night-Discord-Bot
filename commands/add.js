@@ -7,7 +7,7 @@ module.exports = {
 	usage: "[movie name or search]",
 	args: true,
 	async execute(message, args, main, callback, settings) {
-		var search = args.join(" ");
+		const search = args.join(" ");
 
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set. 
 		if (settings.addMoviesRole && !message.member.roles.cache.has(settings.addMoviesRole) && !message.member.hasPermission("ADMINISTRATOR")) {
@@ -18,7 +18,6 @@ module.exports = {
 
 		//Continue with normal search if the above doesnt return.
 		try {
-			//await 
 			return main.searchNewMovie(search, message, function(newMovie, data) {
 				//No need for else, searchNewMovie alerts user if no movie found.
 				if (newMovie) {
@@ -38,7 +37,8 @@ module.exports = {
 									const filter = (reaction, user) => { return (reaction.emoji.name == emojis.yes || reaction.emoji.name == emojis.no) && user.id == message.author.id; };
 
 									await embedMessage.react(emojis.yes);
-									await embedMessage.react(emojis.no);								
+									await embedMessage.react(emojis.no);
+									//Wait for user to confirm if movie presented to them is what they wish to be added to the list or not.								
 									embedMessage.awaitReactions(filter, { max: 1, time: 15000, errors: ["time"] }).then(function(collected) {
 										const reaction = collected.first();
 
@@ -58,9 +58,7 @@ module.exports = {
 									});
 								});
 							} else {
-								const movieEmbed = main.buildSingleMovieEmbed(newMovie, "Movie Added!");
-
-								message.channel.send(movieEmbed);
+								message.channel.send(main.buildSingleMovieEmbed(newMovie, "Movie Added!"));
 
 								return callback();
 							}

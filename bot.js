@@ -10,8 +10,8 @@ const moment = require("moment");
 const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Discord.Client({
-	messageCacheMaxSize: 200,
-	messageCacheLifetime: 7300, //seconds
+	messageCacheMaxSize: 100,
+	messageCacheLifetime: 7300, //Maximum poll time = 7200, ensure message not swept.
 	messageSweepInterval: 600,
 	disabledEvents: [
 		'GUILD_UPDATE'
@@ -85,6 +85,7 @@ if (!testing) {
 }
 
 client.commands = new Discord.Collection();
+client.commandsArray = [];
 mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
 
 function setMessage() {
@@ -95,7 +96,6 @@ client.once("ready", () => {
 	//Every hour update activity to avoid getting it cleared.
 	setMessage();
 	setInterval(setMessage, 1000 * 60 * 60 );
-
 	console.log("Ready!");
 });
 
@@ -111,6 +111,7 @@ client.on("guildCreate", async function(guild) {
 });
 
 client.on("guildDelete", function(guild) {
+	//Whenever the bot is removed from a guild, we remove all related data.
 	movieModel.deleteMany({ guildID: guild.id }, handleError);
 	setting.deleteMany({ guildID: guild.id }, handleError);
 });
@@ -120,19 +121,29 @@ for (const file of commandFiles) {
 	const command = require(`./commands/${file}`);
 
 	client.commands.set(command.name, command);
+	client.commandsArray.push(command.name);
+
+	//We don't really care about duplicates, merge alias' into commands array
+	if (command.aliases) {
+		Array.prototype.push.apply(client.commandsArray, command.aliases);
+	}
 }
 
 client.on("message", async function(message) {	
 	var guildID = message.guild ? message.guild.id : -1;
 
 	//Put in a check for all commands and aliases, if not apart of message dont continue
+	if (!client.commandsArray.some(commandText=>message.content.includes(commandText))) {
+		return;
+	}
 
 	//Do not ask database for settings if we already have them stored, any updates to settings are handled within the settings modules.
+	//Currently in commands and callbacks we clear out guildSettings to avoid memory leaks with discord.js memory caching.
 	if (message.guild && !guildSettings.has(message.guild.id)) {
 		await getSettings(message.guild.id).then(function(settings) {
 			if (!settings) {
 				//If no settings exist (during downtime of bot) we instantiate some settings before processing command.
-				new setting({guildID: guildID}).save(function(err, setting) {
+				new setting({ guildID: guildID }).save(function(err, setting) {
 					if (err) {
 						console.error("Guild create", err);
 					} else {
@@ -360,4 +371,4 @@ main.setting = setting;
 main.guildSettings = guildSettings;
 main.getRandomFromArray = getRandomFromArray;
 main.client = client;
-main.maxPollTime = 10800;
+main.maxPollTime = 7200;

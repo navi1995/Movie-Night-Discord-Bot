@@ -8,7 +8,6 @@ module.exports = {
 		var search = args.join(" ");
 
 		try {
-			//await 
 			return main.searchNewMovie(search, message, function(newMovie) {
 				//No need for else, searchNewMovie alerts user if no movie found.
 				if (newMovie) {

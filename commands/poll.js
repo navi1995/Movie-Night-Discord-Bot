@@ -16,7 +16,7 @@ module.exports = {
 		var movieEmbed = new MessageEmbed().setTitle("Poll has begun!").setColor("#6441a3");
 		var movieMap = {};
 
-		message.channel.send(settings.pollTime >= 7200*1000 ? settings.pollMessage + "\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO TWO HOURS DUE TO A TECHNICAL ISSUE. THIS WILL BE FIXED SOON)" : settings.pollMessage);
+		message.channel.send(settings.pollTime >= main.maxPollTime*1000 ? settings.pollMessage + "\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO TWO HOURS DUE TO A TECHNICAL ISSUE. THIS WILL BE FIXED SOON)" : settings.pollMessage);
 
 		//2048 limit
 		await main.movieModel.find(searchOptions, function (error, docs) {
@@ -67,7 +67,7 @@ module.exports = {
 					var emojiMap = {};
 
 					message.channel.send(embeddedMessage).then(async (message) => {
-						var collector = message.createReactionCollector(m => m, { time: (settings.pollTime >= 7200*1000 ? 7200*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
+						var collector = message.createReactionCollector(m => m, { time: (settings.pollTime >= main.maxPollTime*1000 ? main.maxPollTime*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 
 						console.log("Poll started" + message.guild.id);
 						collector.on("collect", (messageReact, user) => {
@@ -92,17 +92,15 @@ module.exports = {
 							await message.react(emojis[i]);
 						}
 				
-						collector.on("end", m => {
+						collector.on("end", () => {
 							console.log("Poll end" + message.guild.id);
+							//Refetch message due to discord.js caching.
 							message.fetch().then(function(updatedMessage) {
-								var reactionsCache = updatedMessage.reactions.cache;
-
-								var highestValidReactions = reactionsCache.filter(function(a) {
+								const reactionsCache = updatedMessage.reactions.cache;
+								const highestValidReactions = reactionsCache.filter(function(a) {
 									return emojiMap[a._emoji.name] > 0;
 								});
-								var highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0) || message.reactions.reduce((p, c) => p.count > c.count ? p : c, 0);
-								// console.log(m.length);
-								// console.log(message.reactions);
+								const highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0) || message.reactions.reduce((p, c) => p.count > c.count ? p : c, 0);
 	
 								if (!highestReact._emoji) {
 									console.error("Could not collect reactions");

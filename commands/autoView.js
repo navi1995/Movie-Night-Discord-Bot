@@ -9,7 +9,7 @@ module.exports = {
 
 			return callback();
 		} else {
-			var autoView = args[0].toLowerCase() == "on";
+			const autoView = args[0].toLowerCase() == "on";
 
 			return main.setting.updateOne({ guildID: message.guild.id }, { "autoViewed": autoView }, function(err) {
 				if (!err) {

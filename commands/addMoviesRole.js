@@ -14,7 +14,7 @@ module.exports = {
 
 			return callback();
 		} else {
-			var addMoviesRole = args[0] == "clear" ? null : message.mentions.roles.first().id;
+			const addMoviesRole = args[0] == "clear" ? null : message.mentions.roles.first().id;
 
 			//Update the settings with the role user provided, or clear it and set to NULL.
 			return main.setting.updateOne({ guildID: message.guild.id }, { "addMoviesRole": addMoviesRole }, function(err) {
