@@ -88,8 +88,14 @@ module.exports = {
 						});
 
 						for (var i = 1; i <= totalCount; i++) {
-							emojiMap[emojis[i]] = i;
-							await message.react(emojis[i]);
+							try {
+								await message.react(emojis[i]);
+								emojiMap[emojis[i]] = i;
+							} catch (e) {
+								console.log("Poll message deleted");
+								collector.stop();
+							}
+
 						}
 				
 						collector.on("end", () => {
@@ -98,22 +104,29 @@ module.exports = {
 							message.fetch().then(function(updatedMessage) {
 								const reactionsCache = updatedMessage.reactions.cache;
 								const highestValidReactions = reactionsCache.filter(function(a) {
-									return emojiMap[a._emoji.name] > 0;
+									return emojiMap[a.emoji.name] > 0;
 								});
+
+								if (highestValidReactions.size == 0) {
+									message.channel.send("Reactions may have been removed or another error occurred.");
+
+									return callback();
+								}
+
 								const highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0) || message.reactions.reduce((p, c) => p.count > c.count ? p : c, 0);
 	
-								if (!highestReact._emoji) {
+								if (!highestReact.emoji) {
 									console.error("Could not collect reactions");
 									console.error(emojiMap);
 									console.error(highestReact);
 									console.error(highestValidReactions);
-									console.error(highestReact._emoji);
+									console.error(highestReact.emoji);
 									message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
 	
 									return callback();
 								}
 	
-								var winner = movieMap[emojiMap[highestReact._emoji.name]];
+								var winner = movieMap[emojiMap[highestReact.emoji.name]];
 	
 								if (highestReact.count <= 1) {
 									message.channel.send("No votes were cast, so no movie has been chosen.");
@@ -138,6 +151,8 @@ module.exports = {
 	
 									return callback();
 								}								
+							}).catch(function() {
+								console.log("Poll was deleted.");
 							});
 						});
 					});

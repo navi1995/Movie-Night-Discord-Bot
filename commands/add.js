@@ -36,8 +36,15 @@ module.exports = {
 								message.channel.send(movieEmbed).then(async (embedMessage) => {
 									const filter = (reaction, user) => { return (reaction.emoji.name == emojis.yes || reaction.emoji.name == emojis.no) && user.id == message.author.id; };
 
-									await embedMessage.react(emojis.yes);
-									await embedMessage.react(emojis.no);
+									try {
+										await embedMessage.react(emojis.yes);
+										await embedMessage.react(emojis.no);
+									} catch (e) {
+										console.log("Message deleted");
+
+										return removeMovie(newMovie, callback);
+									}
+									
 									//Wait for user to confirm if movie presented to them is what they wish to be added to the list or not.								
 									embedMessage.awaitReactions(filter, { max: 1, time: 15000, errors: ["time"] }).then(function(collected) {
 										const reaction = collected.first();
