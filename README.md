@@ -9,9 +9,9 @@ The Movie DB API is used to gather any relevant data to movies throughout the ap
 Create a config.json file in the root directory
 ```json
 {
-  "prefix": "set to whichever prefix you wish the bot to use."
-  "token": "set to your discord bot API token"
-  "movieDbAPI": "set to your API token from developers.themoviedb.org (Required to get movie data when requested by user)"
+  "prefix": "set to whichever prefix you wish the bot to use.",
+  "token": "set to your discord bot API token",
+  "movieDbAPI": "set to your API token from developers.themoviedb.org (Required to get movie data when requested by user)",
   "mongoLogin": "set to your connection string for any MongoDB collection (Check Mongoose for more information)"
 }
 ```
