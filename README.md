@@ -1,16 +1,20 @@
 # Movie Night Bot for Discord
 This is a Discord Bot written in Node.JS using Discord.JS library to interface with the Discord API. 
+
 MongoDB connection is required to store and retrieve settings as well as film details. The schema is available within bot.js
+
 The Movie DB API is used to gather any relevant data to movies throughout the application.
 
 ## Setup
 Create a config.json file in the root directory
+```json
 {
-  "prefix": set to whichever prefix you wish the bot to use.
-  "token": set to your discord bot API token
-  "movieDbAPI": set to your API token from https://developers.themoviedb.org/ (Required to get movie data when requested by user)
-  "mongoLogin": set to your connection string for any MongoDB collection (Check Mongoose for more information)
+  "prefix": "set to whichever prefix you wish the bot to use."
+  "token": "set to your discord bot API token"
+  "movieDbAPI": "set to your API token from developers.themoviedb.org (Required to get movie data when requested by user)"
+  "mongoLogin": "set to your connection string for any MongoDB collection (Check Mongoose for more information)"
 }
+```
 
 I would reccomend removing dblapi.js and references to topggAPI/testing from bot.js as this is simply to post statistics to a third party website.
 
