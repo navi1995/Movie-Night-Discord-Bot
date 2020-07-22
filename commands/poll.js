@@ -37,7 +37,7 @@ module.exports = {
 				totalCount = movies.length;
 
 				for (var movie of movies) {
-					var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
+					var stringConcat = `**[${emojis[number]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
 					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
 
 					//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
@@ -67,12 +67,13 @@ module.exports = {
 					var emojiMap = {};
 
 					message.channel.send(embeddedMessage).then(async (message) => {
+						//Polltime is stored in ms
 						var collector = message.createReactionCollector(m => m, { time: (settings.pollTime >= main.maxPollTime*1000 ? main.maxPollTime*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 
 						console.log("Poll started" + message.guild.id);
 						collector.on("collect", (messageReact, user) => {
-							console.log("Collect");
 							if (user.id != main.client.user.id) {
+								console.log("Collect");
 								var duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
 			
 								//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
