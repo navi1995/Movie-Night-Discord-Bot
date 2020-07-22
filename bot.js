@@ -10,7 +10,7 @@ const moment = require("moment");
 const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Discord.Client({
-	messageCacheMaxSize: 100,
+	messageCacheMaxSize: 70,
 	messageCacheLifetime: 7300, //Maximum poll time = 7200, ensure message not swept.
 	messageSweepInterval: 600,
 	disabledEvents: [
