@@ -227,7 +227,7 @@ client.on("message", async function(message) {
 
 	//Send message, arguments and additional functions/variables required to the command.
 	try {
-		console.log(command.name);
+		console.log(command.name + " " + new Date());
 		await command.execute(message, args, main, function() {
 			guildSettings.delete(message.guild.id);	
 		}, settings);
