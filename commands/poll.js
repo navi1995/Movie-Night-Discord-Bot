@@ -93,7 +93,7 @@ module.exports = {
 								await message.react(emojis[i]);
 								emojiMap[emojis[i]] = i;
 							} catch (e) {
-								console.log("Poll message deleted");
+								console.log("Poll message deleted" + " " + new Date() );
 								collector.stop();
 							}
 
