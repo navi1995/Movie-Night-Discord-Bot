@@ -70,10 +70,10 @@ module.exports = {
 						//Polltime is stored in ms
 						var collector = message.createReactionCollector(m => m, { time: (settings.pollTime >= main.maxPollTime*1000 ? main.maxPollTime*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 
-						console.log("Poll started" + message.guild.id);
+						console.log("Poll started. GuildID: " + message.guild.id  + " " + new Date());
 						collector.on("collect", (messageReact, user) => {
 							if (user.id != main.client.user.id) {
-								console.log("Collect");
+								console.log("Collect" + " " + new Date());
 								var duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
 			
 								//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
@@ -100,7 +100,7 @@ module.exports = {
 						}
 				
 						collector.on("end", () => {
-							console.log("Poll end" + message.guild.id);
+							console.log("Poll end.  GuildID: " + message.guild.id + " " + new Date());
 							//Refetch message due to discord.js caching.
 							message.fetch().then(function(updatedMessage) {
 								const reactionsCache = updatedMessage.reactions.cache;
