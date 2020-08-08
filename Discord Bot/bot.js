@@ -130,6 +130,8 @@ for (const file of commandFiles) {
 }
 
 client.on("message", async function(message) {	
+	if (message.author.bot) return;
+
 	var guildID = message.guild ? message.guild.id : -1;
 
 	//Put in a check for all commands and aliases, if not apart of message dont continue
