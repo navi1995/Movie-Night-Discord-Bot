@@ -1,0 +1,105 @@
+$fluid-padding: 25%;
+$fluid-padding-lg: 15%;
+
+body {
+	padding-bottom: 100px;
+}
+
+.App {
+	text-align: center;
+}
+
+.Box-Shadow {
+	box-shadow: 0px 4px 10px 2px rgba(74, 74, 74, 0.3);
+	border-radius: 0;
+
+	.card {
+		border-radius: 0;
+	}
+}
+
+.jumbotron {
+	border-radius: 0;
+}
+
+.image-shadow {
+	box-shadow: 15px 25px 0px 3px #03a9f4;
+}
+
+.info-panel:nth-child(odd) {
+	background-color: rgb(245, 250, 253);
+}
+
+.card-title {
+	text-transform: uppercase;
+}
+
+.card-text {
+	font-weight: 400;
+	color: rgb(153, 153, 153); 
+}
+
+.col {
+		vertical-align: middle;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.header-sub {
+	font-weight: 300;
+	font-size: 1.25em;
+	line-height: 1.5;
+	color: rgb(102, 102, 102);
+}
+
+.btn-primary {
+	background-color: #03a9f4;
+	border-color: #03a9f4;
+}
+
+.btn-outline-primary {
+	border-color: #03a9f4;
+	color: #03a9f4;
+}
+
+.btn-outline-primary:hover {
+	border-color: #03a9f4;
+	color: #fff;
+	background-color: #03a9f4;
+}
+
+//Need media queries to adjust, to ensure we dont use % padding for small sizes.
+@media (min-width: 1200px) {
+	nav:has(.container-fluid) {
+		padding-left: $fluid-padding;
+		padding-right: $fluid-padding;
+	}
+	.container-fluid {
+		.card-group {
+			margin-left: $fluid-padding;
+			margin-right: $fluid-padding;
+		}
+		
+		.info-panel {
+			padding-left: $fluid-padding;
+			padding-right: $fluid-padding;
+		}
+	}
+}
+@media (min-width: 992px) {
+	nav:has(.container-fluid) {
+		padding-left: $fluid-padding-lg;
+		padding-right: $fluid-padding-lg;
+	}
+	.container-fluid {
+		.card-group {
+			margin-left: $fluid-padding-lg;
+			margin-right: $fluid-padding-lg;
+		}
+		
+		.info-panel {
+			padding-left: $fluid-padding-lg;
+			padding-right: $fluid-padding-lg;
+		}
+	}
+}
