@@ -9,12 +9,53 @@ body {
 	text-align: center;
 }
 
+.feature-image {
+	text-align: center;
+}
+
+.jumbotron {
+	background: url(/images/collage.jpg) repeat-y;
+	background-blend-mode: overlay;
+	animation: slide 60s linear infinite;
+	box-shadow: inset 0 0 0 1000px rgba(44,41,41,0.8);
+	min-height: 600px;
+	background-position: center;
+}
+
+@keyframes slide {
+	0%{
+		background-position-y: 0px
+	}
+	100%{
+		background-position-y: 1979px;
+	}
+}
 .Box-Shadow {
 	box-shadow: 0px 4px 10px 2px rgba(74, 74, 74, 0.3);
 	border-radius: 0;
 
 	.card {
 		border-radius: 0;
+		color: rgb(51, 51, 51);
+
+		* {
+			margin: 5px;
+		}
+	}
+
+	.card-title {
+		text-transform: uppercase;
+		min-height: 48px;
+		vertical-align: middle;
+		display: flex;
+		justify-content: center;
+		align-content: center;
+		flex-direction: column;
+	}
+	
+	.card-text {
+		font-weight: 400;
+		color: rgb(153, 153, 153); 
 	}
 }
 
@@ -22,27 +63,48 @@ body {
 	border-radius: 0;
 }
 
-.image-shadow {
-	box-shadow: 15px 25px 0px 3px #03a9f4;
+
+.info-panel:nth-child(even) {
+	.image-shadow {
+		box-shadow: 15px 25px 0px 3px #03a9f4;
+	}
 }
 
 .info-panel:nth-child(odd) {
 	background-color: rgb(245, 250, 253);
+
+	.image-shadow {
+		box-shadow: -15px 25px 0px 3px #03a9f4;
+	}
 }
 
-.card-title {
-	text-transform: uppercase;
+.info-panel {
+	padding-top: 40px;
+	padding-bottom: 40px;
+
+	.feature-card, * {
+		margin-bottom: 5px;
+		margin-top: 5px;
+	}
 }
 
-.card-text {
-	font-weight: 400;
-	color: rgb(153, 153, 153); 
+.flex-col {
+	vertical-align: middle!important;
+	margin-top: auto;
+	margin-bottom: auto;
+	display: flex!important;
+	flex-direction: column;
+	margin-left: 20px;
 }
 
-.col {
-		vertical-align: middle;
-    margin-top: auto;
-    margin-bottom: auto;
+h5 {
+	//All p tags after h5
+	&+p {
+		font-weight: 400;
+		font-size: 16px;
+		line-height: 1.6;
+		color: rgb(153, 153, 153);
+	}
 }
 
 .header-sub {
@@ -86,6 +148,22 @@ body {
 		}
 	}
 }
+
+h3 {
+		font-weight: 300;
+		font-size: 2.25em;
+		line-height: 1.25;
+		color: rgb(51, 51, 51);
+}
+
+h5 {
+		font-weight: 600;
+		font-size: 1.125em;
+		line-height: 1.55;
+		color: rgb(51, 51, 51);
+		text-transform: uppercase;
+}
+
 @media (min-width: 992px) {
 	nav:has(.container-fluid) {
 		padding-left: $fluid-padding-lg;
