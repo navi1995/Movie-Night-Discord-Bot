@@ -5,6 +5,7 @@ const passport = require('passport');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const session = require('express-session');
+const cors = require('cors')
 const Store = require('connect-mongo')(session);
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -25,6 +26,10 @@ app.use(session({
 	resave: false,
 	saveUninitialized: false,
 	store: new Store({ mongooseConnection: mongoose.connection })
+}));
+app.use(cors({
+	origin: ['http://localhost:3000'],
+	credentials: true
 }));
 app.use(passport.initialize());
 app.use(passport.session());
