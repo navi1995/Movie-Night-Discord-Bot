@@ -1,9 +1,10 @@
 import React from 'react';
-import { Image, CardGroup, Card, Button, Row, Col, Container, Jumbotron, Navbar, Nav } from 'react-bootstrap';
+import { Image, CardGroup, Card, Button, Row, Col, Container, Jumbotron } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faList, faListOl, faRandom,  faCog, faCheckSquare, faPaintBrush, faBullhorn, faEye, faTrophy, faBrush } from '@fortawesome/free-solid-svg-icons'
+import { faList, faListOl, faRandom,  faCog, faCheckSquare, faBullhorn, faEye, faTrophy, faBrush } from '@fortawesome/free-solid-svg-icons'
 import { faThumbsUp } from '@fortawesome/free-regular-svg-icons';
 import { faImdb, faDiscord } from '@fortawesome/free-brands-svg-icons';
+// import { NavbarComponent } from '../../components/navbar';
 
 export function Homepage(props) {
 	const login = function() {
@@ -12,34 +13,7 @@ export function Homepage(props) {
 
 	return (
 		<div>
-			<Navbar style={{ backgroundColor: "rgb(44, 41, 41)" }} variant="dark">
-				<Container>
-					<Navbar.Brand>
-						<img
-							src="/images/logo.png"
-							width="70"
-							height="70"
-							className="d-inline-block align-top"
-						/>
-					</Navbar.Brand>
-					<Nav activeKey="link-1" className="justify-content-end ml-auto">
-						<Nav.Item>
-							<Nav.Link eventKey="link-1">Home</Nav.Link>
-						</Nav.Item>
-						<Nav.Item>
-							<Nav.Link eventKey="link-2">Commands</Nav.Link>
-						</Nav.Item>
-						<Nav.Item>
-							<Nav.Link eventKey="link-3">Contact</Nav.Link>
-						</Nav.Item>
-						<Nav.Item>
-							<Button onClick={login} variant="outline-primary">
-								LOGIN WITH <FontAwesomeIcon icon={faDiscord} />
-							</Button>
-						</Nav.Item>
-					</Nav>
-				</Container>
-			</Navbar>
+			{/* <NavbarComponent /> */}
 			<Jumbotron style={{ backgroundColor: "rgb(44, 41, 41)", color: "white", marginBottom: "-30px", paddingBottom: "100px" }} className="text-center">
 				<h1 className="display-1">
 					Movie Night Bot <br />

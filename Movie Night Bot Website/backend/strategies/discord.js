@@ -30,19 +30,12 @@ passport.use(
 				discordTag: `${username}#${discriminator}`,
 				avatar,
 				guilds
-			}, { new: true });
+			}, { upsert: true, new: true });
 
 			if (foundUser) {
 				return done(null, foundUser);
 			} else {
-				const newUser = await User.create({
-					discordID: id,
-					discordTag: `${username}#${discriminator}`,
-					avatar,
-					guilds
-				});
-
-				return done(null, newUser);
+				throw "Something went wrong."; 
 			}
 		} catch (error) {
 			return done(error, null);

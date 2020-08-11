@@ -181,3 +181,54 @@ h5 {
 		}
 	}
 }
+
+.dashboard-page {
+	.card {
+		margin-top: 10px;
+		margin-bottom: 10px;
+		margin-right: 25px;
+		margin-left: 25px;
+	}
+
+	.default-image {
+		object-fit: contain;
+		border-bottom: 1px solid rgba(0,0,0,.125);
+	}
+}
+
+.nav-item {
+	.rounded-circle {
+		height: 28px;
+		margin-right: .5rem;
+	}
+}
+
+.dropdown-avatar {
+	display: inline;
+}
+
+.error-message {
+	h1 {
+		color: #fff;
+	}
+}
+
+.flex {
+	display: flex;
+}
+
+.page-loader {
+	position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 250px;
+    height: 250px;
+    margin-left: -125px;
+    margin-top: -125px;
+}
+
+.loading-text {
+	position: absolute;
+    top: calc(50% - 25px);
+    text-align: center;
+}
