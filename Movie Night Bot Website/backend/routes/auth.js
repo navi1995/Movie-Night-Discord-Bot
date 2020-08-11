@@ -4,7 +4,7 @@ const passport = require('passport');
 router.get('/discord', passport.authenticate('discord'));
 
 router.get('/discord/redirect', passport.authenticate('discord'), (request, response) => {
-	response.redirect('http://localhost:3000/dashboard')
+	response.redirect('http://localhost:3000/menu')
 });
 
 router.get('/', (request, response) => {
