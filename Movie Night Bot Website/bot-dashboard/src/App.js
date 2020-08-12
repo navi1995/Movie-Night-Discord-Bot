@@ -1,5 +1,5 @@
 import React from 'react';
-import { Switch, Route } from 'react-router-dom';
+import { Switch, Route, useLocation } from 'react-router-dom';
 import { Homepage } from './pages/Homepage'
 import { Menu } from './pages/Menu';
 import { Dashboard } from './pages/Dashboard';
@@ -10,7 +10,9 @@ import axios from 'axios';
 function App() {
 	const [user, setUser] = React.useState(null);
 	const [loading, setLoading] = React.useState(true);
+	const location = useLocation();
 
+	//Run user check on every location change (If cookies removed, log user out as unauthorized)
 	React.useEffect(() => {
 		getUserDetails().then(function(response) {
 			console.log(response.data);
@@ -23,7 +25,7 @@ function App() {
 				console.log("UNAUTH IN APP");
 			}
 		});
-	}, []);
+	}, [location]);
 
 	return (
 		<div>
