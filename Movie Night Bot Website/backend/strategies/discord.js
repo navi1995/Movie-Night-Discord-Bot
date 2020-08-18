@@ -1,4 +1,5 @@
 const passport = require('passport');
+const { encrypt, decrypt } = require("../utils/utils");
 const DiscordStrategy = require('passport-discord');
 const User = require('../database/schemas/User');
 
@@ -29,7 +30,9 @@ passport.use(
 			const foundUser = await User.findOneAndUpdate({ discordID: id }, {
 				discordTag: `${username}#${discriminator}`,
 				avatar,
-				guilds
+				guilds,
+				accessToken: encrypt(accessToken).toString(),
+				refreshToken: encrypt(refreshToken).toString()
 			}, { upsert: true, new: true });
 
 			if (foundUser) {

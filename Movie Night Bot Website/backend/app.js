@@ -35,8 +35,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(morgan('combined'));
 
-app.use('/api', routes);
+app.get('/logout', function(request, response){
+	console.log("logout");
+	request.logout();
+	response.redirect('http://localhost:3000');
+});
 
+
+app.use('/api', routes);
 app.listen(PORT, () => console.log(`Running on port ${PORT}`));
 
 
