@@ -53,7 +53,7 @@ export function NavbarComponent(props) {
 							<NavDropdown title={<div className="dropdown-avatar"><img className="rounded-circle" src={`https://cdn.discordapp.com/avatars/${user.discordID}/${user.avatar}?size=256`} /><span>{user.discordTag}</span></div>}>
 								<NavDropdown.Item>Settings</NavDropdown.Item>
 								<NavDropdown.Divider />
-								<NavDropdown.Item>Logoff</NavDropdown.Item>
+								<NavDropdown.Item href="http://localhost:3001/logout">Logoff</NavDropdown.Item>
 							</NavDropdown>
 						)}
 						{!isUserLoggedIn() && !loading && (<Button onClick={login} variant="outline-primary">

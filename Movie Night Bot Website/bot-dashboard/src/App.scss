@@ -232,3 +232,21 @@ h5 {
     top: calc(50% - 25px);
     text-align: center;
 }
+
+//Movie comps
+.viewed-icon {
+	margin: 10px;
+	color: rgba(3, 169, 244, 0.3);
+	position: absolute;
+}
+
+.card:hover {
+	.viewed-icon {
+		color: rgba(3, 169, 244, 1);
+	}
+}
+
+.card-img-top:hover {
+	filter: grayscale(50%);
+	filter: brightness(0.4);
+}

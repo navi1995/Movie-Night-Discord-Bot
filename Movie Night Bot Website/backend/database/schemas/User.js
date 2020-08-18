@@ -17,6 +17,14 @@ const UserSchema = new mongoose.Schema({
 	guilds: {
 		type: Array,
 		required: true
+	},
+	accessToken: {
+		type: String,
+		required: true
+	},
+	refreshToken: {
+		type: String,
+		required: true
 	}
 });
 

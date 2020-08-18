@@ -19,6 +19,7 @@ export function Dashboard(props) {
 
 	//If user already passed through, dont re-get user details
 	React.useEffect(() => {
+		//Do not get user details if we already have them. Need to stop hitting API twice. 
 		getUserDetails().then(function(response) {
 			setUser(response.data);
 		}).then(function() {

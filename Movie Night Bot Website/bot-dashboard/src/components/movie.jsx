@@ -1,5 +1,7 @@
 import React from 'react';
 import { ListGroup, Card, Col } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye } from '@fortawesome/free-solid-svg-icons'
 import moment from 'moment';
 
 export function MovieComponent(props) {
@@ -12,6 +14,7 @@ export function MovieComponent(props) {
 					? <Card.Img variant="top" src={movie.posterURL.replace('original', 'w300')} />
 					: <Card.Img variant="top" className="default-image" src="/images/default.png" />
 				}
+				{ movie.viewed && <FontAwesomeIcon icon={faEye} size="2x" color="#03a9f4" className="viewed-icon" alt="Movie has been viewed" /> }
 				<Card.Body>
 					<Card.Title>{movie.name}</Card.Title>
 					<Card.Subtitle className="mb2 text-muted">Release Date: {moment(movie.releaseDate).format("DD MMM YYYY")}</Card.Subtitle>
