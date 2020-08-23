@@ -1,10 +1,6 @@
 $fluid-padding: 25%;
 $fluid-padding-lg: 15%;
 
-body {
-	padding-bottom: 100px;
-}
-
 .App {
 	text-align: center;
 }
@@ -234,19 +230,82 @@ h5 {
 }
 
 //Movie comps
-.viewed-icon {
-	margin: 10px;
-	color: rgba(3, 169, 244, 0.3);
-	position: absolute;
+.card {
+	.movie-button-group {
+		top: -38px;
+		margin-bottom: -38px;
+		display: none;
+		
+		button {
+			border-radius: 0;
+		}
+	}
+
+	.viewed-icon {
+		margin: 10px;
+		color: rgba(3, 169, 244, 0.3);
+		position: absolute;
+	}
+}
+
+.hidden-toggle {
+	display: none;
 }
 
 .card:hover {
 	.viewed-icon {
 		color: rgba(3, 169, 244, 1);
 	}
+
+	.movie-button-group {
+		display: inline-flex;
+	}
+
+	.card-img-top {
+		filter: grayscale(50%);
+		filter: brightness(0.4);
+	}
 }
 
-.card-img-top:hover {
-	filter: grayscale(50%);
-	filter: brightness(0.4);
+.footer {
+	background-color: rgb(75, 70, 70);
+	margin-top: 20px;
+
+	h3 {
+		text-transform: uppercase;
+		color: white;
+		margin-bottom: 30px;
+	}
+
+	h5 {
+		text-transform: none;
+		color: white;
+	}
+
+	a {
+		color: white;
+	}
+
+	a:hover {
+		color: #4b4646;
+	}
+
+	.info {
+		background-color: #03a9f4;
+		padding: 60px;
+		margin-left: auto;
+		margin-right: auto;
+		width: 100%;
+		text-align: center;
+		border-radius: 5px;
+		margin-top: 30px;
+		margin-bottom: 30px;
+		color: white;
+	}
+
+	svg {
+		margin-left: 1em;
+		margin-right: 1em;
+		margin-bottom: 30px;
+	}
 }

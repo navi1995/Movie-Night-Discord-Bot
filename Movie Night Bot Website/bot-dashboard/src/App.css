@@ -1,7 +1,3 @@
-body {
-  padding-bottom: 100px;
-}
-
 .App {
   text-align: center;
 }
@@ -212,17 +208,78 @@ h5 {
   text-align: center;
 }
 
-.viewed-icon {
+.card .movie-button-group {
+  top: -38px;
+  margin-bottom: -38px;
+  display: none;
+}
+
+.card .movie-button-group button {
+  border-radius: 0;
+}
+
+.card .viewed-icon {
   margin: 10px;
   color: rgba(3, 169, 244, 0.3);
   position: absolute;
+}
+
+.hidden-toggle {
+  display: none;
 }
 
 .card:hover .viewed-icon {
   color: #03a9f4;
 }
 
-.card-img-top:hover {
+.card:hover .movie-button-group {
+  display: inline-flex;
+}
+
+.card:hover .card-img-top {
   filter: grayscale(50%);
   filter: brightness(0.4);
+}
+
+.footer {
+  background-color: #4b4646;
+  margin-top: 20px;
+}
+
+.footer h3 {
+  text-transform: uppercase;
+  color: white;
+  margin-bottom: 30px;
+}
+
+.footer h5 {
+  text-transform: none;
+  color: white;
+}
+
+.footer a {
+  color: white;
+}
+
+.footer a:hover {
+  color: #4b4646;
+}
+
+.footer .info {
+  background-color: #03a9f4;
+  padding: 60px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  text-align: center;
+  border-radius: 5px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  color: white;
+}
+
+.footer svg {
+  margin-left: 1em;
+  margin-right: 1em;
+  margin-bottom: 30px;
 }
