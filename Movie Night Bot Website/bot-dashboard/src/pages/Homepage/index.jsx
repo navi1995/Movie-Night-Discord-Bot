@@ -1,9 +1,9 @@
 import React from 'react';
 import { Image, CardGroup, Card, Button, Row, Col, Container, Jumbotron } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faList, faListOl, faRandom,  faCog, faCheckSquare, faBullhorn, faEye, faTrophy, faBrush } from '@fortawesome/free-solid-svg-icons'
-import { faThumbsUp } from '@fortawesome/free-regular-svg-icons';
-import { faImdb, faDiscord } from '@fortawesome/free-brands-svg-icons';
+import { faList, faListOl, faRandom,  faCog, faCheckSquare, faBullhorn, faEye, faTrophy, faBrush, faEnvelopeOpen } from '@fortawesome/free-solid-svg-icons'
+import { faThumbsUp, faEnvelope } from '@fortawesome/free-regular-svg-icons';
+import { faImdb, faDiscord, faGithub } from '@fortawesome/free-brands-svg-icons';
 // import { NavbarComponent } from '../../components/navbar';
 
 export function Homepage(props) {
@@ -140,6 +140,20 @@ export function Homepage(props) {
 					<Col className="feature-image"><Image fluid className="image-shadow" src="/images/cropped-win.png" /></Col>
 				</Row>
 			</Container>
+			<div className="footer">
+				<Container>
+					<Row>
+						<div className="info">
+							<h3>Contact Information</h3>
+							<div className="badge-row"><a href="mailto:navi.jador@gmail.com" target="_blank" ><FontAwesomeIcon icon={faEnvelope} size="3x" /></a><a href="https://github.com/navi1995/Movie-Night-Discord-Bot" target="_blank"><FontAwesomeIcon icon={faGithub} size="3x" /></a></div>
+							<a href="mailto:navi.jador@gmail.com" target="_blank" ><h5>Email me if you have any problems or questions! <br />
+							navi.jador@gmail.com
+							</h5></a>
+							<div>© 2020 Movie Night Bot for Discord. Created by <a target="_blank" href="https://navijador.io.com">Navi Jador</a></div>
+						</div>
+					</Row>
+				</Container>
+			</div>
 		</div>
 	);
 }

@@ -74,7 +74,8 @@ const Settings = new Schema({
 	pollMessage: { type: String, default: "Poll has begun!" },
 	pollSize: { type: Number, min: 1, max: 10, default: 10 },
 	autoViewed: { type: Boolean, default: false },
-	addMoviesRole: { type: String, default: null }
+	addMoviesRole: { type: String, default: null },
+	pollRole: { type: String, default: null }
 });
 const movieModel = mongoose.model("Movie", Movie);
 const setting = mongoose.model("Settings", Settings);
@@ -318,7 +319,7 @@ async function searchNewMovie(search, message, callback) {
 		data = await fetch(`https://api.themoviedb.org/3/movie/${isImdbSearch ? initialData.movie_results[0].id : initialData.results[0].id}?api_key=${movieDbAPI}`).then(response => response.json());
 	}
 
-	if (!data || failedSearch) {
+	if (!data || failedSearch || data.success == "false") {
 		message.channel.send("Couldn't find any movies. Sorry!");
 
 		return callback(null, data);
