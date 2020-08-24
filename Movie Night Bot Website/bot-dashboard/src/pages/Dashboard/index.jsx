@@ -6,26 +6,21 @@ import { Loader } from '../../components/loader';
 import { Row, Container } from 'react-bootstrap';
 
 export function Dashboard(props) {
-	const userTest = props.user || null;
-	const [user, setUser] = React.useState(userTest || []);
+	const [user] = React.useState(props.user || []);
 	const [loading, setLoading] = React.useState(true);
 	const [movies, setMovies] = React.useState([]);
 	const [error, setError] = React.useState(null);
 
 	function goBack() {
 		//props.history.push('/')
+		console.log(user);
 		props.history.goBack();
 	}
 
 	//If user already passed through, dont re-get user details
 	React.useEffect(() => {
 		//Do not get user details if we already have them. Need to stop hitting API twice. 
-		getUserDetails().then(function(response) {
-			setUser(response.data);
-		}).then(function() {
-			console.log(props.match.params);
-			return getMovies(props.match.params.id);
-		}).then(function(response) {
+		getMovies(props.match.params.id).then(function(response) {
 			if (response.data.message) {
 				throw response.data.message;
 			}
@@ -65,12 +60,6 @@ export function Dashboard(props) {
 			)}
 		</div>
 	);
-}
-
-function getUserDetails() {
-	return axios.get('http://localhost:3001/api/auth', {
-		withCredentials: true
-	});
 }
 
 function getMovies(guildID) {
