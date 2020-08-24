@@ -15,7 +15,7 @@ router.get('/guilds', async (request, response) => {
 		// const userGuildsUnmapped = userGuilds.filter(guild => botGuilds.find(botGuild => botGuild.guildID == guild.id)); 
 		const userGuildsMapped = userGuilds.reduce((reduction, guild) => {
 			const adminLevel = (guild.permissions_new & 0x00000008) == 0x00000008 ? "admin" : ((guild.permissions_new & 0x00000020) == 0x00000020 ? "manage" : "user")
-			const isBotInServer = botGuilds.find(botGuild => botGuild.guildID == guild.id && (adminLevel == "admin" || adminLevel == "manage"));
+			const isBotInServer = botGuilds.find(botGuild => botGuild.guildID == guild.id);
 			
 			if (isBotInServer || (adminLevel != "user" && !isBotInServer)) {
 				reduction.push({
@@ -59,6 +59,8 @@ router.get('/movies/:guildID', async (request, response) => {
 		response.status(401).send({ message: "User is not in the guild." });
 	}
 });
+
+//Add UNVIEWED/VIEWED/DELETE API calls. Check if user is in guild and has admin privs, or was the user to submit. Do user to submit on front end check too.
 
 function isUserInGuild(user, guildID) {
 	const userGuilds = user.get('guilds');

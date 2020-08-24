@@ -16,7 +16,7 @@ function App() {
 	//Run user check on every location change (If cookies removed, log user out as unauthorized)
 	React.useEffect(() => {
 		getUserDetails().then(function(response) {
-			console.log('use effect');
+			console.log(response.data);
 			setUser(response.data);
 			
 			return getGuilds();			
@@ -44,7 +44,7 @@ function App() {
 		<Switch>
 			<Route path="/" exact={true} component={Homepage} />
 			<Route path="/menu" exact={true} render={(props) => <Menu {...props} user={user} guilds={guilds} />} />
-			<Route path="/dashboard/:id" exact={true} render={(props) => <Dashboard {...props} user={user} />} />
+			<Route path="/dashboard/:id" exact={true} render={(props) => <Dashboard {...props} user={user} guilds={guilds} />} />
 		</Switch>)}
 		</div>
 	);

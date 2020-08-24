@@ -4,23 +4,35 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList, faListOl, faRandom,  faCog, faCheckSquare, faBullhorn, faEye, faTrophy, faBrush, faEnvelopeOpen } from '@fortawesome/free-solid-svg-icons'
 import { faThumbsUp, faEnvelope } from '@fortawesome/free-regular-svg-icons';
 import { faImdb, faDiscord, faGithub } from '@fortawesome/free-brands-svg-icons';
+import axios from 'axios';
+import CountUp from 'react-countup';
 // import { NavbarComponent } from '../../components/navbar';
 
 export function Homepage(props) {
-	const login = function() {
-		window.location.href ='http://localhost:3001/api/auth/discord';
-	}
+	const [serverCount, setServerCount] = React.useState(3500);
 
+	React.useEffect(() => {
+		//Do not get user details if we already have them. Need to stop hitting API twice. 
+		getBotServers().then(function(response) {
+			if (response.data && response.data.server_count) {
+				setServerCount(response.data.server_count);
+			}
+		}).catch(function(err) {
+		});
+	}, []);
 	return (
 		<div>
-			{/* <NavbarComponent /> */}
 			<Jumbotron style={{ backgroundColor: "rgb(44, 41, 41)", color: "white", marginBottom: "-30px", paddingBottom: "100px" }} className="text-center">
 				<h1 className="display-1">
 					Movie Night Bot <br />
 					For Discord
 				</h1>
 				<br />
-				<Button variant="primary" size="lg">
+				<h3 style={{color: "white"}}>
+					Used in <b><CountUp start={3500} end={serverCount} duration={2} /></b> servers
+				</h3>
+				<br />
+				<Button href="https://discord.com/api/oauth2/authorize?client_id=709271563110973451&permissions=1073835072&scope=bot" target="_blank" variant="primary" size="lg">
 					ADD TO DISCORD <FontAwesomeIcon icon={faDiscord} />
 				</Button>
 			</Jumbotron>
@@ -156,4 +168,12 @@ export function Homepage(props) {
 			</div>
 		</div>
 	);
+}
+
+function getBotServers() {
+	return axios.get("https://top.gg/api/bots/709271563110973451/stats", {
+		headers: {
+			"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcwOTI3MTU2MzExMDk3MzQ1MSIsImJvdCI6dHJ1ZSwiaWF0IjoxNTkxNjkwMjczfQ.bOcA6o-pSaWsvdz4n3Pu5JOiz2ZNajrV9ejld96xOqs"
+		}
+	})
 }

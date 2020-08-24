@@ -228,8 +228,24 @@ h5 {
   display: none;
 }
 
+.hover-toggle {
+  visibility: hidden;
+  position: relative;
+  bottom: 240px;
+  margin-bottom: -195px;
+  opacity: 0;
+  transition: all 0.1s ease-in-out 0s, visibility 0s linear 0.3s, z-index 0s linear 0.01s;
+}
+
+.hover-toggle .list-group-item {
+  background-color: transparent;
+  color: white;
+  font-weight: bold;
+}
+
 .card:hover .viewed-icon {
   color: #03a9f4;
+  transition: color 0.5s linear;
 }
 
 .card:hover .movie-button-group {
@@ -239,6 +255,13 @@ h5 {
 .card:hover .card-img-top {
   filter: grayscale(50%);
   filter: brightness(0.4);
+  transition: filter 0.5s linear;
+}
+
+.card:hover .hover-toggle {
+  visibility: visible;
+  opacity: 1;
+  transition: all 0.5s ease-in-out 0s, visibility 0s linear 0s, z-index 0s linear 0.3s;
 }
 
 .footer {
@@ -282,4 +305,25 @@ h5 {
   margin-left: 1em;
   margin-right: 1em;
   margin-bottom: 30px;
+}
+
+.dropdown-menu {
+  display: block;
+  visibility: hidden;
+  transform: translateY(-1em);
+  opacity: 0;
+  z-index: 1;
+  transition: all 0.3s ease-in-out 0s, visibility 0s linear 0.3s, z-index 0s linear 0.01s;
+}
+
+.dropdown-menu.show {
+  visibility: visible;
+  transform: translateY(0%);
+  z-index: 1;
+  opacity: 1;
+  transition: all 0.3s ease-in-out 0s, visibility 0s linear 0s, z-index 0s linear 0.3s;
+}
+
+.btn-group button, .btn-group label {
+  border-radius: 0px;
 }
