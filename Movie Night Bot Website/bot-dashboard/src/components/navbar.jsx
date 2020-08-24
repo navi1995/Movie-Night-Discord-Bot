@@ -11,17 +11,12 @@ export function NavbarComponent(props) {
 	// const [user, setUser] = React.useState(props.user || null);
 	const user = props.user || null;
 	const loading = props.loading || false;
+	const guilds = props.guilds  || [];
+	const split = window.location.pathname.split("/");
+	const dashboardID = window.location.pathname.indexOf("dashboard") > 0 ? split[split.length-1] : null;
+	const currentGuild = guilds.find(guild => guild.id == dashboardID) || {};
 
-	// React.useEffect(() => {
-	// 	getUserDetails().then(function(response) {
-	// 		console.log(response.data);
-	// 		setUser(response.data);
-	// 	}).catch(function(err) {
-	// 		if (err.response && err.response.data.message) {
-	// 			setUser(null);
-	// 		}
-	// 	});
-	// }, []);
+	// guilds = guilds.sort(function(a, b) { return (b.isBotInServer - a.isBotInServer) });
 
 	function isUserLoggedIn() {
 		return user != null && user != undefined;
@@ -49,6 +44,13 @@ export function NavbarComponent(props) {
 						{/* <Nav.Link >Commands</Nav.Link>
 						<Nav.Link >Contact</Nav.Link> */}
 						{isUserLoggedIn() && (<Nav.Link isActive={isActive} as={NavLink} to={{pathname: `/menu`, state: {user: user}}}>Menu</Nav.Link>)}
+						{isUserLoggedIn() && currentGuild.id && (
+							<NavDropdown title={<div className="dropdown-avatar"><img className="rounded-circle" src={currentGuild.icon ? `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}?size=256` : "/images/default.png"} />{currentGuild.name || ""}</div>}>
+								{guilds.map(guild => (
+									<NavDropdown.Item key={guild.id}><img className="rounded-circle" src={guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}?size=256` : "/images/default.png"} />{guild.name}</NavDropdown.Item>
+								))}
+							</NavDropdown>
+						)}
 						{isUserLoggedIn() && (
 							<NavDropdown title={<div className="dropdown-avatar"><img className="rounded-circle" src={`https://cdn.discordapp.com/avatars/${user.discordID}/${user.avatar}?size=256`} /><span>{user.discordTag}</span></div>}>
 								<NavDropdown.Item>Settings</NavDropdown.Item>

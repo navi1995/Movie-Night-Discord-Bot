@@ -28,7 +28,7 @@ export function MovieComponent(props) {
 					<Card.Title>{movie.name}</Card.Title>
 					<Card.Subtitle className="mb2 text-muted">Release Date: {moment(movie.releaseDate).format("DD MMM YYYY")}</Card.Subtitle>
 					<Card.Text onClick={toggleTextBody}>{!show && movie.overview.length > 100 ? movie.overview.substr(0, 97) + '... (Click to expand)' : movie.overview}</Card.Text>
-					<div class="hidden-toggle">
+					<div className="hidden-toggle">
 						<ListGroup variant="flush">
 							<ListGroup.Item>Runtime: {movie.runtime} Minutes</ListGroup.Item>
 							<ListGroup.Item>Rating: {movie.rating} / 10</ListGroup.Item>

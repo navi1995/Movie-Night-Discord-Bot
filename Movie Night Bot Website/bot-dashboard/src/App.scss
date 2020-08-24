@@ -255,6 +255,7 @@ h5 {
 .card:hover {
 	.viewed-icon {
 		color: rgba(3, 169, 244, 1);
+		transition: color 0.5s linear;
 	}
 
 	.movie-button-group {
@@ -264,6 +265,7 @@ h5 {
 	.card-img-top {
 		filter: grayscale(50%);
 		filter: brightness(0.4);
+		transition: filter 0.5s linear;
 	}
 }
 

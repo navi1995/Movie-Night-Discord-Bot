@@ -5,29 +5,23 @@ import { Link } from 'react-router-dom';
 import { Card, Button, Row, Container, Col } from 'react-bootstrap';
 
 export function Menu(props) {
-	const userTest = props.location.state ? props.location.state.user : null;
-	const [user, setUser] = React.useState(userTest || []);
-	const [guilds, setGuild] = React.useState([]);
+	const [user] = React.useState(props.user || []);
+	const [guilds, setGuild] = React.useState(props.guilds || []);
 	const [loading, setLoading] = React.useState(true);
 
 	React.useEffect(() => {
-		getUserDetails().then(function(response) {
-			setUser(response.data);
-		}).then(function() {
-			return getGuilds();
-		}).then(function(response) {
+		getGuilds().then(function(response) {
 			console.log(response.data)
 			setGuild(response.data);
 			setLoading(false);
 		}).catch(function(err) {
 			setLoading(false);
-			props.history.push('/');
+			// props.history.push('/');
 		});
 	}, []);
 
 	return (
 		<div>
-			{/* <NavbarComponent user={user} /> */}
 			<Loader loading={loading} />
 			{!loading && (
 			<Container>
@@ -36,7 +30,7 @@ export function Menu(props) {
 				guilds.filter(guild => {
 					return guild.isBotInServer;
 				}).map(guild => (
-					<Col xl={3} lg={4} md={4} sm={6} xs={6} className="clearfix py-3" >
+					<Col xl={3} lg={4} md={4} sm={6} xs={6} className="clearfix py-3" key={guild.id} >
 						<Link to={{pathname: `/dashboard/${guild.id}`, state: {user: user}}} key={guild.id} >
 							<Card className="text-center">
 								{ guild.icon 
@@ -57,7 +51,7 @@ export function Menu(props) {
 				guilds.filter(guild => {
 					return !guild.isBotInServer;
 				}).map(guild => (
-					<Col xl={3} lg={4} md={4} sm={6} xs={6} className="clearfix py-3" >
+					<Col xl={3} lg={4} md={4} sm={6} xs={6} className="clearfix py-3" key={guild.id}>
 						<a href={`https://discord.com/oauth2/authorize?client_id=709271563110973451&permissions=1073835072&scope=bot&redirect_uri=${encodeURIComponent("http://localhost:3000/menu")}&guild_id=${guild.id}`}>
 							<Card className="text-center">
 								{ guild.icon 
@@ -81,12 +75,6 @@ export function Menu(props) {
 
 function getGuilds() {
 	return axios.get('http://localhost:3001/api/discord/guilds', {
-		withCredentials: true
-	});
-}
-
-function getUserDetails() {
-	return axios.get('http://localhost:3001/api/auth', {
 		withCredentials: true
 	});
 }
