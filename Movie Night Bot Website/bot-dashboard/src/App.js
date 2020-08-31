@@ -1,11 +1,9 @@
 import React from 'react';
 import { Switch, Route, useLocation } from 'react-router-dom';
-import { Homepage } from './pages/Homepage'
-import { Menu } from './pages/Menu';
-import { Dashboard } from './pages/Dashboard';
+import { Homepage, Commands, Menu, Dashboard } from './pages';
 import './App.scss';
-import { NavbarComponent } from './components/navbar';
-import axios from 'axios';
+import { NavbarComponent, Loader } from './components';
+import { getUserDetails, getGuilds } from './utils/utils';
 
 function App() {
 	const [user, setUser] = React.useState(null);
@@ -15,22 +13,29 @@ function App() {
 
 	//Run user check on every location change (If cookies removed, log user out as unauthorized)
 	React.useEffect(() => {
+		if (window.location.pathname == "/menu") {
+			setLoading(true);
+		}
+
 		getUserDetails().then(function(response) {
-			console.log(response.data);
 			setUser(response.data);
-			
+
+			if (window.location.pathname == "/") {
+				setLoading(false);
+			}
+
+			//Only do this if menu/dashboard url
 			return getGuilds();			
 		}).then(function(response) {
 			setGuild(response.data);
-			console.log(response.data);
 			setLoading(false);
 		}).catch(function(err) {
 			if (err.response && err.response.data.message) {
 				setUser(null);
 				setLoading(false);
-				console.log("UNAUTH IN APP");
 
-				if (window.location.pathname != '/') {
+				//Must add unauth page url's here for now.
+				if (!(window.location.pathname == '/' || window.location.pathname == '/commands')) {
 					window.location.pathname = '/';
 				}
 			}
@@ -40,26 +45,16 @@ function App() {
 	return (
 		<div>
 		<NavbarComponent user={user} guilds={guilds} loading={loading} />
+		<Loader loading={loading} />
 		{!loading && (
 		<Switch>
 			<Route path="/" exact={true} component={Homepage} />
-			<Route path="/menu" exact={true} render={(props) => <Menu {...props} user={user} guilds={guilds} />} />
+			<Route path="/commands" component={Commands} exact={true} />
+			<Route path="/menu" exact={true} render={(props) => <Menu {...props} user={user} guilds={guilds} loading={loading} />} />
 			<Route path="/dashboard/:id" exact={true} render={(props) => <Dashboard {...props} user={user} guilds={guilds} />} />
 		</Switch>)}
 		</div>
 	);
-}
-
-function getUserDetails() {
-	return axios.get('http://localhost:3001/api/auth', {
-		withCredentials: true
-	});
-}
-
-function getGuilds() {
-	return axios.get('http://localhost:3001/api/discord/guilds', {
-		withCredentials: true
-	});
 }
 
 

@@ -8,9 +8,9 @@ export function Loader(props) {
 		return null;
 	} else {
 		return (
-			<div className="flex flex-column align-items-center">
-				<Spinner className="page-loader" animation="border" role="status" />
-				<h1 className="loading-text">Loading...</h1>
+			<div className='flex flex-column align-items-center'>
+				<Spinner className='page-loader' animation='border' role='status' />
+				<h1 className='loading-text'>Loading...</h1>
 			</div>);
 	}
 }
