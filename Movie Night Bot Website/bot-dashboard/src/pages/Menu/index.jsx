@@ -1,12 +1,12 @@
 import React from 'react';
-import { Loader, FooterComponent } from '../../components';
+import { FooterComponent } from '../../components';
 import { Link } from 'react-router-dom';
 import { Card, Button, Row, Container, Col, ListGroup } from 'react-bootstrap';
 
 export function Menu(props) {
 	const [user] = React.useState(props.user || []);
-	const [guilds, setGuild] = React.useState(props.guilds || []);
-	const [loading, setLoading] = React.useState(props.loading);
+	const [guilds] = React.useState(props.guilds || []);
+	const [loading] = React.useState(props.loading);
 	
 	return (
 		<div>

@@ -4,7 +4,7 @@ import { Row, Container, ToggleButton, ButtonGroup, Toast } from 'react-bootstra
 import { getMovies } from '../../utils/utils';;
 
 export function Dashboard(props) {
-	const [user] = React.useState(props.user || []);
+	// const [user] = React.useState(props.user || []);
 	const [loading, setLoading] = React.useState(true);
 	const [movies, setMovies] = React.useState([]);
 	const [error, setError] = React.useState(null);
