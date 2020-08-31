@@ -216,6 +216,7 @@ h5 {
 
 .card .movie-button-group button {
   border-radius: 0;
+  width: 50%;
 }
 
 .card .viewed-icon {
@@ -229,10 +230,8 @@ h5 {
 }
 
 .hover-toggle {
-  visibility: hidden;
   position: relative;
-  bottom: 240px;
-  margin-bottom: -195px;
+  visibility: hidden;
   opacity: 0;
   transition: all 0.1s ease-in-out 0s, visibility 0s linear 0.3s, z-index 0s linear 0.01s;
 }
@@ -241,6 +240,21 @@ h5 {
   background-color: transparent;
   color: white;
   font-weight: bold;
+}
+
+.hover-toggle {
+  position: absolute;
+  width: 100%;
+}
+
+.hover-toggle .list-group-item {
+  background-color: transparent;
+  color: white;
+  font-weight: bold;
+}
+
+.menu-page .hover-toggle {
+  height: 256px;
 }
 
 .card:hover .viewed-icon {
@@ -326,4 +340,21 @@ h5 {
 
 .btn-group button, .btn-group label {
   border-radius: 0px;
+}
+
+.commands-page table {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.commands-page table td:nth-child(1) {
+  text-align: center;
+  color: #333333;
+  line-height: 1.6;
+}
+
+.commands-page table td:nth-child(2) {
+  font-size: 16px;
+  line-height: 1.6;
+  vertical-align: middle;
 }

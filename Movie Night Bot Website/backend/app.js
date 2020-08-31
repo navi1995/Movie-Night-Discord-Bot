@@ -1,5 +1,6 @@
 require('dotenv').config();
 require('./strategies/discord');
+
 const express = require('express');
 const passport = require('passport');
 const morgan = require('morgan');
@@ -20,9 +21,7 @@ mongoose.connect(process.env.MONGO_LOGIN, {
 
 app.use(session({
 	secret: process.env.SESSION_SECRET,
-	cookie: {
-		maxAge: 60000 * 60 * 24
-	},
+	cookie: { maxAge: 60000 * 60 * 24 },
 	resave: false,
 	saveUninitialized: false,
 	store: new Store({ mongooseConnection: mongoose.connection })
@@ -33,17 +32,15 @@ app.use(cors({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(express.json());
 app.use(morgan('combined'));
 
 app.get('/logout', function(request, response){
-	console.log("logout");
+	console.log('logout');
 	request.logout();
-	response.redirect('http://localhost:3000');
+	response.redirect(process.env.BASE_URL);
 });
 
 
 app.use('/api', routes);
 app.listen(PORT, () => console.log(`Running on port ${PORT}`));
-
-
-

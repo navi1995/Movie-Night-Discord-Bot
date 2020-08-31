@@ -1,5 +1,5 @@
 const passport = require('passport');
-const { encrypt, decrypt } = require("../utils/utils");
+const { encrypt } = require('../utils/utils');
 const DiscordStrategy = require('passport-discord');
 const User = require('../database/schemas/User');
 
@@ -23,8 +23,7 @@ passport.use(
 		callbackURL: process.env.DASHBOARD_CALLBACK_URL,
 		scope: ['identify', 'guilds']
 	}, async (accessToken, refreshToken, profile, done) => {
-		const { id, username, discriminator, avatar, guilds } = profile		
-		console.log(id, username, discriminator, avatar, guilds);
+		const { id, username, discriminator, avatar, guilds } = profile;
 		
 		try {
 			const foundUser = await User.findOneAndUpdate({ discordID: id }, {
@@ -38,7 +37,7 @@ passport.use(
 			if (foundUser) {
 				return done(null, foundUser);
 			} else {
-				throw "Something went wrong."; 
+				throw 'Something went wrong.'; 
 			}
 		} catch (error) {
 			return done(error, null);

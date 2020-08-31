@@ -238,6 +238,7 @@ h5 {
 		
 		button {
 			border-radius: 0;
+			width: 50%;
 		}
 	}
 
@@ -253,17 +254,31 @@ h5 {
 }
 
 .hover-toggle {
-	visibility: hidden;
 	position: relative;
-	bottom: 240px;
-	margin-bottom: -195px;
+	visibility: hidden;
 	opacity: 0;
 	transition: all 0.1s ease-in-out 0s, visibility 0s linear 0.3s, z-index 0s linear 0.01s;
+
+	.list-group-item {
+		background-color: transparent;
+		color: white;
+		font-weight: bold;
+	}
+}
+.hover-toggle {
+	position: absolute;
+	width: 100%;
 	
 	.list-group-item {
 		background-color: transparent;
 		color: white;
 		font-weight: bold;
+	}
+}
+
+.menu-page {
+	.hover-toggle {
+		height: 256px;
 	}
 }
 
@@ -353,5 +368,24 @@ h5 {
 .btn-group {
 	button, label {
 		border-radius: 0px;
+	}
+}
+
+.commands-page {
+	table {
+		font-size: 16px;
+		font-weight:600;
+
+		td:nth-child(1) {
+			text-align: center;
+			color: rgb(51, 51, 51);
+			line-height: 1.6;
+		}
+
+		td:nth-child(2) {
+			font-size: 16px;
+			line-height: 1.6;
+			vertical-align: middle;
+		}
 	}
 }
