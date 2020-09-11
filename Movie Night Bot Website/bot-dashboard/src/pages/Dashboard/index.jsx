@@ -97,10 +97,10 @@ export function Dashboard(props) {
 	}, [props.match.params.id, currentGuild.id]);
 
 	return (
-		<div>
+		<div className='dashboard-page'>
 			<Loader loading={loading} />
-			{!loading && (
-			<Container fluid className='dashboard-page'>
+			{!loading && !error && (
+			<Container fluid>
 				<Row>
 					<ButtonGroup toggle style={{width: '100%', borderRadius: '0px'}}>
 						<ToggleButton onChange={radioClick} type='radio' variant='secondary' value='ALL' checked={radioValue == 'ALL'}>All</ToggleButton>
@@ -108,22 +108,21 @@ export function Dashboard(props) {
 						<ToggleButton onChange={radioClick} type='radio' variant='secondary' value='UNVIEWED' checked={radioValue == 'UNVIEWED'}>Unviewed</ToggleButton>
 					</ButtonGroup>
 				</Row>
-				<Row noGutters={true}>
-				{
-				movies.map((movie, index) => (
+				<Row>
+				{movies.map((movie, index) => (
 					<MovieComponent movie={movie} index={index} key={index} render={renderMovie(movie, index)} adminLevel={currentGuild.adminLevel} onDelete={loaderToast} afterDelete={removeMovie} afterViewed={toggleViewed}/>
-				))
-				}
+				))}
+				{movies.length == 0 && (<h3 style={{margin: 'auto', marginTop: '2.5em', marginBottom: '2.5em'}}>No Movies =(</h3>)}
 				</Row>
-				<Toast style={{ position: 'absolute', bottom: '100px', right: 0}} show={responseMessage != null && responseMessage != ''}>
+				<Toast style={{ position: 'fixed', bottom: '100px', right: 0}} show={responseMessage != null && responseMessage != ''}>
 					<Toast.Body>{responseMessage}</Toast.Body>
 				</Toast>
 			</Container>
 			)}
-			{!loading && (<FooterComponent />)}
 			{!loading && error && (
 				<ErrorComponent message={error} func={goBack} />
 			)}
+			{!loading && (<FooterComponent />)}
 		</div>
 	);
 }

@@ -1,12 +1,30 @@
 $fluid-padding: 25%;
 $fluid-padding-lg: 15%;
+$navbar-bg: #202225;
+$bg-color: #2f3136;
+$card-bg: #36393f;
+$footer-bg: $card-bg;
+$font-color-primary: #fff;
+$font-color-secondary: #999999;
+$border-primary: #03a9f4;
+$glyph-primary: $border-primary;
+
+.navbar {
+	background-color: $navbar-bg;
+	border-bottom: 2px solid $border-primary;
+}
+
+body {
+	background-color: $bg-color;
+	color: $font-color-primary;
+}
 
 .App {
 	text-align: center;
 }
 
-.feature-image {
-	text-align: center;
+html {
+	scroll-behavior: smooth;
 }
 
 .jumbotron {
@@ -16,6 +34,8 @@ $fluid-padding-lg: 15%;
 	box-shadow: inset 0 0 0 1000px rgba(44,41,41,0.8);
 	min-height: 600px;
 	background-position: center;
+	border-bottom: 1px solid $border-primary;
+	border-radius: 0;
 }
 
 @keyframes slide {
@@ -26,13 +46,28 @@ $fluid-padding-lg: 15%;
 		background-position-y: 1979px;
 	}
 }
+
+@keyframes fadein {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+#serverCount {
+	animation: fadein 5s;
+}
+
+.bg-dark {
+	background-color: $card-bg !important;
+}
+
 .Box-Shadow {
-	box-shadow: 0px 4px 10px 2px rgba(74, 74, 74, 0.3);
+	box-shadow: 0px 4px 10px 2px rgba(41, 35, 34, 0.3);
 	border-radius: 0;
 
 	.card {
 		border-radius: 0;
-		color: rgb(51, 51, 51);
+		background-color: $card-bg;
+		color: $font-color-primary;//rgb(51, 51, 51);
 
 		* {
 			margin: 5px;
@@ -55,22 +90,17 @@ $fluid-padding-lg: 15%;
 	}
 }
 
-.jumbotron {
-	border-radius: 0;
-}
-
-
 .info-panel:nth-child(even) {
 	.image-shadow {
-		box-shadow: 15px 25px 0px 3px #03a9f4;
+		box-shadow: 15px 25px 0px 3px $border-primary;
 	}
 }
 
 .info-panel:nth-child(odd) {
-	background-color: rgb(245, 250, 253);
+	background-color: $card-bg;//rgb(245, 250, 253);
 
 	.image-shadow {
-		box-shadow: -15px 25px 0px 3px #03a9f4;
+		box-shadow: -15px 25px 0px 3px $border-primary;
 	}
 }
 
@@ -85,15 +115,28 @@ $fluid-padding-lg: 15%;
 }
 
 .flex-col {
-	vertical-align: middle!important;
+	vertical-align: middle !important;
 	margin-top: auto;
 	margin-bottom: auto;
-	display: flex!important;
+	display: flex !important;
 	flex-direction: column;
-	margin-left: 20px;
+}
+
+//HEADERS
+h3 {
+	font-weight: 300;
+	font-size: 2.25em;
+	line-height: 1.25;
+	color: $font-color-primary;
 }
 
 h5 {
+	font-weight: 600;
+	font-size: 1.125em;
+	line-height: 1.55;
+	color: $font-color-primary;
+	text-transform: uppercase;
+
 	//All p tags after h5
 	&+p {
 		font-weight: 400;
@@ -107,23 +150,23 @@ h5 {
 	font-weight: 300;
 	font-size: 1.25em;
 	line-height: 1.5;
-	color: rgb(102, 102, 102);
+	color: $font-color-secondary;
 }
 
 .btn-primary {
-	background-color: #03a9f4;
-	border-color: #03a9f4;
+	background-color: $glyph-primary;
+	border-color: $glyph-primary;
 }
 
 .btn-outline-primary {
-	border-color: #03a9f4;
-	color: #03a9f4;
+	border-color: $glyph-primary;
+	color: $glyph-primary;
 }
 
 .btn-outline-primary:hover {
-	border-color: #03a9f4;
-	color: #fff;
-	background-color: #03a9f4;
+	border-color: $glyph-primary;
+	color: $font-color-primary;
+	background-color: $glyph-primary;
 }
 
 //Need media queries to adjust, to ensure we dont use % padding for small sizes.
@@ -143,21 +186,6 @@ h5 {
 			padding-right: $fluid-padding;
 		}
 	}
-}
-
-h3 {
-		font-weight: 300;
-		font-size: 2.25em;
-		line-height: 1.25;
-		color: rgb(51, 51, 51);
-}
-
-h5 {
-		font-weight: 600;
-		font-size: 1.125em;
-		line-height: 1.55;
-		color: rgb(51, 51, 51);
-		text-transform: uppercase;
 }
 
 @media (min-width: 992px) {
@@ -205,7 +233,7 @@ h5 {
 
 .error-message {
 	h1 {
-		color: #fff;
+		color: $font-color-primary;
 	}
 }
 
@@ -230,8 +258,9 @@ h5 {
 }
 
 //Movie comps
-.card {
+.card, .movie {
 	.movie-button-group {
+		width: calc(100% + 1px);
 		top: -38px;
 		margin-bottom: -38px;
 		display: none;
@@ -254,25 +283,28 @@ h5 {
 }
 
 .hover-toggle {
-	position: relative;
 	visibility: hidden;
 	opacity: 0;
 	transition: all 0.1s ease-in-out 0s, visibility 0s linear 0.3s, z-index 0s linear 0.01s;
-
-	.list-group-item {
-		background-color: transparent;
-		color: white;
-		font-weight: bold;
-	}
-}
-.hover-toggle {
+	top: 10%;
+	text-align: center;
 	position: absolute;
 	width: 100%;
-	
-	.list-group-item {
-		background-color: transparent;
-		color: white;
-		font-weight: bold;
+}
+
+.list-group-item {
+	background-color: transparent;
+	color: $font-color-primary;
+	font-weight: bold;
+}
+
+.menu-page, .dashboard-page {
+	//Footer+Navbar
+	min-height: calc(100vh - 535px);
+
+	.container:not(.container-footer), .container-fluid {
+		//Footer+Navbar
+		min-height: calc(100vh - 535px);
 	}
 }
 
@@ -282,17 +314,60 @@ h5 {
 	}
 }
 
-.card:hover {
+.movie {
+	background-color: $card-bg;
+    border-radius: 3px;
+    box-shadow: 0 4px 5px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    position: relative;
+	margin: 1rem;
+	margin-left: auto;
+	margin-right: auto;
+	width: 300px;
+
+	.movie-details {
+		text-align: center;
+		padding: 10px;
+		margin-bottom: 38px;
+	
+		h3 {
+			font-size: 24px;
+
+			a {
+				color: $font-color-primary;
+			}
+		}
+	
+		.text-muted {
+			color: rgba(255,255,255,.5) !important;
+			margin-bottom: .5rem;
+		}
+	}
+
+	.poster-container {
+		min-height: 450px;
+		border-bottom: 1px solid $border-primary;
+	}
+	
+	.button-container {
+		position: absolute;
+		bottom: 0;
+		width: 100%;	
+	}
+}
+
+.card:hover, .movie:hover {
 	.viewed-icon {
 		color: rgba(3, 169, 244, 1);
 		transition: color 0.5s linear;
+		z-index: 3;
 	}
 
 	.movie-button-group {
-		display: inline-flex;
+		display: block;
 	}
 
-	.card-img-top {
+	.card-img-top, img {
 		filter: grayscale(50%);
 		filter: brightness(0.4);
 		transition: filter 0.5s linear;
@@ -301,27 +376,27 @@ h5 {
 	.hover-toggle {
 		visibility: visible;
 		opacity: 1;
-		transition: all 0.5s ease-in-out 0s, visibility 0s linear 0s, z-index 0s linear 0.3s;	
+		transition: all 0.5s ease-in-out 0s, visibility 0s linear 0s, z-index 0s linear 0.3s;
 	}
 }
 
 .footer {
-	background-color: rgb(75, 70, 70);
+	background-color: $footer-bg;//rgb(75, 70, 70);
 	margin-top: 20px;
 
 	h3 {
 		text-transform: uppercase;
-		color: white;
+		color: $font-color-primary;
 		margin-bottom: 30px;
 	}
 
 	h5 {
 		text-transform: none;
-		color: white;
+		color: $font-color-primary;
 	}
 
 	a {
-		color: white;
+		color: $font-color-primary;
 	}
 
 	a:hover {
@@ -329,7 +404,7 @@ h5 {
 	}
 
 	.info {
-		background-color: #03a9f4;
+		background-color: $border-primary;
 		padding: 60px;
 		margin-left: auto;
 		margin-right: auto;
@@ -338,7 +413,7 @@ h5 {
 		border-radius: 5px;
 		margin-top: 30px;
 		margin-bottom: 30px;
-		color: white;
+		color: $font-color-primary;
 	}
 
 	svg {
@@ -360,9 +435,13 @@ h5 {
 .dropdown-menu.show {
 	visibility: visible;
 	transform: translateY(0%);
-	z-index: 1;
+	z-index: 4;
 	opacity: 1;
 	transition: all 0.3s ease-in-out 0s, visibility 0s linear 0s, z-index 0s linear 0.3s;	
+}
+
+.dropdown-item.active, .dropdown-item:active {
+	background-color: $border-primary;
 }
 
 .btn-group {
@@ -378,7 +457,6 @@ h5 {
 
 		td:nth-child(1) {
 			text-align: center;
-			color: rgb(51, 51, 51);
 			line-height: 1.6;
 		}
 
@@ -387,5 +465,20 @@ h5 {
 			line-height: 1.6;
 			vertical-align: middle;
 		}
+	}
+}
+
+
+.feature-image {
+	text-align: center;
+	margin-top: auto;
+	margin-bottom: auto;
+	padding-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+	.card-group>.card {
+		display: block;
+		flex: auto;
 	}
 }

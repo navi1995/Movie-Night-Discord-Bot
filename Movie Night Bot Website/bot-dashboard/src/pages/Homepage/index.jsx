@@ -13,8 +13,8 @@ export function Homepage(props) {
 
 	React.useEffect(() => {
 		getBotServers().then(function(response) {
-			if (response.data && response.data.server_count) {
-				setServerCount(response.data.server_count);
+			if (response.data && response.data.count) {
+				setServerCount(response.data.count);
 			}
 		}).catch(function(err) {
 		});
@@ -27,7 +27,7 @@ export function Homepage(props) {
 					For Discord
 				</h1>
 				<br />
-				<h3 style={{color: 'white'}}>
+				<h3 id="serverCount" style={{color: 'white'}}>
 					Used in <b><CountUp start={3500} end={serverCount} duration={2} /></b> servers
 				</h3>
 				<br />
@@ -75,8 +75,8 @@ export function Homepage(props) {
 					</Card>
 				</CardGroup>
 				<Row className='mt-5 info-panel'>
-					<Col className='feature-image'><Image fluid className='image-shadow' src='/images/cropped-confirmation.png' /></Col>
-					<Col className='flex-col'>
+					<Col className='feature-image' lg={6}><Image fluid className='image-shadow' src='/images/cropped-confirmation.png' /></Col>
+					<Col className='flex-col' lg={6}>
 						<h3>Add Command</h3>
 						<p className='header-sub'>Will search online databases and display all the movies details to you!</p>
 						<Row>
@@ -113,8 +113,8 @@ export function Homepage(props) {
 					<Col className='feature-image'><Image fluid className='image-shadow' src='/images/cropped-list.png' /></Col>
 				</Row>
 				<Row className='mt-5 info-panel'>
-					<Col className='feature-image'><Image fluid className='image-shadow' src='/images/cropped-poll.png' /></Col>
-					<Col className='flex-col'>
+					<Col lg={6} className='feature-image'><Image fluid className='image-shadow' src='/images/cropped-poll.png' /></Col>
+					<Col className='flex-col' lg={6}>
 						<h3>Poll Command</h3>
 						<p className='header-sub'>Begins a poll in the server with up to a max of 10 random movies from the servers list. This can also be set to less movies if required.</p>
 						<Row>
@@ -132,7 +132,7 @@ export function Homepage(props) {
 					</Col>
 				</Row>
 				<Row className='mt-5 info-panel'>
-					<Col className='flex-col'>
+					<Col className='flex-col' lg={6}>
 						<h3>Winner</h3>
 						<p className='header-sub'>Winner of the film is announced after the poll ends.</p>
 						<Row>
@@ -148,7 +148,7 @@ export function Homepage(props) {
 							</Col>
 						</Row>
 					</Col>
-					<Col className='feature-image'><Image fluid className='image-shadow' src='/images/cropped-win.png' /></Col>
+					<Col lg={6} className='feature-image'><Image fluid className='image-shadow' src='/images/cropped-win.png' /></Col>
 				</Row>
 			</Container>
 			<FooterComponent />

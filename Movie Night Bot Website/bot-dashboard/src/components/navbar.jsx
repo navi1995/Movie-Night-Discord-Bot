@@ -32,7 +32,7 @@ export function NavbarComponent(props) {
 	}
 
 	return (
-		<Navbar style={{ backgroundColor: 'rgb(44, 41, 41)' }} variant='dark' expand='lg'>
+		<Navbar variant='dark' expand='lg'>
 			<Container>
 				<Navbar.Brand>
 					<img
@@ -45,11 +45,13 @@ export function NavbarComponent(props) {
 				</Navbar.Brand>
 				<Navbar.Toggle aria-controls='basic-navbar-nav' />
 				<Navbar.Collapse id='basic-navbar-nav'>
-					<Nav className='justify-content-end ml-auto'>
+					<Nav className='justify-content'>
 						<Nav.Link exact as={NavLink} to={{pathname: `/`}}>Home</Nav.Link>
 						<Nav.Link exact as={NavLink} to={{pathname: `/commands`}}>Commands</Nav.Link>
 						{isUserLoggedIn() && (<Nav.Link isActive={isMenuActive} as={NavLink} to={{pathname: `/menu`}}>Menu</Nav.Link>)}
-						{isUserLoggedIn() && currentGuild.id && (
+					</Nav>
+					<Nav className='justify-content-end ml-auto'>
+					{isUserLoggedIn() && currentGuild.id && (
 							<NavDropdown active={isDashboardActive()} title={<div className='dropdown-avatar'><img alt='' className='rounded-circle' src={currentGuild.icon ? `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}?size=256` : '/images/default.png'} />{currentGuild.name || ''}</div>}>
 								{guilds.map(guild => (
 									(guild.isBotInServer 
@@ -60,7 +62,7 @@ export function NavbarComponent(props) {
 							</NavDropdown>
 						)}
 						{isUserLoggedIn() && (
-							<NavDropdown title={<div className='dropdown-avatar'><img alt='' className='rounded-circle' src={`https://cdn.discordapp.com/avatars/${user.discordID}/${user.avatar}?size=256`} /><span>{user.discordTag}</span></div>}>
+							<NavDropdown title={<div className='dropdown-avatar'><img alt='' className='rounded-circle' src={user.avatar ? `https://cdn.discordapp.com/avatars/${user.discordID}/${user.avatar}?size=256`: 'https://cdn.discordapp.com/embed/avatars/1.png'} /><span>{user.discordTag}</span></div>}>
 								<NavDropdown.Item href={`${process.env.REACT_APP_BASE_API_URL}logout`}>Logoff</NavDropdown.Item>
 							</NavDropdown>
 						)}

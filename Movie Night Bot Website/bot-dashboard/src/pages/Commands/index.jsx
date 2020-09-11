@@ -19,7 +19,7 @@ export function Commands(props) {
 			<Container>
 				<h3>The default prefix is --</h3>
 				<h6>Login to dashboard and hover over guild to check prefix.</h6>
-				<Table responsive>
+				<Table responsive variant="dark">
 					<tbody>
 						<tr>
 							<td>help</td>
