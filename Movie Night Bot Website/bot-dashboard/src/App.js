@@ -33,11 +33,16 @@ function App() {
 			if (err.response && err.response.data.message) {
 				setUser(null);
 				setLoading(false);
+			}
 
-				//Must add unauth page url's here for now.
-				if (!(window.location.pathname == '/' || window.location.pathname == '/commands')) {
-					window.location.pathname = '/';
-				}
+			//Must add unauth page url's here for now.
+			if (!(window.location.pathname == '/' || window.location.pathname == '/commands')) {
+				window.location.pathname = '/';
+			}
+
+			if (window.location.pathname == '/' || window.location.pathname == '/commands') {
+				setLoading(false);
+				setUser(null);
 			}
 		});
 	}, [location]);

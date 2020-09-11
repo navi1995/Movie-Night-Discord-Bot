@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 export function getUserDetails() {
-	console.log(`${process.env.REACT_APP_API_FULLURL}auth`);
 	return axios.get(`${process.env.REACT_APP_API_FULLURL}auth`, {
 		withCredentials: true
 	});
@@ -20,11 +19,7 @@ export function getMovies(guildID) {
 }
 
 export function getBotServers() {
-	return axios.get('https://top.gg/api/bots/709271563110973451/stats', {
-		headers: {
-			'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcwOTI3MTU2MzExMDk3MzQ1MSIsImJvdCI6dHJ1ZSwiaWF0IjoxNTkxNjkwMjczfQ.bOcA6o-pSaWsvdz4n3Pu5JOiz2ZNajrV9ejld96xOqs'
-		}
-	})
+	return axios.get(`${process.env.REACT_APP_BASE_API_URL}count`)
 }
 
 export function deleteMovieAPI(movie) {

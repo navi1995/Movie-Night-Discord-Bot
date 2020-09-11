@@ -6,8 +6,8 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons';
 
 export function FooterComponent(props) {
 	return (
-		<div className='footer'>
-			<Container>
+		<div id='contactInfo' className='footer'>
+			<Container className='container-footer'>
 				<Row>
 					<div className='info'>
 						<h3>Contact Information</h3>

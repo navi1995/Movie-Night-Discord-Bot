@@ -8,7 +8,7 @@ const { hasDeletePermissions, isUserInGuild } = require('../utils/utils');
 //Returns all guilds for a user.
 router.get('/guilds', async (request, response) => {
 	try {
-		const user = await User.findOne({ discordId: request.user.discordId });
+		const user = await User.findOne({ discordID: request.user.discordID });
 		const userGuilds = await getUserGuilds(user.discordID); //This updates the guilds against user in our mongoDB as well.
 		const userGuildIDs = userGuilds.map(guild => guild.id);
 		const botGuilds = await Settings.find({ guildID: userGuildIDs });
@@ -41,7 +41,7 @@ router.get('/guilds', async (request, response) => {
 
 //Returns all movies for a given guild
 router.get('/movies/:guildID', async (request, response) => {
-	const user = await User.findOne({ discordId: request.user.discordId }); //Update with refresh tokens
+	const user = await User.findOne({ discordID: request.user.discordID }); //Update with refresh tokens
 	const { guildID } = request.params;
 	const userInGuild = isUserInGuild(user, guildID); //Check if user requesting is actually in the guild
 
@@ -61,8 +61,8 @@ router.get('/movies/:guildID', async (request, response) => {
 
 //Deletes a movie from the guilds list. Requires GuildID and MovieID to be sent in payload. 
 router.post('/movies/delete', async (request, response) => {
-	const user = await User.findOne({ discordId: request.user.discordId }); //Update with refresh tokens
 	const userID = request.user.discordID;
+	const user = await User.findOne({ discordID: userID }); //Update with refresh tokens
 	const guildID = request.body.guildID;
 	const movieID = request.body.movieID;
 
@@ -91,8 +91,8 @@ router.post('/movies/delete', async (request, response) => {
 
 //Updates a movie to be either VIEWED or UNVIEWED. Requires GuildID and MovieID to be sent in payload. 
 router.post('/movies/viewed', async (request, response) => {
-	const user = await User.findOne({ discordId: request.user.discordId }); //Update with refresh tokens
 	const userID = request.user.discordID;
+	const user = await User.findOne({ discordID: userID }); //Update with refresh tokens
 	const guildID = request.body.guildID;
 	const movieID = request.body.movieID;
 

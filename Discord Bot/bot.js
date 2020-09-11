@@ -90,7 +90,7 @@ client.commandsArray = [];
 mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
 
 function setMessage() {
-	client.user.setActivity("movies with friends at https://movienightbot.xyz/", { type: "WATCHING" });
+	client.user.setActivity("at https://movienightbot.xyz/", { type: "WATCHING" });
 }
 
 client.once("ready", () => {

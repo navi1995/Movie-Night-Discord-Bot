@@ -9,9 +9,9 @@ export function Menu(props) {
 	const [loading] = React.useState(props.loading);
 	
 	return (
-		<div>
+		<div className='menu-page'>
 			{!loading && (
-			<Container className='menu-page'>
+			<Container>
 				<Row>
 				{
 				guilds.filter(guild => {
@@ -19,7 +19,7 @@ export function Menu(props) {
 				}).map(guild => (
 					<Col xl={3} lg={4} md={4} sm={6} xs={6} className='clearfix py-3' key={guild.id} >
 						<Link to={{pathname: `/dashboard/${guild.id}`, state: {user: user}}} key={guild.id} >
-							<Card className='text-center'>
+							<Card className='text-center' bg='dark'>
 								{ guild.icon 
 									? <Card.Img variant='top' src={`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}?size=256`} />
 									: <Card.Img variant='top' src='/images/default.png' />
@@ -48,7 +48,7 @@ export function Menu(props) {
 				}).map(guild => (
 					<Col xl={3} lg={4} md={4} sm={6} xs={6} className='clearfix py-3' key={guild.id}>
 						<a target='_blank' rel='noopener noreferrer' href={`https://discord.com/oauth2/authorize?client_id=709271563110973451&permissions=1073835072&scope=bot&redirect_uri=${encodeURIComponent(process.env.REACT_APP_BASE_URL + 'menu')}&guild_id=${guild.id}`}>
-							<Card className='text-center'>
+							<Card className='text-center' bg='dark'>
 								{ guild.icon 
 									? <Card.Img variant='top' src={`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}?size=256`} />
 									: <Card.Img variant='top' src='/images/default.png' />
