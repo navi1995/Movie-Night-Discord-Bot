@@ -21,7 +21,7 @@ module.exports = {
 			return main.searchNewMovie(search, message, function(newMovie, data) {
 				//No need for else, searchNewMovie alerts user if no movie found.
 				if (newMovie) {
-				newMovie.save(function(err) {
+					newMovie.save(function(err) {
 						if (err && err.name == "MongoError") {
 							message.channel.send(newMovie.name + " already exists in the list. It may be marked as 'Viewed'");
 
