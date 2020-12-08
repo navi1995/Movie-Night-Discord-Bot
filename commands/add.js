@@ -21,9 +21,9 @@ module.exports = {
 			return main.searchNewMovie(search, message, function(newMovie, data) {
 				//No need for else, searchNewMovie alerts user if no movie found.
 				if (newMovie) {
-					newMovie.save(function(err) {
+				newMovie.save(function(err) {
 						if (err && err.name == "MongoError") {
-							message.channel.send("Movie already exists in the list. It may be marked as 'Viewed'");
+							message.channel.send(newMovie.name + " already exists in the list. It may be marked as 'Viewed'");
 
 							return callback();
 						}
@@ -50,16 +50,16 @@ module.exports = {
 										const reaction = collected.first();
 
 										if (reaction.emoji.name == emojis.yes) {
-											message.channel.send("Movie will be added to the list!");
+											message.channel.send( newMovie.name + " will be added to the list!");
 
 											return callback();
 										} else {
-											message.channel.send("Movie will not be added to the list. Try using an IMDB link instead?");
+											message.channel.send(newMovie.name + " will not be added to the list. Try using an IMDB link instead?");
 											
 											return removeMovie(newMovie, callback);
 										}
 									}).catch(() => {
-										message.channel.send("Movie will not be added, you didn't respond in time. Try using an IMDB link instead?");
+										message.channel.send(newMovie.name + " will not be added, you didn't respond in time. Try using an IMDB link instead?");
 
 										return removeMovie(newMovie, callback);
 									});
