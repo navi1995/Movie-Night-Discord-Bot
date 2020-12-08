@@ -4,8 +4,9 @@ module.exports = {
 	aliases: ["getrandom", "getone", "randommovie", "roulette"],
 	admin: true,
 	async execute(message, args, main, callback, settings) {
+		//If we have arguments, we assume our first argument is a number or a comparison operator and a number.
+		const rating = args.length > 0 ? main.buildNumericComparison(args.join(" ")) : null;
 		//First we get total number of movies the guild has that are unviewed.
-		const rating = args.length > 0 ? main.buildComparison(args[0]) : null;
 		return main.movieModel.countDocuments({guildID: message.guild.id, viewed: false, rating}, function(err, count) {
 			if (!err) {
 				const random = Math.floor(Math.random() * count);

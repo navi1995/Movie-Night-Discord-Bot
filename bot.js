@@ -351,7 +351,12 @@ function getSettings(guildID) {
 	return setting.findOne({guildID: guildID }).lean().exec();
 }
 
-function buildComparison(comparison) {
+/**
+ * Builds a Mongoose comparison object based on a given string.
+ * @param string comparison A string of length > 0 which contains either a number, or a number and 
+ * a comparison operator.
+ */
+function buildNumericComparison(comparison) {
 	let operator = comparison.charAt(0);
 	switch(operator) {
 		case '<':
@@ -365,8 +370,9 @@ function buildComparison(comparison) {
 			break;
 		default:
 			operator = "$gt";
+			
 	}
-	return { [operator]: parseFloat(comparison.replace(/[^\d.-]/g, ''))}
+	return { [operator]: comparison.replace(/[^\d.-]/g, '') }
 }
 
 // function syncUpAfterDowntime() {
@@ -388,7 +394,7 @@ function buildComparison(comparison) {
 main.movieModel = movieModel;
 main.searchMovieDatabaseObject = searchMovieDatabaseObject;
 main.buildSingleMovieEmbed = buildSingleMovieEmbed;
-main.buildComparison = buildComparison;
+main.buildNumericComparison = buildNumericComparison;
 main.searchNewMovie = searchNewMovie;
 main.setting = setting;
 main.guildSettings = guildSettings;
