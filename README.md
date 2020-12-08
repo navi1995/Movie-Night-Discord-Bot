@@ -12,7 +12,9 @@ Create a config.json file in the root directory
   "prefix": "set to whichever prefix you wish the bot to use.",
   "token": "set to your discord bot API token",
   "movieDbAPI": "set to your API token from developers.themoviedb.org (Required to get movie data when requested by user)",
-  "mongoLogin": "set to your connection string for any MongoDB collection (Check Mongoose for more information)"
+  "mongoLogin": "set to your connection string for any MongoDB collection (Check Mongoose for more information)",
+  "topggAPI": "Top.gg Api Key (Optional if testing=true)",
+  "testing": "set to true if you do not want to use top.gg/dblapi.js."
 }
 ```
 
