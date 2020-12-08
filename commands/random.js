@@ -6,12 +6,12 @@ module.exports = {
 	async execute(message, args, main, callback, settings) {
 		//If we have arguments, we assume our first argument is a number or a comparison operator and a number.
 		const rating = args.length > 0 ? main.buildNumericComparison(args.join(" ")) : null;
+
+		const searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true, rating);
 		//First we get total number of movies the guild has that are unviewed.
-		return main.movieModel.countDocuments({guildID: message.guild.id, viewed: false, rating}, function(err, count) {
+		return main.movieModel.countDocuments(searchOptions, function(err, count) {
 			if (!err) {
 				const random = Math.floor(Math.random() * count);
-				const searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true, rating);
-
 				//Then using a generated random number limited to the count, we find a random movie from the guilds list. If auto view is on, it will be set to viewed.
 				return main.movieModel.find(searchOptions).skip(random).limit(1).lean().exec(async function (error, docs) {
 					if (docs && docs.length > 0) {
