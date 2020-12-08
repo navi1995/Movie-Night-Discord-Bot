@@ -248,7 +248,7 @@ function handleError(err, message) {
 }
 
 //Movie can be string or IMDB link
-function searchMovieDatabaseObject(guildID, movie, hideViewed) {
+function searchMovieDatabaseObject(guildID, movie, hideViewed, rating) {
 	var searchObj = {
 		guildID: guildID
 	};
@@ -259,6 +259,10 @@ function searchMovieDatabaseObject(guildID, movie, hideViewed) {
 
 	if (hideViewed) {
 		searchObj.viewed = false;
+	}
+
+	if (rating) {
+		searchObj.rating = rating;
 	}
 
 	return searchObj;
@@ -347,6 +351,24 @@ function getSettings(guildID) {
 	return setting.findOne({guildID: guildID }).lean().exec();
 }
 
+function buildComparison(comparison) {
+	let operator = comparison.charAt(0);
+	switch(operator) {
+		case '<':
+			operator = "$lt";
+			break;
+		case '>':
+			operator = "$gt";
+			break;
+		case '=':
+			operator ="$eq";
+			break;
+		default:
+			operator = "$gt";
+	}
+	return { [operator]: parseFloat(comparison.replace(/[^\d.-]/g, ''))}
+}
+
 // function syncUpAfterDowntime() {
 // 	setting.find({}).exec(function(err, docs) { 
 // 		var missingSettings = Array.from(client.guilds.cache.keys()).filter(function(val) {
@@ -366,6 +388,7 @@ function getSettings(guildID) {
 main.movieModel = movieModel;
 main.searchMovieDatabaseObject = searchMovieDatabaseObject;
 main.buildSingleMovieEmbed = buildSingleMovieEmbed;
+main.buildComparison = buildComparison;
 main.searchNewMovie = searchNewMovie;
 main.setting = setting;
 main.guildSettings = guildSettings;

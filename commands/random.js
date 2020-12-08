@@ -5,10 +5,11 @@ module.exports = {
 	admin: true,
 	async execute(message, args, main, callback, settings) {
 		//First we get total number of movies the guild has that are unviewed.
-		return main.movieModel.countDocuments({guildID: message.guild.id, viewed: false }, function(err, count) {
+		const rating = args.length > 0 ? main.buildComparison(args[0]) : null;
+		return main.movieModel.countDocuments({guildID: message.guild.id, viewed: false, rating}, function(err, count) {
 			if (!err) {
 				const random = Math.floor(Math.random() * count);
-				const searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
+				const searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true, rating);
 
 				//Then using a generated random number limited to the count, we find a random movie from the guilds list. If auto view is on, it will be set to viewed.
 				return main.movieModel.find(searchOptions).skip(random).limit(1).lean().exec(async function (error, docs) {
