@@ -372,7 +372,8 @@ function buildNumericComparison(comparison) {
 			operator = "$gt";
 			
 	}
-	return { [operator]: comparison.replace(/[^\d.-]/g, '') }
+	const value = parseFloat(comparison.replace(/[^\d.-]/g, ''));
+	return (value != '' && !isNaN(value)) ? { [operator]: value } : null;
 }
 
 // function syncUpAfterDowntime() {
