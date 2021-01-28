@@ -90,20 +90,8 @@ html {
 	}
 }
 
-.info-panel:nth-child(even) {
-	.image-shadow {
-		box-shadow: 15px 25px 0px 3px $border-primary;
-	}
-}
-
-.info-panel:nth-child(odd) {
-	background-color: $card-bg;//rgb(245, 250, 253);
-
-	.image-shadow {
-		box-shadow: -15px 25px 0px 3px $border-primary;
-	}
-}
-
+// .info-panel:nth-child(odd) {
+// 	background-color: $card-bg;//rgb(245, 250, 253);
 .info-panel {
 	padding-top: 40px;
 	padding-bottom: 40px;
@@ -111,6 +99,10 @@ html {
 	.feature-card, * {
 		margin-bottom: 5px;
 		margin-top: 5px;
+	}
+
+	.image-shadow {
+		box-shadow: 15px 25px 0px 3px $border-primary;
 	}
 }
 
@@ -448,6 +440,10 @@ h5 {
 	button, label {
 		border-radius: 0px;
 	}
+}
+
+.toast.show {
+	background-color: #202225;
 }
 
 .commands-page {

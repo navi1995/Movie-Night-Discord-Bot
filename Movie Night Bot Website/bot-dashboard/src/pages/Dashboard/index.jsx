@@ -114,7 +114,7 @@ export function Dashboard(props) {
 				))}
 				{movies.length == 0 && (<h3 style={{margin: 'auto', marginTop: '2.5em', marginBottom: '2.5em'}}>No Movies =(</h3>)}
 				</Row>
-				<Toast style={{ position: 'fixed', bottom: '100px', right: 0}} show={responseMessage != null && responseMessage != ''}>
+				<Toast style={{ position: 'fixed', bottom: '100px', right: 0, backgroundColor: '#36393f'}} show={responseMessage != null && responseMessage != ''}>
 					<Toast.Body>{responseMessage}</Toast.Body>
 				</Toast>
 			</Container>
