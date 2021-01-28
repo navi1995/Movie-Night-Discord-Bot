@@ -83,18 +83,6 @@ html {
   color: #999999;
 }
 
-.info-panel:nth-child(even) .image-shadow {
-  box-shadow: 15px 25px 0px 3px #03a9f4;
-}
-
-.info-panel:nth-child(odd) {
-  background-color: #36393f;
-}
-
-.info-panel:nth-child(odd) .image-shadow {
-  box-shadow: -15px 25px 0px 3px #03a9f4;
-}
-
 .info-panel {
   padding-top: 40px;
   padding-bottom: 40px;
@@ -103,6 +91,10 @@ html {
 .info-panel .feature-card, .info-panel * {
   margin-bottom: 5px;
   margin-top: 5px;
+}
+
+.info-panel .image-shadow {
+  box-shadow: 15px 25px 0px 3px #03a9f4;
 }
 
 .flex-col {
@@ -413,6 +405,10 @@ h5 + p {
 
 .btn-group button, .btn-group label {
   border-radius: 0px;
+}
+
+.toast.show {
+  background-color: #202225;
 }
 
 .commands-page table {
