@@ -6,7 +6,7 @@ module.exports = {
 	name: "poll",
 	description: "Begins a poll.",
 	aliases: ["begin", "start"],
-	admin: true,
+	//admin: true, Check admin but also check setting for pollRole
 	async execute(message, args, main, callback, settings) {
 		var embeddedMessages = [];
 		var number = 1;
@@ -15,6 +15,18 @@ module.exports = {
 		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
 		var movieEmbed = new MessageEmbed().setTitle("Poll has begun!").setColor("#6441a3");
 		var movieMap = {};
+
+		//Check this logic
+		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set. 
+		if ((settings.pollRole && !message.member.roles.cache.has(settings.pollRole)) && !message.member.hasPermission("ADMINISTRATOR")) {
+			message.channel.send(`Polls can only be started by administrators or users with the role <@&${settings.addMoviesRole}>`);
+
+			return callback();
+		} else if (!settings.pollRole && !message.member.hasPermission("ADMINISTRATOR")) {
+			message.channel.send(`Polls can only be started by administrators, or set a role using pollrole command.`);
+
+			return callback();
+		}
 
 		message.channel.send(settings.pollTime >= main.maxPollTime*1000 ? settings.pollMessage + "\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO TWO HOURS DUE TO A TECHNICAL ISSUE. THIS WILL BE FIXED SOON)" : settings.pollMessage);
 
