@@ -14,7 +14,7 @@
     "discord.js": "^12.2.0",
     "moment": "^2.25.3",
     "mongoose": "^5.9.13",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.1"
   },
   "devDependencies": {
     "eslint": "^7.5.0"

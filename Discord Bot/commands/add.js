@@ -70,6 +70,7 @@ module.exports = {
 								return callback();
 							}
 						} else {
+							console.log(err);
 							message.channel.send("Something went wrong, couldn't run command");
 
 							return callback();
