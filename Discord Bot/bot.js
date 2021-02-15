@@ -10,7 +10,7 @@ const moment = require("moment");
 const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Discord.Client({
-	messageCacheMaxSize: 70,
+	messageCacheMaxSize: 50,
 	messageCacheLifetime: 7300, //Maximum poll time = 7200, ensure message not swept.
 	messageSweepInterval: 600,
 	disabledEvents: [
@@ -74,7 +74,8 @@ const Settings = new Schema({
 	pollMessage: { type: String, default: "Poll has begun!" },
 	pollSize: { type: Number, min: 1, max: 10, default: 10 },
 	autoViewed: { type: Boolean, default: false },
-	addMoviesRole: { type: String, default: null }
+	addMoviesRole: { type: String, default: null },
+	pollRole: { type: String, default: null }
 });
 const movieModel = mongoose.model("Movie", Movie);
 const setting = mongoose.model("Settings", Settings);
@@ -89,7 +90,7 @@ client.commandsArray = [];
 mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
 
 function setMessage() {
-	client.user.setActivity("movies with friends at https://movienightbot.xyz/", { type: "WATCHING" });
+	client.user.setActivity("at https://movienightbot.xyz/", { type: "WATCHING" });
 }
 
 client.once("ready", () => {
@@ -130,6 +131,8 @@ for (const file of commandFiles) {
 }
 
 client.on("message", async function(message) {	
+	if (message.author.bot) return;
+
 	var guildID = message.guild ? message.guild.id : -1;
 
 	//Put in a check for all commands and aliases, if not apart of message dont continue
@@ -316,7 +319,7 @@ async function searchNewMovie(search, message, callback) {
 		data = await fetch(`https://api.themoviedb.org/3/movie/${isImdbSearch ? initialData.movie_results[0].id : initialData.results[0].id}?api_key=${movieDbAPI}`).then(response => response.json());
 	}
 
-	if (!data || failedSearch) {
+	if (!data || failedSearch || data.success == "false") {
 		message.channel.send("Couldn't find any movies. Sorry!");
 
 		return callback(null, data);
