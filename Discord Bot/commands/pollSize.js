@@ -5,30 +5,18 @@ module.exports = {
 	admin: true,
 	async execute(message, args, main, settings) {
 		if (!args.length) {
-			await message.channel.send(`Poll size is currently set to: ${settings.pollSize}`);
-
-			return;
+			return message.channel.send(`Poll size is currently set to: ${settings.pollSize}`);
 		} else if (args.length > 1 || isNaN(args[0])) {
-			await message.channel.send("Please only specify a number.");
-			
-			return;
+			return message.channel.send("Please only specify a number.");
 		} else {
 			var pollSize = Math.floor(Number(args[0]));
 
 			if (pollSize >= 1 || pollSize <= 10) {
 				return main.setting.updateOne({guildID: message.guild.id}, { pollSize }, err => {
-					if (!err) {
-						await message.channel.send(`Poll size has now been set to: ${pollSize}`);
-					} else {
-						await message.channel.send("Couldn't set Poll size, something went wrong");
-					}
-
-					return;
+					return message.channel.send(err ? "Couldn't set Poll size, something went wrong" : `Poll size has now been set to: ${pollSize}`);
 				});
 			} else {
-				await message.channel.send("Poll size must be atleast 1 and a maximum of 10");
-
-				return;
+				return message.channel.send("Poll size must be atleast 1 and a maximum of 10");
 			}
 		}
 	}

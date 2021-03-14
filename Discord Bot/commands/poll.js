@@ -18,9 +18,7 @@ module.exports = {
 		//Check this logic
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set. 
 		if (!message.member.hasPermission("ADMINISTRATOR") && (!settings.pollRole || !message.member.roles.cache.has(settings.pollRole))) {
-			await message.channel.send(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : 'a set role using the \`pollrole\` command.'}`);
-
-			return;
+			return message.channel.send(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : 'a set role using the \`pollrole\` command.'}`);
 		}
 
 		await message.channel.send(settings.pollTime >= main.maxPollTime*1000 ? settings.pollMessage + "\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO TWO HOURS DUE TO A TECHNICAL ISSUE. THIS WILL BE FIXED SOON)" : settings.pollMessage);
@@ -28,15 +26,11 @@ module.exports = {
 		//2048 limit
 		await main.movieModel.find(searchOptions, (error, docs) => {
 			if (error) {
-				await message.channel.send("Could not  return list of movies, an error occured.");
-
-				return;
+				return message.channel.send("Could not  return list of movies, an error occured.");
 			}
 			
 			if (!docs.length) {
-				await message.channel.send("Cannot start poll. List of unviewed movies is empty.");
-
-				return;
+				return message.channel.send("Cannot start poll. List of unviewed movies is empty.");
 			} else if (docs && docs.length) {
 				//Gets random assortment of movies depending on poll size setting and number of movies in the servers list.
 				var movies = main.getRandomFromArray(docs, settings.pollSize);
@@ -108,9 +102,7 @@ module.exports = {
 						const highestValidReactions = reactionsCache.filter(a => emojiArray.includes(a.emoji.name));
 
 						if (!highestValidReactions.size) {
-							await message.channel.send("Reactions may have been removed or another error occurred.");
-
-							return;
+							return message.channel.send("Reactions may have been removed or another error occurred.");
 						}
 
 						const highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c);
@@ -121,17 +113,13 @@ module.exports = {
 							console.error(highestReact);
 							console.error(highestValidReactions);
 							if (highestReact) console.error(highestReact.emoji);
-							await message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
-
-							return;
+							return message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
 						}
 
 						var winner = movieArray[emojiArray.findIndex(highestReact.emoji.name)];
 
 						if (highestReact.count <= 1) {
-							await message.channel.send("No votes were cast, so no movie has been chosen.");
-							
-							return;
+							return message.channel.send("No votes were cast, so no movie has been chosen.");
 						}
 						
 						//If auto viewed is set, update movie to be entered into the VIEWED list. 
@@ -140,14 +128,11 @@ module.exports = {
 								if (!err) {
 									winner.viewed = true; winner.viewedDate = new Date();
 								} else {
-									await message.channel.send("Something went wrong, could not get winner. Try removing auto-view setting.");
-									return;
+									return message.channel.send("Something went wrong, could not get winner. Try removing auto-view setting.");
 								}
 							});
 						}
-						await message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
-
-						return;
+						return message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
 					}).catch(function() {
 						console.log(`Poll was deleted. guild: ${message.guild.id}, channel: ${message.channel.id}, message ID: ${message.id}`);
 					});
