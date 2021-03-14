@@ -5,23 +5,18 @@ module.exports = {
 	args: true,
 	admin: true,
 	async execute(message, args, main) {
-		var movie = args.join(" ");
-		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, movie);
+		const searchOptions = main.searchMovieDatabaseObject(message.guild.id, args.join(" "));
 
-		return main.movieModel.findOne(searchOptions, function(err, movie) {
+		return main.movieModel.findOne(searchOptions, (err, movie) => {
 			if (err || !movie) {
-				message.channel.send("Movie could not be found!");
-				
-				return;
+				return message.channel.send("Movie could not be found!");
 			} else {
-				movie.updateOne({ viewed: !movie.viewed, viewedDate: movie.viewed ? null : new Date() }, function(err) {
+				return movie.updateOne({ viewed: !movie.viewed, viewedDate: movie.viewed ? null : new Date() }, err => {
 					if (!err) {
-						message.channel.send(`${movie.name} has been set to ${!movie.viewed ? "viewed" : "unviewed"}!`);
+						return message.channel.send(`${movie.name} has been set to ${!movie.viewed ? "" : "un"}viewed!`);
 					} else {
-						message.channel.send("Could not set movie to viewed, something went wrong.");
+						return message.channel.send("Could not set movie to viewed, something went wrong.");
 					}
-
-					return;
 				});
 			} 
 		});
