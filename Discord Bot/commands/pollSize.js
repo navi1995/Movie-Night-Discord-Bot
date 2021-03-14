@@ -9,7 +9,7 @@ module.exports = {
 		} else if (args.length > 1 || isNaN(args[0])) {
 			return message.channel.send("Please only specify a number.");
 		} else {
-			var pollSize = Math.floor(Number(args[0]));
+			const pollSize = Math.floor(Number(args[0]));
 
 			if (pollSize >= 1 || pollSize <= 10) {
 				return main.setting.updateOne({guildID: message.guild.id}, { pollSize }, err => {
