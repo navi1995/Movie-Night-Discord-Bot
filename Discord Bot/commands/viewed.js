@@ -15,7 +15,7 @@ module.exports = {
 		searchOptions.viewed = true;
 
 		//2048 limit
-		return main.movieModel.find(searchOptions, async function (error, docs) {
+		return main.movieModel.find(searchOptions, async (error, docs) => {
 			if (error) return message.channel.send("Something went wrong trying to find the movies");
 			
 			if (!docs || !docs.length) {

@@ -24,7 +24,7 @@ module.exports = {
 		await message.channel.send(settings.pollTime >= main.maxPollTime*1000 ? settings.pollMessage + "\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO TWO HOURS DUE TO A TECHNICAL ISSUE. THIS WILL BE FIXED SOON)" : settings.pollMessage);
 
 		//2048 limit
-		await main.movieModel.find(searchOptions, (error, docs) => {
+		await main.movieModel.find(searchOptions, async (error, docs) => {
 			if (error) {
 				return message.channel.send("Could not  return list of movies, an error occured.");
 			}
@@ -64,12 +64,12 @@ module.exports = {
 
 			let emojiArray = [];
 
-			message.channel.send(embeddedMessage).then(async (message) => {
+			return message.channel.send(embeddedMessage).then(async message => {
 				//Polltime is stored in ms
 				let collector = message.createReactionCollector((r, u) => u.id !== client.user.id && emojiArray.includes(r.emoji.name), { time: (settings.pollTime >= main.maxPollTime*1000 ? main.maxPollTime*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 
 				console.log("Poll started. GuildID: " + message.guild.id  + " " + new Date());
-				collector.on("collect", (messageReact, user) => {
+				collector.on("collect", async (messageReact, user) => {
 					console.log("Collect" + " " + new Date());
 					let duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
 
@@ -94,10 +94,10 @@ module.exports = {
 					}
 				}
 		
-				collector.on("end", () => {
+				collector.on("end", async () => {
 					console.log("Poll end.  GuildID: " + message.guild.id + " " + new Date());
 					//Refetch message due to discord.js caching.
-					message.fetch().then(updatedMessage => {
+					await message.fetch().then(async updatedMessage => {
 						const reactionsCache = updatedMessage.reactions.cache;
 						const highestValidReactions = reactionsCache.filter(a => emojiArray.includes(a.emoji.name));
 
