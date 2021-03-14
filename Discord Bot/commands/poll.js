@@ -8,12 +8,12 @@ module.exports = {
 	aliases: ["begin", "start"],
 	//admin: true, Check admin but also check setting for pollRole
 	async execute(message, args, main, settings) {
-		var embeddedMessages = [];
-		var totalCount = 0;
-		var description = "";
-		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
-		var movieEmbed = new MessageEmbed().setTitle("Poll has begun!").setColor("#6441a3");
-		var movieArray = [];
+		let embeddedMessages = [];
+		let totalCount = 0;
+		let description = "";
+		let searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
+		let movieEmbed = new MessageEmbed().setTitle("Poll has begun!").setColor("#6441a3");
+		let movieArray = [];
 
 		//Check this logic
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set. 
@@ -33,12 +33,12 @@ module.exports = {
 				return message.channel.send("Cannot start poll. List of unviewed movies is empty.");
 			} else if (docs && docs.length) {
 				//Gets random assortment of movies depending on poll size setting and number of movies in the servers list.
-				var movies = main.getRandomFromArray(docs, settings.pollSize);
+				let movies = main.getRandomFromArray(docs, settings.pollSize);
 
 				totalCount = movies.length;
 
-				for (var movie of movies) {
-					var stringConcat = `**[${emojis[movieArray.length + 1]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
+				for (let movie of movies) {
+					let stringConcat = `**[${emojis[movieArray.length + 1]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
 					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
 
 					//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
@@ -57,25 +57,25 @@ module.exports = {
 			movieEmbed.setDescription(description);
 			embeddedMessages.push(movieEmbed);
 
-			for (var i = 0; i < embeddedMessages.length - 1; i++) {
+			for (let i = 0; i < embeddedMessages.length - 1; i++) {
 				await message.channel.send(embeddedMessages[i]);
 				//If the message is NOT the last one in the embedded messages chain, just send the message. ELSE we wil be sending the message + handling reacts on it.
 			}
 
-			var emojiArray = [];
+			let emojiArray = [];
 
 			message.channel.send(embeddedMessage).then(async (message) => {
 				//Polltime is stored in ms
-				var collector = message.createReactionCollector((r, u) => u.id !== client.user.id && emojiArray.includes(r.emoji.name), { time: (settings.pollTime >= main.maxPollTime*1000 ? main.maxPollTime*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
+				let collector = message.createReactionCollector((r, u) => u.id !== client.user.id && emojiArray.includes(r.emoji.name), { time: (settings.pollTime >= main.maxPollTime*1000 ? main.maxPollTime*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 
 				console.log("Poll started. GuildID: " + message.guild.id  + " " + new Date());
 				collector.on("collect", (messageReact, user) => {
 					console.log("Collect" + " " + new Date());
-					var duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
+					let duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
 
 					//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
 					//This block of code exists before the reactions are added to ensure as the bot adds reactions to the message, users are not able to duplicate votes during this time.
-					for (var reaction of duplicateReactions.values()) {
+					for (let reaction of duplicateReactions.values()) {
 						try {
 							await reaction.users.remove(user.id);
 						} catch (e) {
@@ -84,7 +84,7 @@ module.exports = {
 					}
 				});
 
-				for (var i = 1; i <= totalCount; i++) {
+				for (let i = 1; i <= totalCount; i++) {
 					try {
 						await message.react(emojis[i]);
 						emojiArray.push(emojis[i]);
@@ -116,7 +116,7 @@ module.exports = {
 							return message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
 						}
 
-						var winner = movieArray[emojiArray.findIndex(highestReact.emoji.name)];
+						let winner = movieArray[emojiArray.findIndex(highestReact.emoji.name)];
 
 						if (highestReact.count <= 1) {
 							return message.channel.send("No votes were cast, so no movie has been chosen.");
