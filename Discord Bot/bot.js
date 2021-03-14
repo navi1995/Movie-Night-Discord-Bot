@@ -80,7 +80,7 @@ const Settings = new Schema({
 });
 const movieModel = mongoose.model("Movie", Movie);
 const setting = mongoose.model("Settings", Settings);
-var main;
+let main;
 
 if (!testing) {
 	const dbl = new DBL(topggAPI, client);
@@ -119,7 +119,7 @@ function uncacheGuild(guild) {
 
 client.on("guildCreate", async function(guild) {
 	//Whenever the bot is added to a guild, instantiate default settings into our database. 
-	new setting({guildID: guild.id}).save(guildCreateError);
+	new setting({ guildID: guild.id }).save(guildCreateError);
 });
 
 client.on("guildDelete", function(guild) {
@@ -144,8 +144,6 @@ for (const file of commandFiles) {
 client.on("message", async function(message) {	
 	if (message.author.bot) return;
 
-	var guildID = message.guild ? message.guild.id : -1;
-
 	//Put in a check for all commands and aliases, if not apart of message dont continue
 	if (!client.commandsArray.some(commandText=>message.content.includes(commandText))) {
 		return;
@@ -157,7 +155,7 @@ client.on("message", async function(message) {
 		await getSettings(message.guild.id).then(function(settings) {
 			if (!settings) {
 				//If no settings exist (during downtime of bot) we instantiate some settings before processing command.
-				new setting({ guildID: guildID }).save(function(err, setting) {
+				new setting({ guildID: message.guild.id }).save(function(err, setting) {
 					if (err) {
 						console.error("Guild create", err);
 					} else {
@@ -171,7 +169,7 @@ client.on("message", async function(message) {
 	}
 
 	//Defaults in case mongoDB connection is down
-	const settings = guildSettings.get(guildID) || {
+	const settings = (message.guild ? guildSettings.get(message.guild.id) : null) || {
 		prefix: prefix || '--',
 		pollTime: "60000",
 		pollMessage: "Poll has begun!",
@@ -248,7 +246,7 @@ client.login(token);
 
 //Movie can be string or IMDB link
 function searchMovieDatabaseObject(guildID, movie, hideViewed) {
-	var searchObj = {
+	let searchObj = {
 		guildID: guildID
 	};
 	
@@ -264,7 +262,7 @@ function searchMovieDatabaseObject(guildID, movie, hideViewed) {
 }
 
 function buildSingleMovieEmbed(movie, subtitle, hideSubmitted) {
-	var embed = new Discord.MessageEmbed()
+	const embed = new Discord.MessageEmbed()
 		.setTitle(movie.name)
 		.setURL(`https://www.imdb.com/title/${movie.imdbID}`)
 		.setDescription(movie.overview)
@@ -292,10 +290,10 @@ function buildSingleMovieEmbed(movie, subtitle, hideSubmitted) {
 }
 
 async function searchNewMovie(search, message) {
-	var failedSearch = false;
-	var data = false;
-	var isImdbSearch = search.includes("imdb.com");
-	var searchTerm = isImdbSearch ? search.match(/tt[0-9]{7,8}/g) : search;
+	let failedSearch = false;
+	let data = false;
+	let isImdbSearch = search.includes("imdb.com");
+	let searchTerm = isImdbSearch ? search.match(/tt[0-9]{7,8}/g) : search;
 
 	if (!searchTerm) {
 		await message.channel.send("Please enter a valid search."); 
@@ -304,7 +302,7 @@ async function searchNewMovie(search, message) {
 	}
 
 	//If not a IMDB link, do a general search else we use a different endpoint.
-	var initialData = await (!isImdbSearch ? fetch(`https://api.themoviedb.org/3/search/movie?api_key=${movieDbAPI}&query=${encodeURIComponent(searchTerm)}&page=1`).then(response => response.json()) : fetch(`https://api.themoviedb.org/3/find/${encodeURIComponent(searchTerm)}?api_key=${movieDbAPI}&external_source=imdb_id`).then(response => response.json()));
+	let initialData = await (!isImdbSearch ? fetch(`https://api.themoviedb.org/3/search/movie?api_key=${movieDbAPI}&query=${encodeURIComponent(searchTerm)}&page=1`).then(response => response.json()) : fetch(`https://api.themoviedb.org/3/find/${encodeURIComponent(searchTerm)}?api_key=${movieDbAPI}&external_source=imdb_id`).then(response => response.json()));
 
 	failedSearch = !initialData || initialData.total_results == 0 || (initialData.movie_results && initialData.movie_results.length == 0);
 
@@ -350,7 +348,7 @@ function getSettings(guildID) {
 /*
 function syncUpAfterDowntime() {
 	setting.find({}).exec(function(err, docs) { 
-		var missingSettings = Array.from(client.guilds.cache.keys()).filter(function(val) {
+		let missingSettings = Array.from(client.guilds.cache.keys()).filter(function(val) {
 			return docs.map(a => a.guildID).includes(val);
 		});
 		missingSettings = missingSettings.map(function(a) {
