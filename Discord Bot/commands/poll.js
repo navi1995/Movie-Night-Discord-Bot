@@ -18,7 +18,7 @@ module.exports = {
 		//Check this logic
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set. 
 		if (!message.member.hasPermission("ADMINISTRATOR") && (!settings.pollRole || !message.member.roles.cache.has(settings.pollRole))) {
-			message.channel.send(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : 'a set role using the \`pollrole\` command.'}`, { allowedMentions: { parse: [] } });
+			message.channel.send(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : 'a set role using the \`pollrole\` command.'}`);
 
 			return callback();
 		}
