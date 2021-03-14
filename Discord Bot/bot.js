@@ -13,7 +13,7 @@ const client = new Discord.Client({
 	messageCacheMaxSize: 50,
 	messageCacheLifetime: 7300, //Maximum poll time = 7200, ensure message not swept.
 	messageSweepInterval: 600,
-	// allowedMentions: { parse: ['users'] }, // possible allowedMentions to prevent unintended role and everyone pings
+	allowedMentions: { parse: ['users'] }, // allowedMentions to prevent unintended role and everyone pings
 	disabledEvents: [
 		'GUILD_UPDATE'
 		,'GUILD_MEMBER_ADD'
