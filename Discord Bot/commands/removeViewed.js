@@ -19,7 +19,7 @@ module.exports = {
 		searchOptions.viewed = true;
 
 		//If submitted film is by member trying to delete, allow it.
-		if (args.join("")) {
+		if (args.join(" ")) {
 			return main.movieModel.findOne(searchOptions, (err, movie) => {
 				if (err || !movie) {
 					return message.channel.send("Movie could not be found!");
