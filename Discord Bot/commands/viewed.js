@@ -24,7 +24,7 @@ module.exports = {
 
 			if (docs && docs.length > 0) {
 				for (var movie of docs) {
-					var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy}, viewed on ${moment(movie.viewedDate).format("DD MMM YYYY")}\n
+					var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by <@${movie.submittedBy}>, viewed on ${moment(movie.viewedDate).format("DD MMM YYYY")}\n
 					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} **Minutes Rating:** ${movie.rating}\n\n`;
 
 					//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
