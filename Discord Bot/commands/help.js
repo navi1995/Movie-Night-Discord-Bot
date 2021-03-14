@@ -1,4 +1,5 @@
 const { prefix } = require('../config.json');
+const { MessageEmbed } = require('discord.js');
 
 module.exports = {
 	name: "help",
@@ -6,20 +7,14 @@ module.exports = {
 	aliases: ["commands"],
 	usage: "[command name]",
 	execute(message, args) {
-		const data = [];
+		const data = new MessageEmbed().setColor(0x03a9f4).setAuthor(message.author.tag, message.author.displayAvatarURL({ dynamic: true }));
 		const { commands } = message.client;
 
 		if (!args.length) {
-			data.push("Here's a list of all my commands:");
-			data.push(commands.map(command => '`' + command.name + '`').join(", "));
-			data.push(`\nYou can send \`${prefix}help [command name]\` to get info on a specific command!`);
+			data.setTitle("Here's a list of all my commands:");
+			data.setDescription(commands.map(command => '`' + command.name + '`').join(", ") + `\nYou can send \`${prefix}help [command name]\` to get info on a specific command!`);
 
-			return message.author.send(data.join('\n'), { split: { char: ',' } }).then(() => {
-				if (message.channel.type === "dm") return;
-				return message.reply("I've sent you a DM with all my commands!");
-			}).catch(() => {
-				return message.channel.send(data.join('\n'), { split: { char: ',' } }).catch(err => console.error(`Could not send help to ${message.author.tag}.\n`, err));
-			});
+			return message.channel.send(data);
 		}
 
 		const name = args[0].toLowerCase();
@@ -29,12 +24,12 @@ module.exports = {
 			return message.reply("That's not a valid command!");
 		}
 
-		data.push(`**Name:** ${command.name}`);
+		data.setDescription(`**Name:** ${command.name}`);
 
-		if (command.aliases) data.push(`**Aliases:** ${command.aliases.map(a => '`' + a + '`').join(", ")}`);
-		if (command.description) data.push(`**Description:** ${command.description}`);
-		if (command.usage) data.push(`**Usage:** ${prefix}${command.name} ${command.usage}`);
+		if (command.aliases) data.setDescription(data.description + `\n**Aliases:** ${command.aliases.map(a => '`' + a + '`').join(", ")}`);
+		if (command.description) data.setDescription(data.description + `\n**Description:** ${command.description}`);
+		if (command.usage) data.setDescription(data.description + `\n**Usage:** ${prefix}${command.name} ${command.usage}`);
 
-		return message.channel.send(data.join('\n'), { split: { char: ',' } });
+		return message.channel.send(data);
 	},
 };
