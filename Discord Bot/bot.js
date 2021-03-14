@@ -172,7 +172,7 @@ client.on("message", async function(message) {
 
 	//Defaults in case mongoDB connection is down
 	const settings = guildSettings.get(guildID) || {
-		prefix,
+		prefix: prefix || '--',
 		pollTime: "60000",
 		pollMessage: "Poll has begun!",
 		pollSize: 10,
