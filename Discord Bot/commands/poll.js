@@ -7,7 +7,7 @@ module.exports = {
 	description: "Begins a poll.",
 	aliases: ["begin", "start"],
 	//admin: true, Check admin but also check setting for pollRole
-	async execute(message, args, main, callback, settings) {
+	async execute(message, args, main, settings) {
 		var embeddedMessages = [];
 		var totalCount = 0;
 		var description = "";
@@ -18,9 +18,9 @@ module.exports = {
 		//Check this logic
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set. 
 		if (!message.member.hasPermission("ADMINISTRATOR") && (!settings.pollRole || !message.member.roles.cache.has(settings.pollRole))) {
-			message.channel.send(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : 'a set role using the \`pollrole\` command.'}`);
+			await message.channel.send(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : 'a set role using the \`pollrole\` command.'}`);
 
-			return callback();
+			return;
 		}
 
 		await message.channel.send(settings.pollTime >= main.maxPollTime*1000 ? settings.pollMessage + "\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO TWO HOURS DUE TO A TECHNICAL ISSUE. THIS WILL BE FIXED SOON)" : settings.pollMessage);
@@ -30,13 +30,13 @@ module.exports = {
 			if (error) {
 				await message.channel.send("Could not  return list of movies, an error occured.");
 
-				return callback();
+				return;
 			}
 			
 			if (!docs.length) {
 				await message.channel.send("Cannot start poll. List of unviewed movies is empty.");
 
-				return callback();
+				return;
 			} else if (docs && docs.length) {
 				//Gets random assortment of movies depending on poll size setting and number of movies in the servers list.
 				var movies = main.getRandomFromArray(docs, settings.pollSize);
@@ -110,7 +110,7 @@ module.exports = {
 						if (!highestValidReactions.size) {
 							await message.channel.send("Reactions may have been removed or another error occurred.");
 
-							return callback();
+							return;
 						}
 
 						const highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c);
@@ -123,7 +123,7 @@ module.exports = {
 							if (highestReact) console.error(highestReact.emoji);
 							await message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
 
-							return callback();
+							return;
 						}
 
 						var winner = movieArray[emojiArray.findIndex(highestReact.emoji.name)];
@@ -131,7 +131,7 @@ module.exports = {
 						if (highestReact.count <= 1) {
 							await message.channel.send("No votes were cast, so no movie has been chosen.");
 							
-							return callback();
+							return;
 						}
 						
 						//If auto viewed is set, update movie to be entered into the VIEWED list. 
@@ -141,13 +141,13 @@ module.exports = {
 									winner.viewed = true; winner.viewedDate = new Date();
 								} else {
 									await message.channel.send("Something went wrong, could not get winner. Try removing auto-view setting.");
-									return callback();
+									return;
 								}
 							});
 						}
 						await message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
 
-						return callback();
+						return;
 					}).catch(function() {
 						console.log(`Poll was deleted. guild: ${message.guild.id}, channel: ${message.channel.id}, message ID: ${message.id}`);
 					});

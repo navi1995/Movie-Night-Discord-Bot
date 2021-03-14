@@ -3,7 +3,7 @@ module.exports = {
 	description: "Returns a random movie from the servers list of films to watch.",
 	aliases: ["getrandom", "getone", "randommovie", "roulette"],
 	admin: true,
-	async execute(message, args, main, callback, settings) {
+	async execute(message, args, main, settings) {
 		//First we get total number of movies the guild has that are unviewed.
 		return main.movieModel.countDocuments({guildID: message.guild.id, viewed: false }, function(err, count) {
 			if (!err) {
@@ -25,23 +25,23 @@ module.exports = {
 									message.channel.send("Could not set movie to viewed.");
 								}
 
-								return callback();
+								return;
 							});
 						} else {
 							message.channel.send(movieEmbed);
 
-							return callback();
+							return;
 						}
 					} else {
 						message.channel.send("Your movie list is empty, so a random movie cannot be found.");
 
-						return callback();
+						return;
 					}
 				});
 			} else {
 				message.channel.send("Something went wrong.");
 				
-				return callback();
+				return;
 			}
 		});
 	},

@@ -3,15 +3,15 @@ module.exports = {
 	description: "Updates poll time to chosen number.",
 	usage: "[time chosen (in seconds)]",
 	admin: true,
-	async execute(message, args, main, callback, settings) {
+	async execute(message, args, main, settings) {
 		if (!args.length) {
 			message.channel.send(`Poll time is currently set to: ${settings.pollTime/1000} seconds`);
 
-			return callback();
+			return;
 		} else if (args.length > 1 || isNaN(Number(args[0]))) {
 			message.channel.send("Please only specify a number.");
 			
-			return callback();
+			return;
 		} else {
 			var pollTime = Number(args[0]) * 1000;
 			var limited = false;
@@ -30,7 +30,7 @@ module.exports = {
 					message.channel.send("Couldn't set Poll message, something went wrong");
 				}
 
-				return callback();
+				return;
 			});
 		}
 	}

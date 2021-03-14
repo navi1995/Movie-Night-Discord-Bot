@@ -3,11 +3,11 @@ module.exports = {
 	description: "Updates pollmessage to chosen string.",
 	usage: "[poll message]",
 	admin: true,
-	async execute(message, args, main, callback, settings) {
+	async execute(message, args, main, settings) {
 		if (!args.length) {
 			await message.channel.send(`Poll message is currently set to: ${settings.pollMessage}`);
 
-			return callback();
+			return;
 		} else {
 			const pollMessage = args.join(" ").trim();
 
@@ -18,7 +18,7 @@ module.exports = {
 					await message.channel.send("Couldn't set Poll message, something went wrong");
 				}
 
-				return callback();
+				return;
 			});
 		}
 	}
