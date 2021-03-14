@@ -3,15 +3,15 @@ module.exports = {
 	description: "Updates prefix to chosen string.",
 	usage: "[prefix chosen]",
 	admin: true,
-	async execute(message, args, main, callback, settings) {
+	async execute(message, args, main, settings) {
 		if (!args.length) {
 			message.channel.send(`Prefix is currently set to: ${settings.prefix}`);
 
-			return callback();
+			return;
 		} else if (args.length > 1) {
 			message.channel.send("No spaces allowed in command prefix.");
 			
-			return callback();
+			return;
 		} else {
 			return main.setting.updateOne({guildID: message.guild.id}, { "prefix":  args[0].trim()	}, function(err) {
 				if (!err) {
@@ -20,7 +20,7 @@ module.exports = {
 					message.channel.send("Couldn't set prefix, something went wrong");
 				}
 
-				return callback();
+				return;
 			});
 		}
 	}		

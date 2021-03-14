@@ -4,11 +4,11 @@ module.exports = {
 	aliases: ["delete", "clear"],
 	usage: "[movie name for specific delete, else just the command]",
 	//admin: true, --WE don't use admin tag here as user should be able to remove their own movies before viewing.
-	execute(message, args, main, callback) {
+	execute(message, args, main) {
 		if (!args.length && !message.member.hasPermission("ADMINISTRATOR")) {
 			message.channel.send("Sorry, only Administrators can delete all movies.");
 
-			return callback();
+			return;
 		}
 
 		if (!args.length) {
@@ -20,7 +20,7 @@ module.exports = {
 					message.channel.send("An error occured while trying to delete all movies");
 				}
 
-				return callback();
+				return;
 			});
 		}
 
@@ -33,7 +33,7 @@ module.exports = {
 				if (err || !movie) {
 					message.channel.send("Movie could not be found! It may be in the viewed list. Use removeviewed instead.");
 
-					return callback();
+					return;
 				} else if ("<@" + message.member.user.id + ">" == movie.submittedBy || message.member.hasPermission("ADMINISTRATOR")) {
 					return movie.remove(function(err) {
 						if (!err) {
@@ -42,18 +42,18 @@ module.exports = {
 							message.channel.send("Could not remove movie, something went wrong.");
 						}
 
-						return callback();
+						return;
 					});
 				} else {
 					message.channel.send("Non-administrators can only delete movies they have submitted");
 
-					return callback();
+					return;
 				}
 			});
 		} else {
 			message.channel.send("Specify a movie or remove space.");
 			
-			return callback();
+			return;
 		}
 	},
 };

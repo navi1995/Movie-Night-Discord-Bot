@@ -1,7 +1,7 @@
 module.exports = {
 	name: "stats",
 	description: "Gets number of guilds and members the bot is in",
-	async execute(message, args, main, callback) {
+	async execute(message, args, main) {
 		const promises = [
 			main.client.shard.fetchClientValues('guilds.cache.size'),
 			main.client.shard.broadcastEval('this.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)'),

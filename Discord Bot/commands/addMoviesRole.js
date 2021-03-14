@@ -4,15 +4,15 @@ module.exports = {
 	usage: "[@roleName]",
 	args: true,
 	admin: true,
-	async execute(message, args, main, callback) {
+	async execute(message, args, main) {
 		if (args.length > 1) {
 			message.channel.send("Please only specify one mentioned role.");
 
-			return callback();
+			return;
 		} else if (!message.mentions.roles.first() && args[0] != "clear") {
 			message.channel.send("Please mention the role you'd like to set in the format moviesrole [@roleName], or to clear settings use moviesrole clear");
 
-			return callback();
+			return;
 		} else {
 			const addMoviesRole = args[0] == "clear" ? null : message.mentions.roles.first().id;
 
@@ -24,7 +24,7 @@ module.exports = {
 					message.channel.send("Couldn't set role for adding permissions, something went wrong");
 				}
 
-				return callback();
+				return;
 			});
 
 		}

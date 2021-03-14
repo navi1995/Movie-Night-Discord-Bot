@@ -3,15 +3,15 @@ module.exports = {
 	description: "Updates poll size to chosen number (Max 10).",
 	usage: "[number of movies to show in poll]",
 	admin: true,
-	async execute(message, args, main, callback, settings) {
+	async execute(message, args, main, settings) {
 		if (!args.length) {
 			await message.channel.send(`Poll size is currently set to: ${settings.pollSize}`);
 
-			return callback();
+			return;
 		} else if (args.length > 1 || isNaN(args[0])) {
 			await message.channel.send("Please only specify a number.");
 			
-			return callback();
+			return;
 		} else {
 			var pollSize = Math.floor(Number(args[0]));
 
@@ -23,12 +23,12 @@ module.exports = {
 						await message.channel.send("Couldn't set Poll size, something went wrong");
 					}
 
-					return callback();
+					return;
 				});
 			} else {
 				await message.channel.send("Poll size must be atleast 1 and a maximum of 10");
 
-				return callback();
+				return;
 			}
 		}
 	}

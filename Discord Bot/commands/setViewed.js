@@ -4,7 +4,7 @@ module.exports = {
 	usage: "[Movie name to set as viewed]",
 	args: true,
 	admin: true,
-	async execute(message, args, main, callback) {
+	async execute(message, args, main) {
 		var movie = args.join(" ");
 		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, movie);
 
@@ -12,7 +12,7 @@ module.exports = {
 			if (err || !movie) {
 				message.channel.send("Movie could not be found!");
 				
-				return callback();
+				return;
 			} else {
 				movie.updateOne({ viewed: !movie.viewed, viewedDate: movie.viewed ? null : new Date() }, function(err) {
 					if (!err) {
@@ -21,7 +21,7 @@ module.exports = {
 						message.channel.send("Could not set movie to viewed, something went wrong.");
 					}
 
-					return callback();
+					return;
 				});
 			} 
 		});

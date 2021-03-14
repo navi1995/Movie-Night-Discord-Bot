@@ -4,14 +4,14 @@ module.exports = {
 	usage: "[roleName]",
 	args: true,
 	admin: true,
-	async execute(message, args, main, callback) {
+	async execute(message, args, main) {
 		let pollRole = args.join(' ');
 		pollRole = (pollRole.match(/<@&([0-9]{17,21})>/) || [])[1] || (message.guild.roles.cache.find(r => pollRole !== "clear" && r.name === pollRole) || {}).id || pollRole;
 
 		if (!message.guild.roles.resolve(pollRole) && pollRole !== "clear") {
 			await message.channel.send("Please provide a valid role you'd like to set in the format `pollrole [roleName]`, or to clear settings use `pollrole clear`");
 
-			return callback();
+			return;
 		} else {
 			pollRole = pollRole === "clear" ? null : pollRole;
 
@@ -23,7 +23,7 @@ module.exports = {
 					await message.channel.send("Couldn't set role for adding permissions, something went wrong");
 				}
 
-				return callback();
+				return;
 			});
 
 		}

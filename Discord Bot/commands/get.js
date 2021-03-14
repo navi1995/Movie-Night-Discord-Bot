@@ -5,7 +5,7 @@ module.exports = {
 	name: "get",
 	description: "Returns list of all movies in current watch list for server, or if search is specified it will attempt to search the servers list for the movie.",
 	aliases: ["list", "getmovie"],
-	execute(message, args, main, callback) {
+	execute(message, args, main) {
 		var embeddedMessages = [];
 		var number = 1;
 		var description = "";
@@ -19,13 +19,13 @@ module.exports = {
 				if (error) {
 					message.channel.send("Could not return list of movies, an error occured.");
 
-					return callback();
+					return;
 				}
 				
 				if (movies.length == 0) { 
 					message.channel.send("List of unviewed movies is currently empty.");
 
-					return callback();
+					return;
 				} else if (movies && movies.length > 0) {
 					for (var movie of movies) {
 						var stringConcat = `**[${number}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
@@ -51,7 +51,7 @@ module.exports = {
 					message.channel.send(embeddedMessage);
 				}
 
-				return callback();
+				return;
 			}).lean();
 		}
 
@@ -65,7 +65,7 @@ module.exports = {
 				message.channel.send("Could not find movie in your list. Perhaps try using the search command instead?");
 			}
 
-			return callback();
+			return;
 		}).lean();
 	},
 };

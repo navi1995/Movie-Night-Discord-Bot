@@ -6,26 +6,26 @@ module.exports = {
 	aliases: ["addmovie", "insert"],
 	usage: "[movie name or search]",
 	args: true,
-	async execute(message, args, main, callback, settings) {
+	async execute(message, args, main, settings) {
 		const search = args.join(" ");
 
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set. 
 		if (settings.addMoviesRole && !message.member.roles.cache.has(settings.addMoviesRole) && !message.member.hasPermission("ADMINISTRATOR")) {
 			message.channel.send(`Movies can only be added by administrators or users with the role <@&${settings.addMoviesRole}>`);
 
-			return callback();
+			return;
 		}
 
 		//Continue with normal search if the above doesnt return.
 		try {
-			return main.searchNewMovie(search, message, function(newMovie, data) {
+			return main.searchNewMovie(search, message).then(([newMovie, data]) => {
 				//No need for else, searchNewMovie alerts user if no movie found.
 				if (newMovie) {
 					newMovie.save(function(err) {
 						if (err && err.name == "MongoError") {
 							message.channel.send("Movie already exists in the list. It may be marked as 'Viewed'");
 
-							return callback();
+							return;
 						}
 		
 						if (!err) {
@@ -42,7 +42,7 @@ module.exports = {
 									} catch (e) {
 										console.log("Message deleted");
 
-										return removeMovie(newMovie, callback);
+										return newMovie.remove();
 									}
 									
 									//Wait for user to confirm if movie presented to them is what they wish to be added to the list or not.								
@@ -52,28 +52,28 @@ module.exports = {
 										if (reaction.emoji.name == emojis.yes) {
 											message.channel.send("Movie will be added to the list!");
 
-											return callback();
+											return;
 										} else {
 											message.channel.send("Movie will not be added to the list. Try using an IMDB link instead?");
 											
-											return removeMovie(newMovie, callback);
+											return newMovie.remove();
 										}
 									}).catch(() => {
 										message.channel.send("Movie will not be added, you didn't respond in time. Try using an IMDB link instead?");
 
-										return removeMovie(newMovie, callback);
+										return newMovie.remove();
 									});
 								});
 							} else {
 								message.channel.send(main.buildSingleMovieEmbed(newMovie, "Movie Added!"));
 
-								return callback();
+								return;
 							}
 						} else {
 							console.log(err);
 							message.channel.send("Something went wrong, couldn't run command");
 
-							return callback();
+							return;
 						}
 					});
 				}
@@ -84,8 +84,4 @@ module.exports = {
 			return message.channel.send("Something went wrong.");
 		}
 	}	
-};
-
-function removeMovie(newMovie, callback) {
-	newMovie.remove(callback);
 }

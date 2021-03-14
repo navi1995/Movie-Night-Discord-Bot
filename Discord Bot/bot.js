@@ -152,7 +152,7 @@ client.on("message", async function(message) {
 	}
 
 	//Do not ask database for settings if we already have them stored, any updates to settings are handled within the settings modules.
-	//Currently in commands and callbacks we clear out guildSettings to avoid memory leaks with discord.js memory caching.
+	//Currently after commands we clear out guildSettings to avoid memory leaks with discord.js memory caching.
 	if (message.guild && !guildSettings.has(message.guild.id)) {
 		await getSettings(message.guild.id).then(function(settings) {
 			if (!settings) {
@@ -234,7 +234,8 @@ client.on("message", async function(message) {
 	//Send message, arguments and additional functions/variables required to the command.
 	try {
 		console.log(command.name + " " + new Date());
-		await command.execute(message, args, main, () => { uncacheGuild(message.guild) }, settings);
+		await command.execute(message, args, main, settings);
+		uncacheGuild(message.guild);
 	} catch (error) {
 		console.error("Problem executing command", error);
 		uncacheGuild(message.guild);
@@ -290,7 +291,7 @@ function buildSingleMovieEmbed(movie, subtitle, hideSubmitted) {
 	return embed;
 }
 
-async function searchNewMovie(search, message, callback) {
+async function searchNewMovie(search, message) {
 	var failedSearch = false;
 	var data = false;
 	var isImdbSearch = search.includes("imdb.com");
@@ -299,7 +300,7 @@ async function searchNewMovie(search, message, callback) {
 	if (!searchTerm) {
 		await message.channel.send("Please enter a valid search."); 
 
-		return callback();
+		return;
 	}
 
 	//If not a IMDB link, do a general search else we use a different endpoint.
@@ -315,10 +316,10 @@ async function searchNewMovie(search, message, callback) {
 	if (!data || failedSearch || data.success == "false") {
 		await message.channel.send("Couldn't find any movies. Sorry!");
 
-		return callback(null, data);
+		return [null, data];
 	} 
 
-	return callback(new movieModel({
+	return [new movieModel({
 		primaryKey: message.guild.id + data.id,
 		guildID: message.guild.id,
 		movieID: data.id,
@@ -330,7 +331,7 @@ async function searchNewMovie(search, message, callback) {
 		runtime: data.runtime,
 		rating: data.vote_average,
 		submittedBy: message.member.user
-	}), initialData);
+	}), initialData];
 }
 
 function getRandomFromArray(array, count) {
