@@ -38,7 +38,7 @@ module.exports = {
 				totalCount = movies.length;
 
 				for (let movie of movies) {
-					let stringConcat = `**[${emojis[movieArray.length + 1]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
+					let stringConcat = `**[${emojis[movieArray.length + 1]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by <@${movie.submittedBy}> on ${moment(movie.submitted).format("DD MMM YYYY")}\n
 					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
 
 					//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.

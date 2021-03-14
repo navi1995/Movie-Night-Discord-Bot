@@ -12,7 +12,7 @@ function hasDeletePermissions(user, guildID, movie) {
 	const userGuilds = user.get('guilds');
 	const userGuild = userGuilds.find(guild => guild.id == guildID);
 
-	return (userGuild && ((userGuild.permissions_new & 0x00000008) == 0x00000008 || movie.submittedBy.replace("<@", "").replace(">", "") == user.discordID));
+	return (userGuild && ((userGuild.permissions_new & 0x00000008) == 0x00000008 || movie.submittedBy == user.discordID));
 }
 
 function isUserInGuild(user, guildID) {
