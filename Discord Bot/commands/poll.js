@@ -7,49 +7,38 @@ module.exports = {
 	description: "Begins a poll.",
 	aliases: ["begin", "start"],
 	//admin: true, Check admin but also check setting for pollRole
-	async execute(message, args, main, callback, settings) {
-		var embeddedMessages = [];
-		var number = 1;
-		var totalCount = 0;
-		var description = "";
-		var searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
-		var movieEmbed = new MessageEmbed().setTitle("Poll has begun!").setColor("#6441a3");
-		var movieMap = {};
+	async execute(message, args, main, settings) {
+		let embeddedMessages = [];
+		let totalCount = 0;
+		let description = "";
+		let searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
+		let movieEmbed = new MessageEmbed().setTitle("Poll has begun!").setColor("#6441a3");
+		let movieArray = [];
 
 		//Check this logic
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set. 
-		if ((settings.pollRole && !message.member.roles.cache.has(settings.pollRole)) && !message.member.hasPermission("ADMINISTRATOR")) {
-			message.channel.send(`Polls can only be started by administrators or users with the role <@&${settings.addMoviesRole}>`);
-
-			return callback();
-		} else if (!settings.pollRole && !message.member.hasPermission("ADMINISTRATOR")) {
-			message.channel.send(`Polls can only be started by administrators, or set a role using pollrole command.`);
-
-			return callback();
+		if (!message.member.hasPermission("ADMINISTRATOR") && (!settings.pollRole || !message.member.roles.cache.has(settings.pollRole))) {
+			return message.channel.send(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : 'a set role using the \`pollrole\` command.'}`);
 		}
 
-		message.channel.send(settings.pollTime >= main.maxPollTime*1000 ? settings.pollMessage + "\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO TWO HOURS DUE TO A TECHNICAL ISSUE. THIS WILL BE FIXED SOON)" : settings.pollMessage);
+		await message.channel.send(settings.pollTime >= main.maxPollTime*1000 ? settings.pollMessage + "\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO TWO HOURS DUE TO A TECHNICAL ISSUE. THIS WILL BE FIXED SOON)" : settings.pollMessage, { allowedMentions: {} });
 
 		//2048 limit
-		await main.movieModel.find(searchOptions, function (error, docs) {
+		await main.movieModel.find(searchOptions, async (error, docs) => {
 			if (error) {
-				message.channel.send("Could not  return list of movies, an error occured.");
-
-				return callback();
+				return message.channel.send("Could not  return list of movies, an error occured.");
 			}
 			
-			if (docs.length == 0) {
-				message.channel.send("Cannot start poll. List of unviewed movies is empty.");
-
-				return callback();
-			} else if (docs && docs.length > 0) {
+			if (!docs.length) {
+				return message.channel.send("Cannot start poll. List of unviewed movies is empty.");
+			} else if (docs && docs.length) {
 				//Gets random assortment of movies depending on poll size setting and number of movies in the servers list.
-				var movies = main.getRandomFromArray(docs, settings.pollSize);
+				let movies = main.getRandomFromArray(docs, settings.pollSize);
 
 				totalCount = movies.length;
 
-				for (var movie of movies) {
-					var stringConcat = `**[${emojis[number]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
+				for (let movie of movies) {
+					let stringConcat = `**[${emojis[movieArray.length + 1]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by <@${movie.submittedBy}> on ${moment(movie.submitted).format("DD MMM YYYY")}\n
 					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
 
 					//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
@@ -61,116 +50,94 @@ module.exports = {
 					} 
 
 					description += stringConcat;
-					movieMap[number] = movie; //Store position of movie in list.
-					number++;		
+					movieArray.push(movie); //Store position of movie in list.
 				}
 			}
 
 			movieEmbed.setDescription(description);
 			embeddedMessages.push(movieEmbed);
 
-			for (var i = 0; i < embeddedMessages.length; i++) {
-				var embeddedMessage = embeddedMessages[i];
-
+			for (let i = 0; i < embeddedMessages.length - 1; i++) {
+				await message.channel.send(embeddedMessages[i]);
 				//If the message is NOT the last one in the embedded messages chain, just send the message. ELSE we wil be sending the message + handling reacts on it.
-				if (i != embeddedMessages.length - 1) {
-					message.channel.send(embeddedMessage);
-				} else {
-					var emojiMap = {};
-
-					message.channel.send(embeddedMessage).then(async (message) => {
-						//Polltime is stored in ms
-						var collector = message.createReactionCollector(m => m, { time: (settings.pollTime >= main.maxPollTime*1000 ? main.maxPollTime*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
-
-						console.log("Poll started. GuildID: " + message.guild.id  + " " + new Date());
-						collector.on("collect", (messageReact, user) => {
-							if (user.id != main.client.user.id) {
-								console.log("Collect" + " " + new Date());
-								var duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
-			
-								//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
-								//This block of code exists before the reactions are added to ensure as the bot adds reactions to the message, users are not able to duplicate votes during this time.
-								for (var reaction of duplicateReactions.values()) {
-									try {
-										reaction.users.remove(user.id);
-									} catch (e) {
-										console.error("Error removing reaction", e);
-									}
-								}
-							}
-						});
-
-						for (var i = 1; i <= totalCount; i++) {
-							try {
-								await message.react(emojis[i]);
-								emojiMap[emojis[i]] = i;
-							} catch (e) {
-								console.log("Poll message deleted" + " " + new Date() );
-								collector.stop();
-							}
-
-						}
-				
-						collector.on("end", () => {
-							console.log("Poll end.  GuildID: " + message.guild.id + " " + new Date());
-							//Refetch message due to discord.js caching.
-							message.fetch().then(function(updatedMessage) {
-								const reactionsCache = updatedMessage.reactions.cache;
-								const highestValidReactions = reactionsCache.filter(function(a) {
-									return emojiMap[a.emoji.name] > 0;
-								});
-
-								if (highestValidReactions.size == 0) {
-									message.channel.send("Reactions may have been removed or another error occurred.");
-
-									return callback();
-								}
-
-								const highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c, 0) || message.reactions.reduce((p, c) => p.count > c.count ? p : c, 0);
-	
-								if (!highestReact.emoji) {
-									console.error("Could not collect reactions");
-									console.error(emojiMap);
-									console.error(highestReact);
-									console.error(highestValidReactions);
-									console.error(highestReact.emoji);
-									message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
-	
-									return callback();
-								}
-	
-								var winner = movieMap[emojiMap[highestReact.emoji.name]];
-	
-								if (highestReact.count <= 1) {
-									message.channel.send("No votes were cast, so no movie has been chosen.");
-									
-									return callback();
-								}
-								
-								//If auto viewed is set, update movie to be entered into the VIEWED list. 
-								if (settings.autoViewed) {
-									main.movieModel.updateOne({ guildID: message.guild.id, movieID: winner.movieID }, { viewed: true, viewedDate: new Date() }, function(err) {
-										if (!err) {
-											winner.viewed = true; winner.viewedDate = new Date();
-											message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
-										} else {
-											message.channel.send("Something went wrong, could not get winner. Try removing auto-view setting.");
-										}
-	
-										return callback();
-									});
-								} else {
-									message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
-	
-									return callback();
-								}								
-							}).catch(function() {
-								console.log("Poll was deleted.");
-							});
-						});
-					});
-				}
 			}
+
+			let emojiArray = [];
+
+			return message.channel.send(embeddedMessage).then(async message => {
+				//Polltime is stored in ms
+				let collector = message.createReactionCollector((r, u) => u.id !== client.user.id && emojiArray.includes(r.emoji.name), { time: (settings.pollTime >= main.maxPollTime*1000 ? main.maxPollTime*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
+
+				console.log("Poll started. GuildID: " + message.guild.id  + " " + new Date());
+				collector.on("collect", async (messageReact, user) => {
+					console.log("Collect" + " " + new Date());
+					let duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
+
+					//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
+					//This block of code exists before the reactions are added to ensure as the bot adds reactions to the message, users are not able to duplicate votes during this time.
+					for (let reaction of duplicateReactions.values()) {
+						try {
+							await reaction.users.remove(user.id);
+						} catch (e) {
+							console.error("Error removing reaction", e);
+						}
+					}
+				});
+
+				for (let i = 1; i <= totalCount; i++) {
+					try {
+						await message.react(emojis[i]);
+						emojiArray.push(emojis[i]);
+					} catch (e) {
+						console.log("Poll message deleted" + " " + new Date() );
+						collector.stop();
+					}
+				}
+		
+				collector.on("end", async () => {
+					console.log("Poll end.  GuildID: " + message.guild.id + " " + new Date());
+					//Refetch message due to discord.js caching.
+					await message.fetch().then(async updatedMessage => {
+						const reactionsCache = updatedMessage.reactions.cache;
+						const highestValidReactions = reactionsCache.filter(a => emojiArray.includes(a.emoji.name));
+
+						if (!highestValidReactions.size) {
+							return message.channel.send("Reactions may have been removed or another error occurred.");
+						}
+
+						const highestReact = highestValidReactions.reduce((p, c) => p.count > c.count ? p : c);
+
+						if (!highestReact || !highestReact.emoji) {
+							console.error("Could not collect reactions");
+							console.error(emojiArray);
+							console.error(highestReact);
+							console.error(highestValidReactions);
+							if (highestReact) console.error(highestReact.emoji);
+							return message.channel.send("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
+						}
+
+						let winner = movieArray[emojiArray.findIndex(highestReact.emoji.name)];
+
+						if (highestReact.count <= 1) {
+							return message.channel.send("No votes were cast, so no movie has been chosen.");
+						}
+						
+						//If auto viewed is set, update movie to be entered into the VIEWED list. 
+						if (settings.autoViewed) {
+							await main.movieModel.updateOne({ guildID: message.guild.id, movieID: winner.movieID }, { viewed: true, viewedDate: new Date() }, function(err) {
+								if (!err) {
+									winner.viewed = true; winner.viewedDate = new Date();
+								} else {
+									return message.channel.send("Something went wrong, could not get winner. Try removing auto-view setting.");
+								}
+							});
+						}
+						return message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
+					}).catch(function() {
+						console.log(`Poll was deleted. guild: ${message.guild.id}, channel: ${message.channel.id}, message ID: ${message.id}`);
+					});
+				});
+			});
 		}).lean();
 	},
 };
