@@ -328,7 +328,7 @@ async function searchNewMovie(search, message) {
 		releaseDate: new Date(data.release_date),
 		runtime: data.runtime,
 		rating: data.vote_average,
-		submittedBy: message.author.id
+		submittedBy: message.member.user //message.author.id - Update to this after creating mongoDB migration and API for dashboard can be rolled out.
 	}), initialData];
 }
 

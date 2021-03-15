@@ -8,10 +8,10 @@ module.exports = {
 		let addMoviesRole = args.join(' ');
 		addMoviesRole = (addMoviesRole.match(/<@&([0-9]{17,21})>/) || [])[1] || (message.guild.roles.cache.find(r => addMoviesRole !== "clear" && r.name === addMoviesRole) || {}).id || addMoviesRole;
 
-		if (!message.guild.roles.resolve(addMoviesRole) && addMoviesRole !== "clear") {
+		if (!message.guild.roles.resolve(addMoviesRole) && addMoviesRole !== "clear" && addMoviesRole !== "remove") {
 			return message.channel.send("Please provide a valid role you'd like to set in the format moviesrole [roleName], or to clear settings use moviesrole clear");
 		} else {
-			addMoviesRole = addMoviesRole === "clear" ? null : addMoviesRole;
+			addMoviesRole = (addMoviesRole === "clear" || addMoviesRole === "remove") ? null : addMoviesRole;
 
 			//Update the settings with the role user provided, or clear it and set to NULL.
 			return main.setting.updateOne({ guildID: message.guild.id }, { addMoviesRole }, err => {

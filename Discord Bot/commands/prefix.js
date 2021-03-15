@@ -10,7 +10,7 @@ module.exports = {
 			return message.channel.send("No spaces allowed in command prefix.");
 		} else if (args[0].length > 1900) {
 			return message.channel.send("That prefix is too long.");
-	 	} else {
+		} else {
 			return main.setting.updateOne({ guildID: message.guild.id }, { prefix: args[0].trim() }, err => {
 				if (!err) {
 					return message.channel.send(`Prefix has now been set to: ${args[0].trim()}`, { allowedMentions: { parse: [] } });

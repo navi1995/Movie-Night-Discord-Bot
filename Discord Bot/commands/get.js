@@ -19,11 +19,11 @@ module.exports = {
 					return message.channel.send("Could not return list of movies, an error occured.");
 				}
 				
-				if (!movie || !movies.length) { 
+				if (movies.length == 0 || !movies.length) { 
 					return message.channel.send("List of unviewed movies is currently empty.");
 				} else {
 					for (let movie of movies) {
-						let stringConcat = `**[${number++}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by <@${movie.submittedBy}> on ${moment(movie.submitted).format("DD MMM YYYY")}\n
+						let stringConcat = `**[${number++}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
 						**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
 
 						//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
