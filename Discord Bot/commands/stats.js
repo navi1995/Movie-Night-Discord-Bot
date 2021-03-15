@@ -4,7 +4,7 @@ module.exports = {
 	async execute(message, args, main) {
 		const promises = [
 			main.client.shard.fetchClientValues('guilds.cache.size'),
-			main.client.shard.broadcastEval('this.guilds.cache.reduce((acc, guild) => acc + guild.memberCount)'),
+			main.client.shard.broadcastEval('this.guilds.cache.reduce((acc, guild) => acc + guild.memberCount)', 0),
 		];
 		
 		return Promise.all(promises)

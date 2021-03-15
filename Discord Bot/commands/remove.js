@@ -25,7 +25,7 @@ module.exports = {
 			return main.movieModel.findOne(searchOptions, (err, movie) => {
 				if (err || !movie) {
 					return message.channel.send("Movie could not be found! It may be in the viewed list. Use removeviewed instead.");
-				} else if (message.member.user.id === movie.submittedBy || message.member.hasPermission("ADMINISTRATOR")) {
+				} else if ("<@" + message.member.user.id + ">" === movie.submittedBy || message.member.hasPermission("ADMINISTRATOR")) {
 					return movie.remove(err => {
 						if (!err) {
 							return message.channel.send(`Movie deleted: ${movie.name}`);

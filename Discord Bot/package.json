@@ -1,6 +1,6 @@
 {
   "name": "movie-night-bot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Discord bot for commands related to organising movie nights!",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,8 @@
     "discord.js": "^12.2.0",
     "moment": "^2.25.3",
     "mongoose": "^5.9.13",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "mquery": ">=3.2.3"
   },
   "devDependencies": {
     "eslint": "^7.5.0"
