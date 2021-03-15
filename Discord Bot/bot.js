@@ -13,6 +13,7 @@ const client = new Discord.Client({
 	messageCacheMaxSize: 50,
 	messageCacheLifetime: 7300, //Maximum poll time = 7200, ensure message not swept.
 	messageSweepInterval: 600,
+	allowedMentions: { parse: ['users'] }, // allowedMentions to prevent unintended role and everyone pings
 	disabledEvents: [
 		'GUILD_UPDATE'
 		,'GUILD_MEMBER_ADD'
@@ -79,7 +80,7 @@ const Settings = new Schema({
 });
 const movieModel = mongoose.model("Movie", Movie);
 const setting = mongoose.model("Settings", Settings);
-var main = {};
+let main;
 
 if (!testing) {
 	const dbl = new DBL(topggAPI, client);
@@ -106,9 +107,19 @@ function guildCreateError(err) {
 	}
 }
 
+function handleError(err, message) {
+	if (err) {
+		console.error(message, err);
+	}
+}
+
+function uncacheGuild(guild) {
+	if (guild) guildSettings.delete(guild.id);
+}
+
 client.on("guildCreate", async function(guild) {
 	//Whenever the bot is added to a guild, instantiate default settings into our database. 
-	new setting({guildID: guild.id}).save(guildCreateError);
+	new setting({ guildID: guild.id }).save(guildCreateError);
 });
 
 client.on("guildDelete", function(guild) {
@@ -133,20 +144,18 @@ for (const file of commandFiles) {
 client.on("message", async function(message) {	
 	if (message.author.bot) return;
 
-	var guildID = message.guild ? message.guild.id : -1;
-
 	//Put in a check for all commands and aliases, if not apart of message dont continue
 	if (!client.commandsArray.some(commandText=>message.content.includes(commandText))) {
 		return;
 	}
 
 	//Do not ask database for settings if we already have them stored, any updates to settings are handled within the settings modules.
-	//Currently in commands and callbacks we clear out guildSettings to avoid memory leaks with discord.js memory caching.
+	//Currently after commands we clear out guildSettings to avoid memory leaks with discord.js memory caching.
 	if (message.guild && !guildSettings.has(message.guild.id)) {
 		await getSettings(message.guild.id).then(function(settings) {
 			if (!settings) {
 				//If no settings exist (during downtime of bot) we instantiate some settings before processing command.
-				new setting({ guildID: guildID }).save(function(err, setting) {
+				new setting({ guildID: message.guild.id }).save(function(err, setting) {
 					if (err) {
 						console.error("Guild create", err);
 					} else {
@@ -160,8 +169,8 @@ client.on("message", async function(message) {
 	}
 
 	//Defaults in case mongoDB connection is down
-	const settings = guildSettings.get(guildID) || {
-		prefix: prefix,
+	const settings = (message.guild ? guildSettings.get(message.guild.id) : null) || {
+		prefix: prefix || '--',
 		pollTime: "60000",
 		pollMessage: "Poll has begun!",
 		pollSize: 10,
@@ -178,23 +187,21 @@ client.on("message", async function(message) {
 	//READ_MESSAGES needed for all.
 
 	//If message doesn't have the prefix from settings, ignore the message.
-	if ((!message.content.startsWith(currentPrefix) && message.channel.type == "text") || (message.author.bot && message.channel.type == "text")) return guildSettings.delete(message.guild.id);	
-	if (!message.content.startsWith(currentPrefix) || message.author.bot) return;
+	if (!message.content.startsWith(currentPrefix) || message.author.bot) return uncacheGuild(message.guild);
 
 	const args = message.content.slice(currentPrefix.length).split(/ +/);
 	const commandName = args.shift().toLowerCase();
 	const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
-	if (!command && message.channel.type == "text") return guildSettings.delete(message.guild.id);	
-	if (!command) return;
+	if (!command) return uncacheGuild(message.guild);
 
-	if (command.name != "help" && message.channel.type !== "text") {
+	if (command.name != "help" && message.channel.type === "dm") {
 		return message.reply("I can't execute that command inside DMs!");
 	}
 
 	//If no permissions
-	if (message.channel.type == "text" && !message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES")) {
-		guildSettings.delete(message.guild.id);	
+	if (message.guild && !message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES")) {
+		uncacheGuild(message.guild);
 
 		return message.author.send("This bot needs permissions for SENDING MESSAGES in the channel you've requested a command. Please update bots permissions for the channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.")
 			.catch(error => {
@@ -204,39 +211,32 @@ client.on("message", async function(message) {
 
 	//If the command has been flagged as admin only, do not process it.
 	if (command.admin && !message.member.hasPermission("ADMINISTRATOR")) {
-		guildSettings.delete(message.guild.id);	
+		uncacheGuild(message.guild);
 
 		return message.channel.send("This commands requires the user to have an administrator role in the server.");
 	}
 
-	if (message.channel.type == "text" && !message.channel.permissionsFor(message.guild.me).has(["ADD_REACTIONS", "MANAGE_MESSAGES", "EMBED_LINKS", "READ_MESSAGE_HISTORY"])) {
-		guildSettings.delete(message.guild.id);	
+	if (message.guild && !message.channel.permissionsFor(message.guild.me).has(["ADD_REACTIONS", "MANAGE_MESSAGES", "EMBED_LINKS", "READ_MESSAGE_HISTORY"])) {
+		uncacheGuild(message.guild);
 		
 		return message.reply("Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.");
 	}
 	
 	//Tell user usage if command has been flagged as an argument based command.
 	if (command.args && !args.length) {
-		var reply = `Incorrect command usage., ${message.author}!`;
+		uncacheGuild(message.guild);
 
-		if (command.usage) {
-			reply += `\nThe proper usage would be: \`${currentPrefix}${command.name} ${command.usage}\``;
-		}
-
-		guildSettings.delete(message.guild.id);	
-
-		return message.channel.send(reply);
+		return message.channel.send(`Incorrect command usage, ${message.author}!${command.usage ? `\nThe proper usage would be: \`${currentPrefix}${command.name} ${command.usage}\`` : ''}`);
 	}
 
 	//Send message, arguments and additional functions/variables required to the command.
 	try {
 		console.log(command.name + " " + new Date());
-		await command.execute(message, args, main, function() {
-			guildSettings.delete(message.guild.id);	
-		}, settings);
+		await command.execute(message, args, main, settings);
+		uncacheGuild(message.guild);
 	} catch (error) {
 		console.error("Problem executing command", error);
-		guildSettings.delete(message.guild.id);	
+		uncacheGuild(message.guild);
 
 		return message.reply("There was an error trying to execute that command!");
 	}
@@ -244,19 +244,13 @@ client.on("message", async function(message) {
 
 client.login(token);
 
-function handleError(err, message) {
-	if (err) {
-		console.error(message, err);
-	}
-}
-
 //Movie can be string or IMDB link
 function searchMovieDatabaseObject(guildID, movie, hideViewed) {
-	var searchObj = {
+	let searchObj = {
 		guildID: guildID
 	};
 	
-	if (movie != "" && movie) {
+	if (movie) {
 		searchObj.name = new RegExp(".*" + movie + ".*", "i");
 	}
 
@@ -268,7 +262,7 @@ function searchMovieDatabaseObject(guildID, movie, hideViewed) {
 }
 
 function buildSingleMovieEmbed(movie, subtitle, hideSubmitted) {
-	var embed = new Discord.MessageEmbed()
+	const embed = new Discord.MessageEmbed()
 		.setTitle(movie.name)
 		.setURL(`https://www.imdb.com/title/${movie.imdbID}`)
 		.setDescription(movie.overview)
@@ -295,24 +289,22 @@ function buildSingleMovieEmbed(movie, subtitle, hideSubmitted) {
 	return embed;
 }
 
-async function searchNewMovie(search, message, callback) {
-	var failedSearch = false;
-	var data = false;
-	var isImdbSearch = search.indexOf("imdb.com") > 0;
-	var searchTerm = isImdbSearch ? (search.match(/tt[0-9]{7,8}/g) != null ? search.match(/tt[0-9]{7,8}/g) : null) : search;
+async function searchNewMovie(search, message) {
+	let failedSearch = false;
+	let data = false;
+	let isImdbSearch = search.includes("imdb.com");
+	let searchTerm = isImdbSearch ? search.match(/tt[0-9]{7,8}/g) : search;
 
-	if (searchTerm == "" || !searchTerm) {
-		message.channel.send("Please enter a valid search."); 
+	if (!searchTerm) {
+		await message.channel.send("Please enter a valid search."); 
 
-		return callback();
+		return;
 	}
 
 	//If not a IMDB link, do a general search else we use a different endpoint.
-	var initialData = !isImdbSearch ? await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${movieDbAPI}&query=${encodeURIComponent(searchTerm)}&page=1`).then(response => response.json()) : await fetch(`https://api.themoviedb.org/3/find/${encodeURIComponent(searchTerm)}?api_key=${movieDbAPI}&external_source=imdb_id`).then(response => response.json());
+	let initialData = await (!isImdbSearch ? fetch(`https://api.themoviedb.org/3/search/movie?api_key=${movieDbAPI}&query=${encodeURIComponent(searchTerm)}&page=1`).then(response => response.json()) : fetch(`https://api.themoviedb.org/3/find/${encodeURIComponent(searchTerm)}?api_key=${movieDbAPI}&external_source=imdb_id`).then(response => response.json()));
 
-	if (!initialData || initialData.total_results == 0 || (initialData.movie_results && initialData.movie_results.length == 0)) {
-		failedSearch = true;
-	}
+	failedSearch = !initialData || initialData.total_results == 0 || (initialData.movie_results && initialData.movie_results.length == 0);
 
 	//Get the FIRST result from the initial search
 	if (!failedSearch) {
@@ -320,12 +312,12 @@ async function searchNewMovie(search, message, callback) {
 	}
 
 	if (!data || failedSearch || data.success == "false") {
-		message.channel.send("Couldn't find any movies. Sorry!");
+		await message.channel.send("Couldn't find any movies. Sorry!");
 
-		return callback(null, data);
+		return [null, data];
 	} 
 
-	return callback(new movieModel({
+	return [new movieModel({
 		primaryKey: message.guild.id + data.id,
 		guildID: message.guild.id,
 		movieID: data.id,
@@ -336,42 +328,49 @@ async function searchNewMovie(search, message, callback) {
 		releaseDate: new Date(data.release_date),
 		runtime: data.runtime,
 		rating: data.vote_average,
-		submittedBy: message.member.user
-	}), initialData);
+		submittedBy: message.author.id
+	}), initialData];
 }
 
 function getRandomFromArray(array, count) {
-	const shuffled = array.sort(() => 0.5 - Math.random());
+	for(let i = array.length - 1; i > 0; i--) {
+		let index = Math.floor(Math.random() * (i + 1));
+		[array[i], array[index]] = [array[index], array[i]];
+	}  
 
-	return shuffled.slice(0, count);
+	return array.slice(0, count);
 }
 
 function getSettings(guildID) {
 	return setting.findOne({guildID: guildID }).lean().exec();
 }
 
-// function syncUpAfterDowntime() {
-// 	setting.find({}).exec(function(err, docs) { 
-// 		var missingSettings = Array.from(client.guilds.cache.keys()).filter(function(val) {
-// 			return docs.map(a => a.guildID).indexOf(val) == -1;
-// 		});
-// 		missingSettings = missingSettings.map(function(a) {
-// 			return { "guildID": a };
-// 		});
+/*
+function syncUpAfterDowntime() {
+	setting.find({}).exec(function(err, docs) { 
+		let missingSettings = Array.from(client.guilds.cache.keys()).filter(function(val) {
+			return docs.map(a => a.guildID).includes(val);
+		});
+		missingSettings = missingSettings.map(function(a) {
+			return { "guildID": a };
+		});
 		
-// 		setting.insertMany(missingSettings, function(error, docs) {
-// 			if (error) console.log(error);
-// 		});
-// 	});
-// }
+		setting.insertMany(missingSettings, function(error, docs) {
+			if (error) console.log(error);
+		});
+	});
+}
+*/
 
 //Namespace functions and variables for modules
-main.movieModel = movieModel;
-main.searchMovieDatabaseObject = searchMovieDatabaseObject;
-main.buildSingleMovieEmbed = buildSingleMovieEmbed;
-main.searchNewMovie = searchNewMovie;
-main.setting = setting;
-main.guildSettings = guildSettings;
-main.getRandomFromArray = getRandomFromArray;
-main.client = client;
-main.maxPollTime = 7200;
+main = {
+	movieModel,
+	searchMovieDatabaseObject,
+	buildSingleMovieEmbed,
+	searchNewMovie,
+	setting,
+	guildSettings,
+	getRandomFromArray,
+	client,
+	maxPollTime: 7200
+}
