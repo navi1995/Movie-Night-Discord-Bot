@@ -19,7 +19,7 @@ module.exports = {
 					return message.channel.send("Could not return list of movies, an error occured.");
 				}
 				
-				if (movies.length == 0 || !movies.length) { 
+				if (!movies || !movies.length) { 
 					return message.channel.send("List of unviewed movies is currently empty.");
 				} else {
 					for (let movie of movies) {
