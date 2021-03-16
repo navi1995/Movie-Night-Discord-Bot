@@ -1,9 +1,11 @@
+const emojis = require("../emojis.json");
+
 module.exports = {
 	name: "removeviewed",
 	description: "Removes all VIEWED movies from servers list if no movie specified, if movie specified then will delete that specific VIEWED movie.",
 	aliases: ["deleteviewed", "clearviewed"],
 	usage: "[movie name for specific delete, else just the command to remove all viewed movies]",
-	admin: true,
+	//admin: true,
 	execute(message, args, main) {
 		if (!args.length) {
 			return main.movieModel.deleteMany({ guildID: message.guild.id, viewed: true }, err => {

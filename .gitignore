@@ -17,3 +17,5 @@ Night butt.code-workspace
 TODO.md
 Movie Night Bot Website/bot-dashboard/.env
 Movie Night Bot Website/backend/.env
+.vscode/launch.json
+Discord Bot/.DS_Store
