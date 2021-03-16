@@ -8,10 +8,11 @@ const Discord = require("discord.js");
 const fetch = require("node-fetch");
 const moment = require("moment");
 const mongoose = require("mongoose");
+const maxPollTime = 86400;
 const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Discord.Client({
 	messageCacheMaxSize: 50,
-	messageCacheLifetime: 7300, //Maximum poll time = 7200, ensure message not swept.
+	messageCacheLifetime: maxPollTime + 100, //Maximum poll time = 7200, ensure message not swept.
 	messageSweepInterval: 600,
 	allowedMentions: { parse: ['users'] }, // allowedMentions to prevent unintended role and everyone pings
 	disabledEvents: [
@@ -375,5 +376,5 @@ main = {
 	guildSettings,
 	getRandomFromArray,
 	client,
-	maxPollTime: 86400 //Testing 24 hour polls on GCloud
+	maxPollTime //Testing 24 hour polls on GCloud
 }
