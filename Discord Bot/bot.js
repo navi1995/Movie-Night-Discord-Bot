@@ -76,7 +76,9 @@ const Settings = new Schema({
 	pollSize: { type: Number, min: 1, max: 10, default: 10 },
 	autoViewed: { type: Boolean, default: false },
 	addMoviesRole: { type: String, default: null },
-	pollRole: { type: String, default: null }
+	pollRole: { type: String, default: null },
+	deleteMoviesRole: { type: String, default: null } 
+	//If deleteMoviesRole = null, allow only admins delete. = "all" then remove restrictions. If specific role then admins + role
 });
 const movieModel = mongoose.model("Movie", Movie);
 const setting = mongoose.model("Settings", Settings);
@@ -372,5 +374,5 @@ main = {
 	guildSettings,
 	getRandomFromArray,
 	client,
-	maxPollTime: 7200
+	maxPollTime: 86400 //Testing 24 hour polls on GCloud
 }

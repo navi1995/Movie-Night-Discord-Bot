@@ -43,6 +43,7 @@ module.exports = {
 									await embedMessage.react(emojis.no);
 								} catch (e) {
 									console.log("Message deleted");
+									console.error(e);
 
 									return newMovie.remove();
 								}

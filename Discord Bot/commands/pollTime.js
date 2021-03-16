@@ -21,7 +21,7 @@ module.exports = {
 				if (!err && !limited) {
 					return message.channel.send(`Poll time has now been set to: ${pollTime / 1000} seconds`);
 				} else if (!err && limited) {
-					return message.channel.send(`Cannot set time higher than 7200 seconds (2 hours). Poll time has now been set to: 7200 seconds`);
+					return message.channel.send(`Cannot set time higher than 86400 seconds (24 hours). Poll time has now been set to: 7200 seconds`);
 				} else {
 					return message.channel.send("Couldn't set Poll message, something went wrong");
 				}
