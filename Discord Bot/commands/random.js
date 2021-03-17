@@ -24,11 +24,14 @@ module.exports = {
 								docs[0].viewedDate = new Date();
 
 								if (err) {
-									await message.channel.send("Could not set movie to viewed.");
+									return message.channel.send("Could not set movie to viewed.");
+								} else {
+									return message.channel.send(movieEmbed);
 								}
 							});
+						} else {
+							return message.channel.send(movieEmbed);	
 						}
-						return message.channel.send(movieEmbed);
 					} else {
 						return message.channel.send("Your movie list is empty, so a random movie cannot be found.");
 					}
