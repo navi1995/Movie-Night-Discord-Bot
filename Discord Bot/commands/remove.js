@@ -46,10 +46,6 @@ module.exports = {
 		//If submitted film is by member trying to delete, allow it.
 		if (args.join(" ")) {
 			return main.movieModel.findOne(searchOptions, (err, movie) => {
-				console.log(settings.deleteMoviesRole && (message.member.roles.cache.has(settings.deleteMoviesRole) || settings.deleteMoviesRole == "all"))
-				console.log(settings.deleteMoviesRole);
-				console.log(message.member.roles.cache.has(settings.deleteMoviesRole));
-
 				if (err || !movie) {
 					return message.channel.send("Movie could not be found! It may be in the viewed list. Use removeviewed instead.");
 				} else if ("<@" + message.member.user.id + ">" === movie.submittedBy || (settings.deleteMoviesRole && (message.member.roles.cache.has(settings.deleteMoviesRole) || settings.deleteMoviesRole == "all")) || message.member.hasPermission("ADMINISTRATOR")) {
