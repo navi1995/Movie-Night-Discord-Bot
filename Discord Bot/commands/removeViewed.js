@@ -6,14 +6,38 @@ module.exports = {
 	aliases: ["deleteviewed", "clearviewed"],
 	usage: "[movie name for specific delete, else just the command to remove all viewed movies]",
 	//admin: true,
-	execute(message, args, main) {
+	async execute(message, args, main, settings) {
 		if (!args.length) {
-			return main.movieModel.deleteMany({ guildID: message.guild.id, viewed: true }, err => {
-				if (!err) {
-					return message.channel.send("All movies have been deleted.");
-				} else {
-					return message.channel.send("An error occured while trying to delete all movies");
+			if (!message.member.hasPermission("ADMINISTRATOR")) return message.channel.send("Sorry, only Administrators can delete all viewed movies.");
+
+			return message.channel.send("Are you sure you want to remove all viewed movies?").then(async botMessage => {
+				const filter = (reaction, user) => [emojis.yes, emojis.no].includes(reaction.emoji.name) && user.id == message.author.id;
+
+				try {
+					await botMessage.react(emojis.yes);
+					await botMessage.react(emojis.no);
+				} catch (e) {
+					console.log("Message deleted");
 				}
+				
+				//Wait for user to confirm if movie presented to them is what they wish to be added to the list or not.								
+				return botMessage.awaitReactions(filter, { max: 1, time: 15000, errors: ["time"] }).then(async collected => {
+					const reaction = collected.first();
+
+					if (reaction.emoji.name == emojis.yes) {
+						return main.movieModel.deleteMany({ guildID: message.guild.id, viewed: true }, err => {
+							if (!err) {
+								return message.channel.send("All movies have been deleted.");
+							} else {
+								return message.channel.send("An error occured while trying to delete all movies");
+							}
+						});
+					} else {
+						return message.channel.send("No movies have been deleted.");
+					}
+				}).catch(async () => {
+					return message.channel.send("Couldn't get your response.");
+				});
 			});
 		}
 
@@ -24,15 +48,39 @@ module.exports = {
 		if (args.join(" ")) {
 			return main.movieModel.findOne(searchOptions, (err, movie) => {
 				if (err || !movie) {
-					return message.channel.send("Movie could not be found!");
-				} else {
-					return movie.remove(err => {
-						if (!err) {
-							return message.channel.send(`Movie deleted: ${movie.name}`);
-						} else {
-							return message.channel.send("Could not remove movie, something went wrong.");
+					return message.channel.send("Movie could not be found! It may be in the viewed list. Use remove command instead.");
+				} else if ("<@" + message.member.user.id + ">" === movie.submittedBy || (settings.deleteMoviesRole && (message.member.roles.cache.has(settings.deleteMoviesRole) || settings.deleteMoviesRole == "all")) || message.member.hasPermission("ADMINISTRATOR")) {
+					return message.channel.send(`Are you sure you want to delete ${movie.name}?`).then(async botMessage => {
+						const filter = (reaction, user) => [emojis.yes, emojis.no].includes(reaction.emoji.name) && user.id == message.author.id;
+		
+						try {
+							await botMessage.react(emojis.yes);
+							await botMessage.react(emojis.no);
+						} catch (e) {
+							console.log("Message deleted");
 						}
+						
+						//Wait for user to confirm if movie presented to them is what they wish to be added to the list or not.								
+						return botMessage.awaitReactions(filter, { max: 1, time: 15000, errors: ["time"] }).then(async collected => {
+							const reaction = collected.first();
+		
+							if (reaction.emoji.name == emojis.yes) {
+								return movie.remove(err => {
+									if (!err) {
+										return message.channel.send(`Movie deleted: ${movie.name}`);
+									} else {
+										return message.channel.send("Could not remove movie, something went wrong.");
+									}
+								});
+							} else {
+								return message.channel.send(`${movie.name} has not been deleted.`);
+							}
+						}).catch(async () => {
+							return message.channel.send("Couldn't get your response.");
+						});
 					});
+				} else {
+					return message.channel.send("Non-administrators can only delete movies they have submitted, unless deleterole has been set to all or a specific role.");
 				}
 			});
 		} else {

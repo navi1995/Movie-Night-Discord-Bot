@@ -1,6 +1,6 @@
 module.exports = {
 	name: "moviesrole",
-	description: "Sets a role that is allowed to add movies to the servers list. Can also clear this role by using moviesrole clear",
+	description: `Sets a role that is allowed to add movies to the servers list. Can also clear this role by using moviesrole clear`,
 	usage: "[roleName]",
 	args: true,
 	admin: true,
@@ -9,7 +9,7 @@ module.exports = {
 		addMoviesRole = (addMoviesRole.match(/<@&([0-9]{17,21})>/) || [])[1] || (message.guild.roles.cache.find(r => (addMoviesRole !== "clear" && addMoviesRole !== "remove") && r.name === addMoviesRole) || {}).id || addMoviesRole;
 
 		if (!message.guild.roles.resolve(addMoviesRole) && addMoviesRole !== "clear" && addMoviesRole !== "remove") {
-			return message.channel.send("Please provide a valid role you'd like to set in the format moviesrole [roleName], or to clear settings use moviesrole clear");
+			return message.channel.send(`Please provide a valid role you'd like to set in the format ${this.name} [roleName], or to clear settings use ${this.name} clear`);
 		} else {
 			addMoviesRole = (addMoviesRole === "clear" || addMoviesRole === "remove") ? null : addMoviesRole;
 
