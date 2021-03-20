@@ -2,6 +2,7 @@ const router = require('express').Router();
 const User = require('../database/schemas/User');
 const Movies = require('../database/schemas/Movies');
 const Settings = require('../database/schemas/Settings');
+const { Parser } = require('json2csv');
 const { getUserGuilds} = require('../utils/api');
 const { hasDeletePermissions, isUserInGuild } = require('../utils/utils');
 
@@ -54,6 +55,32 @@ router.get('/movies/:guildID', async (request, response) => {
 			}); //Excluding these fields
 
 		return response.send(movies);
+	} else {
+		return response.status(401).send({ message: 'User is not in the guild.' });
+	}
+});
+
+//Export to CSV
+router.get('/movies-csv/:guildID', async (request, response) => {
+	const user = await User.findOne({ discordID: request.user.discordID }); //Update with refresh tokens
+	const { guildID } = request.params;
+	const userInGuild = isUserInGuild(user, guildID); //Check if user requesting is actually in the guild
+
+	if (userInGuild) {
+		const movies = await Movies.find({ guildID },
+			{
+				_id: 0,
+				primaryKey: 0,
+				movieID: 0,
+				__v: 0
+			}); //Excluding these fields
+
+		const fields = ['imdbID', 'name', 'posterURL', 'overview', 'releaseDate', 'runtime', 'rating', 'submittedBy', 'submitted', 'viewed', 'viewedDate'];
+		const parser = new Parser({ fields });
+  		const csv = parser.parse(movies);
+		
+		response.attachment('movies.csv');
+		return response.send(csv);
 	} else {
 		return response.status(401).send({ message: 'User is not in the guild.' });
 	}

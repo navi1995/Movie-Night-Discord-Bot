@@ -39,3 +39,7 @@ export function toggleViewedAPI(movie) {
 		withCredentials: true
 	});
 }
+
+export function exportToCSV(guildID) {
+	window.location.href = `${process.env.REACT_APP_API_FULLURL}discord/movies-csv/${guildID}`;
+}
