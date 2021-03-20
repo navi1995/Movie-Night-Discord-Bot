@@ -19,23 +19,23 @@ jobs:
         with:
           submodules: true
       - name: Create Web .env file
-      run: |
-        mkdir -p "/Movie-Night-Bot-Website/bot-dashboard/" && touch "/Movie-Night-Bot-Website/bot-dashboard/.env"
-        echo REACT_APP_BASE_URL=${{ secrets.REACT_APP_BASE_URL }} >> /Movie-Night-Bot-Website/bot-dashboard/.env
-        echo REACT_APP_BASE_API_URL=${{ secrets.REACT_APP_BASE_API_URL }} >> /Movie-Night-Bot-Website/bot-dashboard/.env
-        echo REACT_APP_API_FULLURL=${{ secrets.REACT_APP_API_FULLURL }} >> /Movie-Night-Bot-Website/bot-dashboard/.env
-    - name: Create Backend .env file
-      run: |
-        mkdir -p "/Movie-Night-Bot-Website/backend/" && touch "/Movie-Night-Bot-Website/backend/.env"
-        echo PORT=${{ secrets.PORT }} >> /Movie-Night-Bot-Website/backend/.env
-        echo DASHBOARD_CLIENT_ID=${{ secrets.DASHBOARD_CLIENT_ID }} >> /Movie-Night-Bot-Website/backend/.env
-        echo DASHBOARD_CLIENT_SECRET=${{ secrets.DASHBOARD_CLIENT_SECRET }} >> /Movie-Night-Bot-Website/backend/.env
-        echo DASHBOARD_CALLBACK_URL=${{ secrets.DASHBOARD_CALLBACK_URL }} >> /Movie-Night-Bot-Website/backend/.env
-        echo MONGO_LOGIN=${{ secrets.MONGO_LOGIN }} >> /Movie-Night-Bot-Website/backend/.env
-        echo TOP_API=${{ secrets.TOP_API }} >> /Movie-Night-Bot-Website/backend/.env
-        echo SESSION_SECRET=${{ secrets.SESSION_SECRET }} >> /Movie-Night-Bot-Website/backend/.env
-        echo BASE_URL=${{ secrets.BASE_URL }} >> /Movie-Night-Bot-Website/backend/.env
-        echo WEB_FOLDER=${{ secrets.WEB_FOLDER }} >> /Movie-Night-Bot-Website/backend/.env
+        run: |
+          mkdir -p "/Movie-Night-Bot-Website/bot-dashboard/" && touch "/Movie-Night-Bot-Website/bot-dashboard/.env"
+          echo REACT_APP_BASE_URL=${{ secrets.REACT_APP_BASE_URL }} >> /Movie-Night-Bot-Website/bot-dashboard/.env
+          echo REACT_APP_BASE_API_URL=${{ secrets.REACT_APP_BASE_API_URL }} >> /Movie-Night-Bot-Website/bot-dashboard/.env
+          echo REACT_APP_API_FULLURL=${{ secrets.REACT_APP_API_FULLURL }} >> /Movie-Night-Bot-Website/bot-dashboard/.env
+      - name: Create Backend .env file
+        run: |
+          mkdir -p "/Movie-Night-Bot-Website/backend/" && touch "/Movie-Night-Bot-Website/backend/.env"
+          echo PORT=${{ secrets.PORT }} >> /Movie-Night-Bot-Website/backend/.env
+          echo DASHBOARD_CLIENT_ID=${{ secrets.DASHBOARD_CLIENT_ID }} >> /Movie-Night-Bot-Website/backend/.env
+          echo DASHBOARD_CLIENT_SECRET=${{ secrets.DASHBOARD_CLIENT_SECRET }} >> /Movie-Night-Bot-Website/backend/.env
+          echo DASHBOARD_CALLBACK_URL=${{ secrets.DASHBOARD_CALLBACK_URL }} >> /Movie-Night-Bot-Website/backend/.env
+          echo MONGO_LOGIN=${{ secrets.MONGO_LOGIN }} >> /Movie-Night-Bot-Website/backend/.env
+          echo TOP_API=${{ secrets.TOP_API }} >> /Movie-Night-Bot-Website/backend/.env
+          echo SESSION_SECRET=${{ secrets.SESSION_SECRET }} >> /Movie-Night-Bot-Website/backend/.env
+          echo BASE_URL=${{ secrets.BASE_URL }} >> /Movie-Night-Bot-Website/backend/.env
+          echo WEB_FOLDER=${{ secrets.WEB_FOLDER }} >> /Movie-Night-Bot-Website/backend/.env
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v0.0.1-preview
@@ -51,8 +51,6 @@ jobs:
           api_location: "/Movie-Night-Bot-Website/backend" # Api source code path - optional
           output_location: "build" # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
-          env:
-            API_KEY: ${{ secrets.API_KEY }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
