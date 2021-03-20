@@ -19,3 +19,7 @@ Movie-Night-Bot-Website/bot-dashboard/.env
 Movie-Night-Bot-Website/backend/.env
 .vscode/launch.json
 Discord Bot/.DS_Store
+Movie-Night-Bot-Website/backend/.env-prod
+Movie-Night-Bot-Website/bot-dashboard/.env-build
+Movie-Night-Bot-Website/backend/database/.DS_Store
+Movie-Night-Bot-Website/.DS_Store
