@@ -20,13 +20,13 @@ jobs:
           submodules: true
       - name: Create Web .env file
         run: |
-          mkdir -p "/Movie-Night-Bot-Website/bot-dashboard/" && touch "/Movie-Night-Bot-Website/bot-dashboard/.env"
+          touch "/home/runner/work/Movie-Night-Discord-Bot/Movie-Night-Discord-Bot/Movie-Night-Bot-Website/bot-dashboard/.env"
           echo REACT_APP_BASE_URL=${{ secrets.REACT_APP_BASE_URL }} >> /Movie-Night-Bot-Website/bot-dashboard/.env
           echo REACT_APP_BASE_API_URL=${{ secrets.REACT_APP_BASE_API_URL }} >> /Movie-Night-Bot-Website/bot-dashboard/.env
           echo REACT_APP_API_FULLURL=${{ secrets.REACT_APP_API_FULLURL }} >> /Movie-Night-Bot-Website/bot-dashboard/.env
       - name: Create Backend .env file
         run: |
-          mkdir -p "/Movie-Night-Bot-Website/backend/" && touch "/Movie-Night-Bot-Website/backend/.env"
+          touch "/home/runner/work/Movie-Night-Discord-Bot/Movie-Night-Discord-Bot/Movie-Night-Bot-Website/backend/.env"
           echo PORT=${{ secrets.PORT }} >> /Movie-Night-Bot-Website/backend/.env
           echo DASHBOARD_CLIENT_ID=${{ secrets.DASHBOARD_CLIENT_ID }} >> /Movie-Night-Bot-Website/backend/.env
           echo DASHBOARD_CLIENT_SECRET=${{ secrets.DASHBOARD_CLIENT_SECRET }} >> /Movie-Night-Bot-Website/backend/.env
