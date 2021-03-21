@@ -55,7 +55,11 @@ app.get('/count', async function(req, resp) {
 app.use(express.static(path.join(__dirname, '..', process.env.WEB_FOLDER)));
 
 app.get('/*', function (req, res) {
+	console.log("sendfile");
 	res.sendFile(path.join(__dirname, '..', process.env.WEB_FOLDER, 'index.html'));
 });
 
-app.listen(PORT, () => console.log(`Running on port ${PORT}`));
+app.listen(PORT, () => {
+	console.log(process.env);
+	console.log(`Running on port ${PORT}`)
+});
