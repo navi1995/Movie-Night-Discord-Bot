@@ -20,7 +20,7 @@ passport.use(
 	new DiscordStrategy({
 		clientID: process.env.DASHBOARD_CLIENT_ID,
 		clientSecret: process.env.DASHBOARD_CLIENT_SECRET,
-		callbackURL: process.env.DASHBOARD_CALLBACK_URL,
+		callbackURL: process.env.BASE_URL + process.env.DASHBOARD_CALLBACK_URL,
 		scope: ['identify', 'guilds']
 	}, async (accessToken, refreshToken, profile, done) => {
 		const { id, username, discriminator, avatar, guilds } = profile;
