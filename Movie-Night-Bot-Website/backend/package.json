@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon app.js",
-    "deploy": "pm2-runtime start ecosystem.config.js --env production"
+    "deploy": "pm2-runtime start ecosystem.config.js --env production",
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "",
