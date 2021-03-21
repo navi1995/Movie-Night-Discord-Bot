@@ -121,7 +121,10 @@ export function Commands(props) {
 							<td>prefix</td>
 							<td>Updates the prefix to be whatever you wish to set it as. <br/><br/>(Administrator only).</td>
 						</tr>
-						
+						<tr>
+							<td>strategies</td>
+							<td>Shows current number of servers the bot is present in and the number of users its serving.</td>
+						</tr>
 					</tbody>
 				</Table>
 			</Container>
