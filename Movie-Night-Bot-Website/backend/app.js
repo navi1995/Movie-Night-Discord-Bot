@@ -52,10 +52,15 @@ app.get('/count', async function(req, resp) {
 });
 
 //Required for deployment to production
-app.use(express.static(path.join(__dirname, '..', process.env.WEB_FOLDER)));
+app.use(express.static(path.join(__dirname)));
 
 app.get('/*', function (req, res) {
-	res.sendFile(path.join(__dirname, '..', process.env.WEB_FOLDER, 'index.html'));
+	console.log(path.join(__dirname, '..', process.env.WEB_FOLDER, 'index.html'));
+	console.log(path.join(__dirname, '..', 'index.html'));
+	res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => console.log(`Running on port ${PORT}`));
+app.listen(PORT, () => {
+	console.log(process.env);
+	console.log(`Running on port ${PORT}`)
+});
