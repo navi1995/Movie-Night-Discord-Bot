@@ -23,7 +23,7 @@ export function Commands(props) {
 					<tbody>
 						<tr>
 							<td>help</td>
-							<td>Will DM you with details on how to use each command the bot has to offer.</td>
+							<td>Will display details on how to use each command the bot has to offer.</td>
 						</tr>
 						<tr>
 							<td>add</td>
@@ -36,9 +36,11 @@ export function Commands(props) {
 						<tr>
 							<td>remove</td>
 							<td>
-								Only administrators or the user that submitted the movie is able to utilise this command. This will search the UNVIEWED list and remove the movie.
+								By default only administrators or the user that submitted the movie is able to utilise this command. This will search the UNVIEWED list and remove the movie.
 								<br /> <br />
-								If NO movie is specified, this will delete ALL UNVIEWED movies (Administrator only)
+								If NO movie is specified, this will delete ALL UNVIEWED movies. 
+								<br />
+								Check 'deleterole' command for permission-based usage.
 							</td>
 						</tr>
 						<tr>
@@ -60,7 +62,7 @@ export function Commands(props) {
 								<br /> <br />
 								If Auto-View is set to on, the movie will be moved to the VIEWED list.
 								<br /> <br />
-								(Administrator only, unless poll role has been set! Check Pollrole for more)
+								Check 'pollrole' command for permission-based usage. By default this is an administrator only command.
 							</td>
 						</tr>
 						<tr>
@@ -77,7 +79,7 @@ export function Commands(props) {
 						</tr>
 						<tr>
 							<td>removeviewed</td>
-							<td>Same as the REMOVE command, but relates to the VIEWED list only. <br/><br/>(Administrator only).</td>
+							<td>Same as the REMOVE command, but relates to the VIEWED list only. <br/><br/>(Administrator only by default, check 'deleterole' for permission based usage).</td>
 						</tr>
 						<tr>
 							<td>setviewed</td>
@@ -93,15 +95,23 @@ export function Commands(props) {
 						</tr>
 						<tr>
 							<td>polltime</td>
-							<td>Sets the length of time a poll will run. The number must be in SECONDS! Maximum is currently 2 hours, may be increased later. <br/><br/>(Administrator only).</td>
+							<td>Sets the length of time a poll will run. The number must be in SECONDS! Maximum is currently 24 hours, may be increased later. <br/><br/>(Administrator only).</td>
+						</tr>
+						<tr>
+							<td>autoview</td>
+							<td>Specify ON or OFF. When this setting is on, movies will automatically be moved to the VIEWED list after a poll or random command. Default is off. <br/><br/>(Administrator only).</td>
 						</tr>
 						<tr>
 							<td>pollrole</td>
 							<td>Mention a role in your command, users with this role will then be able to start polls rather than just administrators. To clear this setting use 'pollrole clear' <br/><br/>(Administrator only).</td>
 						</tr>
 						<tr>
-							<td>autoview</td>
-							<td>Specify ON or OFF. When this setting is on, movies will automatically be moved to the VIEWED list after a poll or random command. Default is off. <br/><br/>(Administrator only).</td>
+							<td>deleterole</td>
+							<td>Mention a role in your command, to limit the REMOVE and REMOVEVIEWED commands to this role and administrators. To allow ANYONE to use this command use 'deleterole all'. To clear this setting use 'deleterole clear’ <br/><br/>(Administrator only).</td>
+						</tr>
+						<tr>
+							<td>viewedrole</td>
+							<td>Mention a role in your command, to limit the SETVIEWED command to this role and administrators. To allow ANYONE to use this command use 'viewedrole all'. To clear this setting use 'viewedrole clear’ <br/><br/>(Administrator only).</td>
 						</tr>
 						<tr>
 							<td>moviesrole</td>
@@ -111,7 +121,10 @@ export function Commands(props) {
 							<td>prefix</td>
 							<td>Updates the prefix to be whatever you wish to set it as. <br/><br/>(Administrator only).</td>
 						</tr>
-						
+						<tr>
+							<td>strategies</td>
+							<td>Shows current number of servers the bot is present in and the number of users its serving.</td>
+						</tr>
 					</tbody>
 				</Table>
 			</Container>

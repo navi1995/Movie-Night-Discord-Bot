@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, CardGroup, Card, Button, Row, Col, Container, Jumbotron } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faList, faListOl, faRandom,  faCog, faCheckSquare, faBullhorn, faEye, faTrophy, faBrush } from '@fortawesome/free-solid-svg-icons'
+import { faList, faListOl, faRandom,  faCog, faCheckSquare, faBullhorn, faEye, faTrophy, faBrush } from '@fortawesome/free-solid-svg-icons';
 import { faThumbsUp } from '@fortawesome/free-regular-svg-icons';
 import { faImdb, faDiscord } from '@fortawesome/free-brands-svg-icons';
 import { FooterComponent } from '../../components';
@@ -9,7 +9,7 @@ import { getBotServers } from '../../utils/utils';
 import CountUp from 'react-countup';
 
 export function Homepage(props) {
-	const [serverCount, setServerCount] = React.useState(3500);
+	const [serverCount, setServerCount] = React.useState(17000);
 
 	React.useEffect(() => {
 		getBotServers().then(function(response) {

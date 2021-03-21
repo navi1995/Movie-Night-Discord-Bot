@@ -1,7 +1,9 @@
 import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import { MovieComponent, ErrorComponent, Loader, FooterComponent } from '../../components';
-import { Row, Container, ToggleButton, ButtonGroup, Toast } from 'react-bootstrap';
-import { getMovies } from '../../utils/utils';;
+import { Row, Container, ToggleButton, ButtonGroup, Button, Toast } from 'react-bootstrap';
+import { getMovies, exportToCSV } from '../../utils/utils';;
 
 export function Dashboard(props) {
 	// const [user] = React.useState(props.user || []);
@@ -63,6 +65,10 @@ export function Dashboard(props) {
 		setRadioValue(e.currentTarget.value);
 	}
 
+	function exportClick(e) {
+		exportToCSV(currentGuild.id);
+	}
+
 	function renderMovie(movie, index) {
 		return (radioValue == 'ALL' || (radioValue == 'VIEWED' && movie.viewed) || (radioValue == 'UNVIEWED' && movie.viewed == false));
 	}
@@ -106,6 +112,7 @@ export function Dashboard(props) {
 						<ToggleButton onChange={radioClick} type='radio' variant='secondary' value='ALL' checked={radioValue == 'ALL'}>All</ToggleButton>
 						<ToggleButton onChange={radioClick} type='radio' variant='secondary' value='VIEWED' checked={radioValue == 'VIEWED'}>Viewed</ToggleButton>
 						<ToggleButton onChange={radioClick} type='radio' variant='secondary' value='UNVIEWED' checked={radioValue == 'UNVIEWED'}>Unviewed</ToggleButton>
+						<Button onClick={exportClick}>Export to CSV <FontAwesomeIcon icon={faDownload} /></Button>
 					</ButtonGroup>
 				</Row>
 				<Row>
