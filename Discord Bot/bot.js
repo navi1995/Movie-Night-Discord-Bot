@@ -8,8 +8,7 @@ const Discord = require("discord.js");
 const fetch = require("node-fetch");
 const moment = require("moment");
 const mongoose = require("mongoose");
-const maxPollTime = 86400;
-const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
+const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing, maxPollTime } = require("./config.json");
 const client = new Discord.Client({
 	messageCacheMaxSize: 50,
 	messageCacheLifetime: maxPollTime + 100, //Maximum poll time = 7200, ensure message not swept.
