@@ -21,7 +21,7 @@ module.exports = {
 			return message.channel.send(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : 'a set role using the `pollrole` command.'}`);
 		}
 
-		await message.channel.send(settings.pollTime >= main.maxPollTime*1000 ? settings.pollMessage + "\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO 24 HOURS DUE TO A TECHNICAL ISSUE. THIS WILL BE FIXED SOON)" : settings.pollMessage, { allowedMentions: {} });
+		await message.channel.send(settings.pollTime >= main.maxPollTime*1000 ? settings.pollMessage + `\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO ${secondsToHms(main.maxPollTime)} DUE TO SERVER COSTS AND ISSUES. Developers are constantly trying to increase this while also trying to keep server stability.)` : settings.pollMessage, { allowedMentions: {} });
 
 		//2048 limit
 		await main.movieModel.find(searchOptions, async (error, docs) => {
@@ -149,3 +149,15 @@ module.exports = {
 		}).lean();
 	},
 };
+
+function secondsToHms(d) {
+	d = Number(d);
+	var h = Math.floor(d / 3600);
+	var m = Math.floor(d % 3600 / 60);
+	var s = Math.floor(d % 3600 % 60);
+
+	var hDisplay = h > 0 ? h + (h == 1 ? " hour" : " hours") : "";
+	var mDisplay = m > 0 ? m + (m == 1 ? " minute" : " minutes") : "";
+	var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+	return [hDisplay, mDisplay, sDisplay].filter(Boolean).join(", "); 
+}
