@@ -74,17 +74,19 @@ module.exports = {
 						console.log("Poll started. GuildID: " + message.guild.id  + " " + new Date());
 						collector.on("collect", async (messageReact, user) => {
 							console.log("Collect" + " " + new Date());
-							let duplicateReactions = message.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
-		
-							//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
-							//This block of code exists before the reactions are added to ensure as the bot adds reactions to the message, users are not able to duplicate votes during this time.
-							for (let reaction of duplicateReactions.values()) {
-								try {
-									await reaction.users.remove(user.id);
-								} catch (e) {
-									console.error("Error removing reaction", e);
+							await message.fetch().then(async updatedMessage => {
+								let duplicateReactions = updatedMessage.reactions.cache.filter(reaction => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
+			
+								//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
+								//This block of code exists before the reactions are added to ensure as the bot adds reactions to the message, users are not able to duplicate votes during this time.
+								for (let reaction of duplicateReactions.values()) {
+									try {
+										await reaction.users.remove(user.id);
+									} catch (e) {
+										console.error("Error removing reaction", e);
+									}
 								}
-							}
+							});
 						});
 		
 						for (let i = 1; i <= totalCount; i++) {
