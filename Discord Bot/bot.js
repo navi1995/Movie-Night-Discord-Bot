@@ -10,7 +10,7 @@ const moment = require("moment");
 const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing, maxPollTime } = require("./config.json");
 const client = new Discord.Client({
-	messageCacheMaxSize: 50,
+	messageCacheMaxSize: 500,
 	messageCacheLifetime: maxPollTime + 100, //Maximum poll time = 7200, ensure message not swept.
 	messageSweepInterval: 600,
 	allowedMentions: { parse: ['users'] }, // allowedMentions to prevent unintended role and everyone pings
@@ -318,9 +318,9 @@ async function searchNewMovie(search, message) {
 		await message.channel.send("Couldn't find any movies. Sorry!");
 
 		return [null, data];
-	} 
-
-	return [new movieModel({
+	}
+	
+	let movie = new movieModel({
 		primaryKey: message.guild.id + data.id,
 		guildID: message.guild.id,
 		movieID: data.id,
@@ -328,11 +328,16 @@ async function searchNewMovie(search, message) {
 		name: data.title || data.original_title,
 		posterURL: `https://image.tmdb.org/t/p/original/${data.poster_path}`,
 		overview: data.overview,
-		releaseDate: new Date(data.release_date),
 		runtime: data.runtime,
 		rating: data.vote_average,
 		submittedBy: message.member.user //message.author.id - Update to this after creating mongoDB migration and API for dashboard can be rolled out.
-	}), initialData];
+	});
+
+	if (!isNaN(data.release_date)) {
+		movie.releaseDate = new Date(data.release_date);
+	}
+
+	return [movie, initialData];
 }
 
 function getRandomFromArray(array, count) {
