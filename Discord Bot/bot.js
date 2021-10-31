@@ -45,7 +45,7 @@ const client = new Discord.Client({
 		,'WEBHOOKS_UPDATE'
 	]
 });
-const DBL = require("dblapi.js");
+const { AutoPoster } = require('topgg-autoposter');
 const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
 const guildSettings = new Discord.Collection();
 const Schema = mongoose.Schema;
@@ -86,7 +86,7 @@ const setting = mongoose.model("Settings", Settings);
 let main;
 
 if (!testing) {
-	const dbl = new DBL(topggAPI, client);
+	AutoPoster(topggAPI, client)
 }
 
 client.commands = new Discord.Collection();
