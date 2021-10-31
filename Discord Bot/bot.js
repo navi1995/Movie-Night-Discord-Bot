@@ -333,7 +333,7 @@ async function searchNewMovie(search, message) {
 		submittedBy: message.member.user //message.author.id - Update to this after creating mongoDB migration and API for dashboard can be rolled out.
 	});
 
-	if (!isNaN(data.release_date)) {
+	if (isNaN(data.release_date)) {
 		movie.releaseDate = new Date(data.release_date);
 	}
 
