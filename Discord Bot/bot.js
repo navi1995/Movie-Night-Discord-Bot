@@ -4,16 +4,17 @@
 	2. Add reaction check if user wants to delete all movies
 */
 const fs = require("fs");
-const Discord = require("discord.js");
+const { Client, Discord, Intents, Collection, MessageEmbed } = require("discord.js");
 const fetch = require("node-fetch");
 const moment = require("moment");
 const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing, maxPollTime } = require("./config.json");
-const client = new Discord.Client({
+const client = new Client({
+	intents: [Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.DIRECT_MESSAGE_REACTIONS , Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILDS],
 	messageCacheMaxSize: 500,
 	messageCacheLifetime: maxPollTime + 100, //Maximum poll time = 7200, ensure message not swept.
 	messageSweepInterval: 600,
-	allowedMentions: { parse: ['users'] }, // allowedMentions to prevent unintended role and everyone pings
+	allowedMentions: { parse: ['users', 'roles'] }, // allowedMentions to prevent unintended role and everyone pings
 	disabledEvents: [
 		'GUILD_UPDATE'
 		,'GUILD_MEMBER_ADD'
@@ -46,7 +47,7 @@ const client = new Discord.Client({
 });
 const { AutoPoster } = require('topgg-autoposter');
 const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
-const guildSettings = new Discord.Collection();
+const guildSettings = new Collection();
 const Schema = mongoose.Schema;
 const ObjectId = Schema.ObjectId;
 const Movie = new Schema({
@@ -88,7 +89,7 @@ if (!testing) {
 	AutoPoster(topggAPI, client)
 }
 
-client.commands = new Discord.Collection();
+client.commands = new Collection();
 client.commandsArray = [];
 mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
 
@@ -143,7 +144,7 @@ for (const file of commandFiles) {
 	}
 }
 
-client.on("message", async function(message) {	
+client.on("messageCreate", async function(message) {
 	if (message.author.bot) return;
 
 	//Put in a check for all commands and aliases, if not apart of message dont continue
@@ -188,6 +189,7 @@ client.on("message", async function(message) {
 	//EMBED LINKS needed for SEARCH/ADD/POLL
 	//READ_MESSAGES needed for all.
 
+
 	//If message doesn't have the prefix from settings, ignore the message.
 	if (!message.content.startsWith(currentPrefix) || message.author.bot) return uncacheGuild(message.guild);
 
@@ -212,7 +214,7 @@ client.on("message", async function(message) {
 	}
 
 	//If the command has been flagged as admin only, do not process it.
-	if (command.admin && !message.member.hasPermission("ADMINISTRATOR")) {
+	if (command.admin && !message.member.permissions.has("ADMINISTRATOR")) {
 		uncacheGuild(message.guild);
 
 		return message.channel.send("This commands requires the user to have an administrator role in the server.");
@@ -264,7 +266,8 @@ function searchMovieDatabaseObject(guildID, movie, hideViewed) {
 }
 
 function buildSingleMovieEmbed(movie, subtitle, hideSubmitted) {
-	const embed = new Discord.MessageEmbed()
+	console.log(movie);
+	const embed = new MessageEmbed()
 		.setTitle(movie.name)
 		.setURL(`https://www.imdb.com/title/${movie.imdbID}`)
 		.setDescription(movie.overview)
@@ -273,7 +276,7 @@ function buildSingleMovieEmbed(movie, subtitle, hideSubmitted) {
 		.addFields(
 			{ name: "Release Date", value: moment(movie.releaseDate).format("DD MMM YYYY"), inline: true },
 			{ name: "Runtime", value: movie.runtime + " Minutes", inline: true },
-			{ name: "Rating", value: movie.rating, inline: true }
+			{ name: "Rating", value: movie.rating + "", inline: true }
 		);
 
 	if (!hideSubmitted) {
@@ -351,23 +354,6 @@ function getRandomFromArray(array, count) {
 function getSettings(guildID) {
 	return setting.findOne({guildID: guildID }).lean().exec();
 }
-
-/*
-function syncUpAfterDowntime() {
-	setting.find({}).exec(function(err, docs) { 
-		let missingSettings = Array.from(client.guilds.cache.keys()).filter(function(val) {
-			return docs.map(a => a.guildID).includes(val);
-		});
-		missingSettings = missingSettings.map(function(a) {
-			return { "guildID": a };
-		});
-		
-		setting.insertMany(missingSettings, function(error, docs) {
-			if (error) console.log(error);
-		});
-	});
-}
-*/
 
 //Namespace functions and variables for modules
 main = {
