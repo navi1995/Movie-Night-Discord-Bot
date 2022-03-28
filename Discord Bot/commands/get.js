@@ -43,7 +43,7 @@ module.exports = {
 
 				//message.channel.send({ embeds: embeddedMessages})
 				for (let embeddedMessage of embeddedMessages) {
-					await message.channel.send(embeddedMessage);
+					await message.channel.send({embeds: [embeddedMessage]});
 				}
 			}).lean();
 		}
