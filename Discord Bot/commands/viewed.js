@@ -40,10 +40,8 @@ module.exports = {
 			movieEmbed.setDescription(description);
 			embeddedMessages.push(movieEmbed);
 
-			for (let embeddedMessage of embeddedMessages) {
-				await message.channel.send(embeddedMessage);
-			}
-
+			message.channel.send({embeds: embeddedMessages});
+			
 			return;
 		}).lean();
 	},

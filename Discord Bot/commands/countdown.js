@@ -12,7 +12,7 @@ module.exports = {
 
 		let countdown = setInterval(async function() {
 			seconds--;
-			await message1.edit(seconds + 1);
+			await message1.edit(seconds + 1 + "");
 
 			if (seconds == -1) {
 				clearInterval(countdown);

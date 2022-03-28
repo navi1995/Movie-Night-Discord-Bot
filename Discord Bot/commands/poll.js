@@ -17,7 +17,7 @@ module.exports = {
 
 		//Check this logic
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set. 
-		if (!message.member.hasPermission("ADMINISTRATOR") && (!settings.pollRole || !message.member.roles.cache.has(settings.pollRole))) {
+		if (!message.member.permissions.has("ADMINISTRATOR") && (!settings.pollRole || !message.member.roles.cache.has(settings.pollRole))) {
 			return message.channel.send(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : 'a set role using the `pollrole` command.'}`);
 		}
 
@@ -57,19 +57,17 @@ module.exports = {
 			movieEmbed.setDescription(description);
 			embeddedMessages.push(movieEmbed);
 
-			console.log(embeddedMessages.length);
 			for (let i = 0; i < embeddedMessages.length; i++) {
 				let embeddedMessage = embeddedMessages[i];
 				
 				if (i != embeddedMessages.length - 1) {
-					console.log("Hello");
-					await message.channel.send(embeddedMessage);
+					await message.channel.send({ embeds: [embeddedMessage] });
 				} else {
 					let emojiArray = [];
 
-					await message.channel.send(embeddedMessage).then(async message => {
+					await message.channel.send({ embeds: [embeddedMessage] }).then(async message => {
 						//Polltime is stored in ms
-						let collector = message.createReactionCollector((r, u) => u.id !== main.client.user.id && emojiArray.includes(r.emoji.name), { time: (settings.pollTime >= main.maxPollTime*1000 ? main.maxPollTime*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
+						let collector = message.createReactionCollector({ filter: (r, u) => u.id !== main.client.user.id && emojiArray.includes(r.emoji.name), time: (settings.pollTime >= main.maxPollTime*1000 ? main.maxPollTime*1000 : settings.pollTime) + (totalCount * 1000) }); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 		
 						console.log("Poll started. GuildID: " + message.guild.id  + " " + new Date());
 						collector.on("collect", async (messageReact, user) => {
@@ -137,7 +135,7 @@ module.exports = {
 										}
 									});
 								}
-								return message.channel.send(main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`));
+								return message.channel.send({ embeds: [main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count-1} votes.`)] });
 							}).catch(function() {
 								console.log(`Poll was deleted. guild: ${message.guild.id}, channel: ${message.channel.id}, message ID: ${message.id}`);
 							});

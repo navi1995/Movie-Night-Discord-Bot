@@ -7,12 +7,11 @@ module.exports = {
 	usage: "[movie name or search]",
 	args: true,
 	async execute(message, args, main, settings) {
-		// TODO: fix callback hell
 		const search = args.join(" ");
 
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set. 
 		//If setting has been cleared, allow anyone to add movies.
-		if (settings.addMoviesRole && !message.member.roles.cache.has(settings.addMoviesRole) && !message.member.hasPermission("ADMINISTRATOR")) {
+		if (settings.addMoviesRole && !message.member.roles.cache.has(settings.addMoviesRole) && !message.member.permissions.has("ADMINISTRATOR")) {
 			return message.channel.send(`Movies can only be added by administrators or users with the role ${settings.addMoviesRole ? '<@&' + settings.addMoviesRole + '>' : 'set with the `addMoviesRole` command by an administrator'}`);
 		}
 
@@ -35,7 +34,7 @@ module.exports = {
 						if (data && (data.total_results > 1 || (data.movie_results && data.movie_results.length > 1))) {
 							const movieEmbed = main.buildSingleMovieEmbed(newMovie, "Is this the movie you want to add?");
 		
-							return message.channel.send(movieEmbed).then(async embedMessage => {
+							return message.channel.send({embeds: [movieEmbed] }).then(async embedMessage => {
 								const filter = (reaction, user) => [emojis.yes, emojis.no].includes(reaction.emoji.name) && user.id == message.author.id;
 
 								try {
@@ -49,7 +48,7 @@ module.exports = {
 								}
 								
 								//Wait for user to confirm if movie presented to them is what they wish to be added to the list or not.								
-								return embedMessage.awaitReactions(filter, { max: 1, time: 15000, errors: ["time"] }).then(async collected => {
+								return embedMessage.awaitReactions({filter: filter, max: 1, time: 15000, errors: ["time"] }).then(async collected => {
 									const reaction = collected.first();
 
 									if (reaction.emoji.name == emojis.yes) {
@@ -66,7 +65,7 @@ module.exports = {
 								});
 							});
 						} else {
-							return message.channel.send(main.buildSingleMovieEmbed(newMovie, "Movie Added!"));
+							return message.channel.send({ embeds: [main.buildSingleMovieEmbed(newMovie, "Movie Added!")] });
 						}
 					});
 				}

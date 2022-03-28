@@ -41,9 +41,10 @@ module.exports = {
 				movieEmbed.setDescription(description);
 				embeddedMessages.push(movieEmbed);
 
-				for (let embeddedMessage of embeddedMessages) {
-					await message.channel.send(embeddedMessage);
-				}
+				message.channel.send({ embeds: embeddedMessages})
+				// for (let embeddedMessage of embeddedMessages) {
+				// 	await message.channel.send(embeddedMessage);
+				// }
 			}).lean();
 		}
 
@@ -52,7 +53,7 @@ module.exports = {
 		//25 embed limit for fields
 		return main.movieModel.findOne(searchOptions, (error, movie) => {
 			if (movie) {
-				return message.channel.send(main.buildSingleMovieEmbed(movie));		
+				return message.channel.send({ embeds: [main.buildSingleMovieEmbed(movie)]});		
 			} else {
 				return message.channel.send("Could not find movie in your list. Perhaps try using the search command instead?");
 			}

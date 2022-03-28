@@ -12,7 +12,7 @@ module.exports = {
 		return main.movieModel.findOne(searchOptions, (err, movie) => {
 			if (err || !movie) {
 				return message.channel.send("Movie could not be found!");
-			} else if ((settings.viewedMoviesRole && (message.member.roles.cache.has(settings.viewedMoviesRole) || settings.viewedMoviesRole == "all")) || message.member.hasPermission("ADMINISTRATOR")){
+			} else if ((settings.viewedMoviesRole && (message.member.roles.cache.has(settings.viewedMoviesRole) || settings.viewedMoviesRole == "all")) || message.member.permissions.has("ADMINISTRATOR")){
 				return message.channel.send(`Are you sure you want to set ${movie.name} to ${!movie.viewed ? "" : "un"}viewed?`).then(async botMessage => {
 					const filter = (reaction, user) => [emojis.yes, emojis.no].includes(reaction.emoji.name) && user.id == message.author.id;
 	
@@ -24,7 +24,7 @@ module.exports = {
 					}
 					
 					//Wait for user to confirm if movie presented to them is what they wish to be added to the list or not.								
-					return botMessage.awaitReactions(filter, { max: 1, time: 15000, errors: ["time"] }).then(async collected => {
+					return botMessage.awaitReactions({ filter: filter, max: 1, time: 15000, errors: ["time"] }).then(async collected => {
 						const reaction = collected.first();
 	
 						if (reaction.emoji.name == emojis.yes) {
