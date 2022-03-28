@@ -41,10 +41,10 @@ module.exports = {
 				movieEmbed.setDescription(description);
 				embeddedMessages.push(movieEmbed);
 
-				message.channel.send({ embeds: embeddedMessages})
-				// for (let embeddedMessage of embeddedMessages) {
-				// 	await message.channel.send(embeddedMessage);
-				// }
+				//message.channel.send({ embeds: embeddedMessages})
+				for (let embeddedMessage of embeddedMessages) {
+					await message.channel.send(embeddedMessage);
+				}
 			}).lean();
 		}
 
