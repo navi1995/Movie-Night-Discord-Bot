@@ -8,7 +8,7 @@ module.exports = {
 	//admin: true, --WE don't use admin tag here as user should be able to remove their own movies before viewing.
 	async execute(message, args, main, settings) {
 		if (!args.length) {
-			if (!message.member.hasPermission("ADMINISTRATOR")) return message.channel.send("Sorry, only Administrators can delete all movies.");
+			if (!message.member.permissions.has("ADMINISTRATOR")) return message.channel.send("Sorry, only Administrators can delete all movies.");
 
 			return message.channel.send("Are you sure you want to remove all unviewed movies?").then(async botMessage => {
 				const filter = (reaction, user) => [emojis.yes, emojis.no].includes(reaction.emoji.name) && user.id == message.author.id;
@@ -21,7 +21,7 @@ module.exports = {
 				}
 				
 				//Wait for user to confirm if movie presented to them is what they wish to be added to the list or not.								
-				return botMessage.awaitReactions(filter, { max: 1, time: 15000, errors: ["time"] }).then(async collected => {
+				return botMessage.awaitReactions({filter: filter, max: 1, time: 15000, errors: ["time"] }).then(async collected => {
 					const reaction = collected.first();
 
 					if (reaction.emoji.name == emojis.yes) {
@@ -48,7 +48,7 @@ module.exports = {
 			return main.movieModel.findOne(searchOptions, (err, movie) => {
 				if (err || !movie) {
 					return message.channel.send("Movie could not be found! It may be in the viewed list. Use removeviewed instead.");
-				} else if ("<@" + message.member.user.id + ">" === movie.submittedBy || (settings.deleteMoviesRole && (message.member.roles.cache.has(settings.deleteMoviesRole) || settings.deleteMoviesRole == "all")) || message.member.hasPermission("ADMINISTRATOR")) {
+				} else if ("<@" + message.member.user.id + ">" === movie.submittedBy || (settings.deleteMoviesRole && (message.member.roles.cache.has(settings.deleteMoviesRole) || settings.deleteMoviesRole == "all")) || message.member.permissions.has("ADMINISTRATOR")) {
 					return message.channel.send(`Are you sure you want to delete ${movie.name}?`).then(async botMessage => {
 						const filter = (reaction, user) => [emojis.yes, emojis.no].includes(reaction.emoji.name) && user.id == message.author.id;
 		
@@ -60,7 +60,7 @@ module.exports = {
 						}
 						
 						//Wait for user to confirm if movie presented to them is what they wish to be added to the list or not.								
-						return botMessage.awaitReactions(filter, { max: 1, time: 15000, errors: ["time"] }).then(async collected => {
+						return botMessage.awaitReactions({ filter: filter, max: 1, time: 15000, errors: ["time"] }).then(async collected => {
 							const reaction = collected.first();
 		
 							if (reaction.emoji.name == emojis.yes) {
