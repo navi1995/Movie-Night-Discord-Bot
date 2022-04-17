@@ -250,11 +250,14 @@ client.login(token);
 
 //Movie can be string or IMDB link
 function searchMovieDatabaseObject(guildID, movie, hideViewed) {
+	let isImdbSearch = movie.includes("imdb.com");
 	let searchObj = {
 		guildID: guildID
 	};
 	
-	if (movie) {
+	if (isImdbSearch) {
+		searchObj.imdbID = movie.match(/tt[0-9]{7,8}/g);
+	} else if (movie) {
 		searchObj.name = new RegExp(".*" + movie + ".*", "i");
 	}
 
