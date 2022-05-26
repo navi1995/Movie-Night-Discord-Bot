@@ -5,7 +5,7 @@
 */
 const fs = require("fs");
 const Cluster = require('discord-hybrid-sharding');
-const { Client, Discord, Intents, Collection, MessageEmbed, Options } = require("discord.js");
+const { Client, Discord, Intents, Collection, MessageEmbed, Options, LimitedCollection } = require("discord.js");
 const fetch = require("node-fetch");
 const moment = require("moment");
 const mongoose = require("mongoose");
@@ -17,7 +17,18 @@ const client = new Client({
 	// messageCacheMaxSize: 500,
 	// messageCacheLifetime: maxPollTime + 100, //Maximum poll time = 7200, ensure message not swept.
 	// messageSweepInterval: 600,
-	makeCache: Options.cacheEverything(),
+	makeCache: Options.cacheWithLimits({
+		// Keep default thread sweeping behavior
+		...Options.defaultMakeCacheSettings,
+		MessageManager: {
+			sweepInterval: 600,
+			sweepFilter: LimitedCollection.filterByLifetime({
+				lifetime: maxPollTime + 100,
+				getComparisonTimestamp: e => e.editedTimestamp ?? e.createdTimestamp,
+				excludeFromSweep: e => e.author.bot
+			})
+		}
+	}),
 	allowedMentions: { parse: ['users', 'roles'] }, // allowedMentions to prevent unintended role and everyone pings
 	disabledEvents: [
 		'GUILD_UPDATE'
