@@ -4,16 +4,20 @@
 	2. Add reaction check if user wants to delete all movies
 */
 const fs = require("fs");
-const { Client, Discord, Intents, Collection, MessageEmbed } = require("discord.js");
+const Cluster = require('discord-hybrid-sharding');
+const { Client, Discord, Intents, Collection, MessageEmbed, Options } = require("discord.js");
 const fetch = require("node-fetch");
 const moment = require("moment");
 const mongoose = require("mongoose");
 const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing, maxPollTime } = require("./config.json");
 const client = new Client({
+	shards: Cluster.data.SHARD_LIST, // An array of shards that will get spawned
+    shardCount: Cluster.data.TOTAL_SHARDS, //
 	intents: [Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.DIRECT_MESSAGE_REACTIONS , Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILDS],
-	messageCacheMaxSize: 500,
-	messageCacheLifetime: maxPollTime + 100, //Maximum poll time = 7200, ensure message not swept.
-	messageSweepInterval: 600,
+	// messageCacheMaxSize: 500,
+	// messageCacheLifetime: maxPollTime + 100, //Maximum poll time = 7200, ensure message not swept.
+	// messageSweepInterval: 600,
+	makeCache: Options.cacheEverything(),
 	allowedMentions: { parse: ['users', 'roles'] }, // allowedMentions to prevent unintended role and everyone pings
 	disabledEvents: [
 		'GUILD_UPDATE'
