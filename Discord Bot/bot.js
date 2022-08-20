@@ -55,7 +55,7 @@ client.commands = new Collection();
 mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true });
 
 function setMessage() {
-	client.user.setActivity("Reinvite bot for Slash commands https://discord.com/api/oauth2/authorize?client_id=709271563110973451&permissions=2147560512&scope=applications.commands%20bot", { type: "WATCHING" });
+	client.user.setActivity("Reinvite bot for Slash commands from website", { type: "WATCHING" });
 }
 
 client.once("ready", () => {
