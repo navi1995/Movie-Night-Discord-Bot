@@ -1,16 +1,19 @@
+const { SlashCommandBuilder } = require("discord.js");
+
 module.exports = {
-	name: "search",
-	description: "Gets details for a movie without adding to servers list.",
-	aliases: ["find", "details"],
-	usage: "[movie name or search]",
-	args: true,
-	async execute(message, args, main) {
-		return main.searchNewMovie(args.join(" "), message).then(([newMovie]) => {
+	data: new SlashCommandBuilder()
+		.setName("search")
+		.setDescription("Gets details for a movie without adding to servers list.")
+		.addStringOption((option) => option.setName("movie").setDescription("Movie name or IMDB link of movie to search for.").setRequired(true)),
+	async execute(interaction, main) {
+		const movieSearch = interaction.options.getString("movie");
+
+		return main.searchNewMovie(movieSearch, interaction).then(([newMovie]) => {
 			//No need for else, searchNewMovie alerts user if no movie found.
-			return newMovie && message.channel.send({ embeds: [main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)", true)] });
+			return newMovie && interaction.editReply({ embeds: [main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)", true)] });
 		}).catch(err => {
 			console.error("Search.js", err);
-			return message.channel.send("Something went wrong.");
+			return interaction.editReply("Something went wrong.");
 		});
 	}	
 };

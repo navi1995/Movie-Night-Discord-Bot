@@ -1,62 +1,72 @@
-const { MessageEmbed } = require("discord.js");
+const { EmbedBuilder, SlashCommandBuilder } = require("discord.js");
 const moment = require("moment");
 
 module.exports = {
-	name: "get",
-	description: "Returns list of all movies in current watch list for server, or if search is specified it will attempt to search the servers list for the movie.",
-	aliases: ["list", "getmovie"],
-	execute(message, args, main) {
+	data: new SlashCommandBuilder()
+		.setName("getmovie_s")
+		.setDescription("Returns list of all movies in current unviewed list for server, or search using text.")
+		.addStringOption((option) => option.setName("search").setDescription("Movie to search for, Able to use IMDB link.")),
+	async execute(interaction, main) {
+		const search = interaction.options.getString("search");
 		let embeddedMessages = [];
 		let number = 1;
 		let description = "";
-		let searchOptions = main.searchMovieDatabaseObject(message.guild.id, "", true);
-		let movieEmbed = new MessageEmbed().setTitle("Submitted Movies").setColor("#6441a3");
+		let searchOptions = main.searchMovieDatabaseObject(interaction.guild.id, "", true);
+		let movieEmbed = new EmbedBuilder().setTitle("Submitted Movies").setColor("#6441a3");
 
-		if (!args.length) {
+		if (!search || !search.length) {
 			//return to avoid hitting logic below.
-			return main.movieModel.find(searchOptions, async (error, movies) => {
-				if (error) {
-					return message.channel.send("Could not return list of movies, an error occured.");
-				}
-				
-				if (!movies || !movies.length) { 
-					return message.channel.send("List of unviewed movies is currently empty.");
-				} else {
-					for (let movie of movies) {
-						let stringConcat = `**[${number++}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
+			return main.movieModel
+				.find(searchOptions, async (error, movies) => {
+					if (error) {
+						return interaction.editReply("Could not return list of movies, an error occured.");
+					}
+
+					if (!movies || !movies.length) {
+						return interaction.editReply("List of unviewed movies is currently empty.");
+					} else {
+						for (let movie of movies) {
+							let stringConcat = `**[${number++}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
 						**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
 
-						//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
-						if (description.length + stringConcat.length > 2048) {
-							movieEmbed.setDescription(description);
-							embeddedMessages.push(movieEmbed);
-							description = "";
-							movieEmbed = new MessageEmbed().setTitle("Submitted Movies (Cont...)").setColor("#6441a3");
-						} 
+							//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
+							if (description.length + stringConcat.length > 2048) {
+								movieEmbed.setDescription(description);
+								embeddedMessages.push(movieEmbed);
+								description = "";
+								movieEmbed = new EmbedBuilder().setTitle("Submitted Movies (Cont...)").setColor("#6441a3");
+							}
 
-						description += stringConcat;
+							description += stringConcat;
+						}
 					}
-				}
 
-				movieEmbed.setDescription(description);
-				embeddedMessages.push(movieEmbed);
+					movieEmbed.setDescription(description);
+					embeddedMessages.push(movieEmbed);
 
-				//message.channel.send({ embeds: embeddedMessages})
-				for (let embeddedMessage of embeddedMessages) {
-					await message.channel.send({embeds: [embeddedMessage]});
-				}
-			}).lean();
+					let messagesCount = 0;
+					
+					for (let embeddedMessage of embeddedMessages) {
+						messagesCount == 0 ? await interaction.editReply({ embeds: [embeddedMessage] }) : await interaction.followUp({ embeds: [embeddedMessage] });
+						messagesCount++;
+					}
+				})
+				.clone()
+				.lean();
 		}
 
-		searchOptions = main.searchMovieDatabaseObject(message.guild.id, args.join(" ") || null);
+		searchOptions = main.searchMovieDatabaseObject(interaction.guild.id, search || null);
 
 		//25 embed limit for fields
-		return main.movieModel.findOne(searchOptions, (error, movie) => {
-			if (movie) {
-				return message.channel.send({ embeds: [main.buildSingleMovieEmbed(movie)]});		
-			} else {
-				return message.channel.send("Could not find movie in your list. Perhaps try using the search command instead?");
-			}
-		}).lean();
+		return main.movieModel
+			.findOne(searchOptions, (error, movie) => {
+				if (movie) {
+					return interaction.editReply({ embeds: [main.buildSingleMovieEmbed(movie)] });
+				} else {
+					return interaction.editReply("Could not find movie in your list. Perhaps try using the search command instead?");
+				}
+			})
+			.lean()
+			.clone();
 	},
 };

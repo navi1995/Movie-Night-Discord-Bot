@@ -1,28 +1,40 @@
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+
 module.exports = {
-	name: "deleterole",
-	description: `Sets a role that is allowed to delete movies to the servers list. If you use 'deleterole all' then anyone can delete movies. Can also clear this role by using deleterole clear`,
-	usage: "[roleName]",
-	args: true,
-	admin: true,
-	async execute(message, args, main) {
-		console.log(this.name);
-		let deleteMoviesRole = args.join(' ');
-		deleteMoviesRole = (deleteMoviesRole.match(/<@&([0-9]{17,21})>/) || [])[1] || (message.guild.roles.cache.find(r => (deleteMoviesRole !== "clear"  && deleteMoviesRole !== "remove" && deleteMoviesRole !== "all") && r.name === deleteMoviesRole) || {}).id || deleteMoviesRole;
+	data: new SlashCommandBuilder()
+		.setName("deleterole")
+		.setDescription("Sets a role that is allowed to delete movies. 'all' allows anyone to delete movies.")
+		.addStringOption((option) =>
+			option.setName("clear").setDescription("Clear the set roles and only allow admin to delete movies, or allow anyone to delete movies.").addChoices({ name: "Clear", value: "clear" }, { name: "Allow All to Delete", value: "all" })
+		)
+		.addRoleOption((option) => option.setName("role").setDescription("Select a role to allow them and admins to delete movies."))
+		.setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+	async execute(interaction, main, settings) {
+		const clear = interaction.options.getString("clear");
+		const role = interaction.options.getRole("role");
+		const currentRole = settings.deleteMoviesRole;
+		let deleteMoviesRole;
 
-		if (!message.guild.roles.resolve(deleteMoviesRole) && deleteMoviesRole !== "clear" && deleteMoviesRole !== "remove" && deleteMoviesRole !== "all") {
-			return message.channel.send(`Please provide a valid role you'd like to set in the format ${this.name} [roleName], or to clear settings use ${this.name} clear`);
-		} else {
-			deleteMoviesRole = (deleteMoviesRole === "clear" || deleteMoviesRole === "remove") ? null : deleteMoviesRole;
+		if (clear == "clear") deleteMoviesRole = null;
+		if (clear == "all") deleteMoviesRole = "all";
+		if (role) deleteMoviesRole = role.id;
 
-			//Update the settings with the role user provided, or clear it and set to NULL.
-			return main.setting.updateOne({ guildID: message.guild.id }, { deleteMoviesRole }, err => {
+		if (!clear && !role) return interaction.editReply(`Current role is ${currentRole == null ? "admins only" : currentRole == "all" ? "allow everyone." : "<@&" + currentRole + ">"}`);
+
+		return await main.setting
+			.updateOne({ guildID: interaction.guild.id }, { deleteMoviesRole }, (err) => {
 				if (!err) {
-					return message.channel.send(deleteMoviesRole ? (deleteMoviesRole == "all" ? "All users will now be able to delete movies." : `Users with administrator or the role <@&${deleteMoviesRole}> will now be able to delete movies.`) : "Setting for role allowed to delete movies has been cleared. Anyone will be able to delete movies now.");
+					return interaction.editReply(
+						deleteMoviesRole
+							? deleteMoviesRole == "all"
+								? "All users will now be able to delete movies."
+								: `Users with administrator or the role <@&${deleteMoviesRole}> will now be able to delete movies.`
+							: "Setting for role allowed to delete movies has been cleared. Only Admins will be able to delete now."
+					);
 				} else {
-					return message.channel.send("Couldn't set role for delete permissions, something went wrong");
+					return interaction.editReply("Couldn't set role for delete permissions, something went wrong");
 				}
-			});
-
-		}
-	}
+			})
+			.clone();
+	},
 };

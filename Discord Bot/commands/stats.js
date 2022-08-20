@@ -1,7 +1,10 @@
+const { EmbedBuilder, SlashCommandBuilder } = require("discord.js");
+
 module.exports = {
-	name: "stats",
-	description: "Gets number of guilds and members the bot is in",
-	async execute(message, args, main) {
+	data: new SlashCommandBuilder()
+		.setName("stats")
+		.setDescription("Gets number of guilds and members the bot is in"),
+	async execute(interaction, main) {
 		const promises = [
 			main.client.shard.fetchClientValues('guilds.cache.size'),
 			main.client.shard.broadcastEval(c => c.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)),
@@ -12,7 +15,7 @@ module.exports = {
 				const totalGuilds = results[0].reduce((acc, guildCount) => acc + guildCount, 0);
 				const totalMembers = results[1].reduce((acc, memberCount) => acc + memberCount, 0);
 
-				return message.channel.send({embeds: [{
+				return interaction.editReply({embeds: [{
 					color: 0x03a9f4,
 					title: 'Bot Stats',
 					fields: [
