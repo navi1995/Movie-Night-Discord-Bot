@@ -1,27 +1,44 @@
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+
 module.exports = {
-	name: "viewedrole",
-	description: `Sets a role that is allowed to set movies to be unviewed/viewed. If you use 'viewedrole all' then anyone can update. Can also clear this role by using viewedrole clear`,
-	usage: "[roleName]",
-	args: true,
-	admin: true,
-	async execute(message, args, main) {
-		let viewedMoviesRole = args.join(' ');
-		viewedMoviesRole = (viewedMoviesRole.match(/<@&([0-9]{17,21})>/) || [])[1] || (message.guild.roles.cache.find(r => (viewedMoviesRole !== "clear"  && viewedMoviesRole !== "remove" && viewedMoviesRole !== "all") && r.name === viewedMoviesRole) || {}).id || viewedMoviesRole;
+	data: new SlashCommandBuilder()
+		.setName("viewedrole")
+		.setDescription("Set a role that is allowed to set movies to be (un)viewed. Use 'clear' to allow anyone to update.")
+		.addStringOption((option) =>
+			option
+				.setName("clear")
+				.setDescription("Clear the set roles and only allow admin to set movies to viewed, or allow anyone.")
+				.addChoices({ name: "Clear and set to Admin only", value: "clear" }, { name: "Allow All to Delete", value: "all" })
+		)
+		.addRoleOption((option) => option.setName("role").setDescription("Select a role to allow them and admins to set movies to viewed."))
+		.setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+	async execute(interaction, main, settings) {
+		const clear = interaction.options.getString("clear");
+		const role = interaction.options.getRole("role");
+		const currentRole = settings.viewedMoviesRole;
+		var viewedMoviesRole;
 
-		if (!message.guild.roles.resolve(viewedMoviesRole) && viewedMoviesRole !== "clear" && viewedMoviesRole !== "remove" && viewedMoviesRole !== "all") {
-			return message.channel.send(`Please provide a valid role you'd like to set in the format ${this.name} [roleName], or to clear settings use ${this.name} clear`);
-		} else {
-			viewedMoviesRole = (viewedMoviesRole === "clear" || viewedMoviesRole === "remove") ? null : viewedMoviesRole;
+		if (clear == "clear") viewedMoviesRole = null;
+		if (clear == "all") viewedMoviesRole = "all";
+		if (role) viewedMoviesRole = role.id;
 
-			//Update the settings with the role user provided, or clear it and set to NULL.
-			return main.setting.updateOne({ guildID: message.guild.id }, { viewedMoviesRole }, err => {
+		if (!clear && !role) return interaction.editReply(`Current role is ${currentRole == null ? "admins only" : currentRole == "all" ? "allow everyone." : "<@&" + currentRole + ">"}`);
+
+		//Update the settings with the role user provided, or clear it and set to NULL.
+		return await main.setting
+			.updateOne({ guildID: interaction.guild.id }, { viewedMoviesRole }, (err) => {
 				if (!err) {
-					return message.channel.send(viewedMoviesRole ? (viewedMoviesRole == "all" ? "All users will now be able to toggle viewed status for movies." : `Users with administrator or the role <@&${viewedMoviesRole}> will now be able to toggle viewed status for movies.`) : "Setting for role allowed to add movies has been cleared. Anyone will be able to toggle viewed status for movies now.");
+					return interaction.editReply(
+						viewedMoviesRole
+							? viewedMoviesRole == "all"
+								? "All users will now be able to toggle viewed status for movies."
+								: `Users with administrator or the role <@&${viewedMoviesRole}> will now be able to toggle viewed status for movies.`
+							: "Setting for role allowed to add movies has been cleared. Only admins will be able to delete now."
+					);
 				} else {
-					return message.channel.send("Couldn't set role for adding permissions, something went wrong");
+					return interaction.editReply("Couldn't set role for adding permissions, something went wrong");
 				}
-			});
-
-		}
-	}
+			})
+			.clone();
+	},
 };

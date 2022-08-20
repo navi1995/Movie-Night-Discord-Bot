@@ -1,60 +1,17 @@
-/*
-	TODOS
-	1. Check for TIES
-	2. Add reaction check if user wants to delete all movies
-*/
-const fs = require("fs");
-const { Client, Discord, Intents, Collection, MessageEmbed, Options, LimitedCollection } = require("discord.js");
+const fs = require("node:fs");
+const path = require('node:path');
+const { Client, Discord, GatewayIntentBits, Partials, Collection, EmbedBuilder, Options, LimitedCollection } = require("discord.js");
 const fetch = require("node-fetch");
 const moment = require("moment");
 const mongoose = require("mongoose");
-const { prefix, token, movieDbAPI, mongoLogin, topggAPI, testing, maxPollTime } = require("./config.json");
+const { token, movieDbAPI, mongoLogin, topggAPI, testing, maxPollTime } = require("./config.json");
 const client = new Client({
-	intents: [Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.DIRECT_MESSAGE_REACTIONS , Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILDS],
-	makeCache: Options.cacheWithLimits({
-		// Keep default thread sweeping behavior
-		...Options.defaultMakeCacheSettings,
-		MessageManager: {
-			sweepInterval: 600,
-			sweepFilter: LimitedCollection.filterByLifetime({
-				lifetime: 1800,
-				getComparisonTimestamp: e => e.editedTimestamp ?? e.createdTimestamp,
-				excludeFromSweep: e => e.author.bot
-			})
-		}
-	}),
+	intents: [GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessageReactions , GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.Guilds],
 	allowedMentions: { parse: ['users', 'roles'] }, // allowedMentions to prevent unintended role and everyone pings
-	disabledEvents: [
-		'GUILD_UPDATE'
-		,'GUILD_MEMBER_ADD'
-		,'GUILD_MEMBER_REMOVE'
-		,'GUILD_MEMBER_UPDATE'
-		,'GUILD_MEMBERS_CHUNK'
-		,'GUILD_ROLE_CREATE'
-		,'GUILD_ROLE_DELETE'
-		,'GUILD_ROLE_UPDATE'
-		,'GUILD_BAN_ADD'
-		,'GUILD_BAN_REMOVE'
-		,'GUILD_EMOJIS_UPDATE'
-		,'GUILD_INTEGRATIONS_UPDATE'
-		,'CHANNEL_CREATE'
-		,'CHANNEL_DELETE'
-		,'CHANNEL_UPDATE'
-		,'CHANNEL_PINS_UPDATE'
-		,'MESSAGE_DELETE'
-		,'MESSAGE_UPDATE'
-		,'MESSAGE_DELETE_BULK'
-		,'MESSAGE_REACTION_REMOVE'
-		,'MESSAGE_REACTION_REMOVE_ALL'
-		,'USER_UPDATE'
-		,'PRESENCE_UPDATE'
-		,'TYPING_START'
-		,'VOICE_STATE_UPDATE'
-		,'VOICE_SERVER_UPDATE'
-		,'WEBHOOKS_UPDATE'
-	]
 });
 const { AutoPoster } = require('topgg-autoposter');
+// eslint-disable-next-line no-undef
+const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
 const guildSettings = new Collection();
 const Schema = mongoose.Schema;
@@ -79,10 +36,6 @@ const Movie = new Schema({
 const Settings = new Schema({
 	id: ObjectId,
 	guildID: { type: String, unique: true, index: true },
-	prefix: { type: String, default: "--" },
-	pollTime: { type: Number, default: 60000 },
-	pollMessage: { type: String, default: "Poll has begun!" },
-	pollSize: { type: Number, min: 1, max: 10, default: 10 },
 	autoViewed: { type: Boolean, default: false },
 	addMoviesRole: { type: String, default: null },
 	pollRole: { type: String, default: null },
@@ -99,8 +52,7 @@ if (!testing) {
 }
 
 client.commands = new Collection();
-client.commandsArray = [];
-mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
+mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true });
 
 function setMessage() {
 	client.user.setActivity("at https://movienightbot.xyz/", { type: "WATCHING" });
@@ -142,116 +94,69 @@ client.on("guildDelete", function(guild) {
 
 
 for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
+	const filePath = path.join(commandsPath, file);
+	const command = require(filePath);
 
-	client.commands.set(command.name, command);
-	client.commandsArray.push(command.name);
-
-	//We don't really care about duplicates, merge alias' into commands array
-	if (command.aliases) {
-		Array.prototype.push.apply(client.commandsArray, command.aliases);
-	}
+	client.commands.set(command.data.name, command);
 }
 
-client.on("messageCreate", async function(message) {
-	if (message.author.bot) return;
-
-	//Put in a check for all commands and aliases, if not apart of message dont continue
-	if (!client.commandsArray.some(commandText=>message.content.includes(commandText))) {
-		return;
-	}
+client.on("interactionCreate", async interaction => {
+	if (!interaction.isChatInputCommand()) return;
+	const command = client.commands.get(interaction.commandName);
+	if (!command) return uncacheGuild(interaction.guild);
 
 	//Do not ask database for settings if we already have them stored, any updates to settings are handled within the settings modules.
 	//Currently after commands we clear out guildSettings to avoid memory leaks with discord.js memory caching.
-	if (message.guild && !guildSettings.has(message.guild.id)) {
-		await getSettings(message.guild.id).then(function(settings) {
+	if (interaction.guild && !guildSettings.has(interaction.guild.id)) {
+		await getSettings(interaction.guildId).then(function(settings) {
 			if (!settings) {
 				//If no settings exist (during downtime of bot) we instantiate some settings before processing command.
-				new setting({ guildID: message.guild.id }).save(function(err, setting) {
+				new setting({ guildID: interaction.guildId }).save(function(err, setting) {
 					if (err) {
 						console.error("Guild create", err);
 					} else {
-						guildSettings.set(message.guild.id, setting);
+						guildSettings.set(interaction.guildId, setting);
 					}
 				});
 			} else {
-				guildSettings.set(message.guild.id, settings);
+				guildSettings.set(interaction.guildId, settings);
 			}
 		});
 	}
 
 	//Defaults in case mongoDB connection is down
-	const settings = (message.guild ? guildSettings.get(message.guild.id) : null) || {
-		prefix: prefix || '--',
-		pollTime: "60000",
-		pollMessage: "Poll has begun!",
-		pollSize: 10,
+	const settings = (interaction.guild ? guildSettings.get(interaction.guildId) : null) || {
 		autoViewed: false,
 		addMoviesRole: null
 	};
-	const currentPrefix = settings.prefix || prefix;
-
-	//If bot cant SEND MESSAGES, try to DM. If not then bots broken.
-	//ADDS_REACTIONS needed for ADD and POLL
-	//SEND_MESSAGES needed for ALL
-	//MANAGE_MESSAGES needed for POLL
-	//EMBED LINKS needed for SEARCH/ADD/POLL
-	//READ_MESSAGES needed for all.
-
-
-	//If message doesn't have the prefix from settings, ignore the message.
-	if (!message.content.startsWith(currentPrefix) || message.author.bot) return uncacheGuild(message.guild);
-
-	const args = message.content.slice(currentPrefix.length).split(/ +/);
-	const commandName = args.shift().toLowerCase();
-	const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
-
-	if (!command) return uncacheGuild(message.guild);
-
-	if (command.name != "help" && message.channel.type === "dm") {
-		return message.reply("I can't execute that command inside DMs!");
-	}
 
 	//If no permissions
-	if (message.guild && !message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES")) {
-		uncacheGuild(message.guild);
+	if (interaction.guild && !interaction.channel.permissionsFor(client.application.id).has("SendMessages")) {
+		uncacheGuild(interaction.guild);
 
-		return message.author.send("This bot needs permissions for SENDING MESSAGES in the channel you've requested a command. Please update bots permissions for the channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.")
+		return interaction.member.send("This bot needs permissions for SENDING MESSAGES in the channel you've requested a command. Please update bots permissions for the channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.")
 			.catch(error => {
-				console.error(`Could not send help DM to ${message.author.tag}.\n`, error);
+				console.error(`Could not send help DM to ${interaction.member.tag}.\n`, error);
 		});
 	}
 
-	//If the command has been flagged as admin only, do not process it.
-	if (command.admin && !message.member.permissions.has("ADMINISTRATOR")) {
-		uncacheGuild(message.guild);
-
-		return message.channel.send("This commands requires the user to have an administrator role in the server.");
-	}
-
-	if (message.guild && !message.channel.permissionsFor(message.guild.me).has(["ADD_REACTIONS", "MANAGE_MESSAGES", "EMBED_LINKS", "READ_MESSAGE_HISTORY"])) {
-		uncacheGuild(message.guild);
+	if (interaction.guild && !interaction.channel.permissionsFor(client.application.id).has(["AddReactions", "ManageMessages", "EmbedLinks", "ReadMessageHistory"])) {
+		uncacheGuild(interaction.guild);
 		
-		return message.reply("Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.");
-	}
-	
-	//Tell user usage if command has been flagged as an argument based command.
-	if (command.args && !args.length) {
-		uncacheGuild(message.guild);
-
-		return message.channel.send(`Incorrect command usage, ${message.author}!${command.usage ? `\nThe proper usage would be: \`${currentPrefix}${command.name} ${command.usage}\`` : ''}`);
+		return interaction.reply("Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions.");
 	}
 
 	//Send message, arguments and additional functions/variables required to the command.
 	try {
-		console.log(command.name + " " + new Date());
-		await command.execute(message, args, main, settings);
-		uncacheGuild(message.guild);
+		console.log(command.data.name + " " + new Date());
+		await interaction.deferReply();
+		await command.execute(interaction, main, settings);
+		uncacheGuild(interaction.guild);
 	} catch (error) {
 		console.error("Problem executing command", error);
-		uncacheGuild(message.guild);
+		uncacheGuild(interaction.guild);
 
-		return message.reply("There was an error trying to execute that command!");
+		return interaction.editReply({ content: "There was an error trying to execute that command!"});
 	}
 });
 
@@ -279,28 +184,28 @@ function searchMovieDatabaseObject(guildID, movie, hideViewed) {
 
 function buildSingleMovieEmbed(movie, subtitle, hideSubmitted) {
 	console.log(movie);
-	const embed = new MessageEmbed()
+	const embed = new EmbedBuilder()
 		.setTitle(movie.name)
 		.setURL(`https://www.imdb.com/title/${movie.imdbID}`)
 		.setDescription(movie.overview)
 		.setImage(movie.posterURL)
 		.setColor("#6441a3")
-		.addFields(
+		.addFields([
 			{ name: "Release Date", value: moment(movie.releaseDate).format("DD MMM YYYY"), inline: true },
 			{ name: "Runtime", value: movie.runtime + " Minutes", inline: true },
 			{ name: "Rating", value: movie.rating + "", inline: true }
-		);
+		]);
 
 	if (!hideSubmitted) {
-		embed.addFields(
+		embed.addFields([
 			{ name: "Submitted By", value: movie.submittedBy, inline: true },
 			{ name: "Submitted On", value: moment(movie.submitted).format("DD MMM YYYY"), inline: true },
 			{ name: "Viewed", value: movie.viewed ? moment(movie.viewedDate).format("DD MMM YYYY") : "No", inline: true }
-		);
+		]);
 	}
 
 	if (subtitle) {
-		embed.setAuthor(subtitle);
+		embed.setAuthor({name: subtitle});
 	}
 
 	return embed;

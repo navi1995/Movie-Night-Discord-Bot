@@ -1,22 +1,23 @@
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+
 module.exports = {
-	name: "autoview",
-	description: "Turns on or off auto view after poll is complete (Hides movie from future polls).",
-	usage: "[on or off]",
-	admin: true,
-	async execute(message, args, main, settings) {
-		if (args.length - 1 || !['on', 'off'].includes(args[0].toLowerCase())) {
-			return message.channel.send(`Please only specify on or off. Currently setting is: ${settings.autoViewed ? 'on' : 'off'}`);
-		} else {
-			const autoViewed = args[0].toLowerCase() === "on";
+	data: new SlashCommandBuilder()
+		.setName("autoview")
+		.setDescription("Set autoview on or off after poll is complete. Without options this will show the current setting.")
+		.addStringOption((option) => option.setName("switch").setDescription("Set autoview to either on, or off.").addChoices({ name: "On", value: "on" }, { name: "Off", value: "off" }))
+		.setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+	async execute(interaction, main, settings) {
+		const option = interaction.options.getString("switch");
+		const autoViewed = option === "on";
 
-			return main.setting.updateOne({ guildID: message.guild.id }, { autoViewed }, err => {
-				if (!err) {
-					return message.channel.send(`Auto view has now been set to: ${autoViewed ? "on" : "off"}`);
-				} else {
-					return message.channel.send("Couldn't set auto view, something went wrong");
-				}
-			});
+		if (!option) return interaction.editReply(`Currently setting is: ${settings.autoViewed ? "on" : "off"}`);
 
-		}
-	}
+		return await main.setting.updateOne({ guildID: interaction.guild.id }, { autoViewed }, (err) => {
+			if (!err) {
+				return interaction.editReply(`Auto view has now been set to: ${autoViewed ? "on" : "off"}`);
+			} else {
+				return interaction.editReply("Couldn't set auto view, something went wrong");
+			}
+		}).clone();
+	},
 };

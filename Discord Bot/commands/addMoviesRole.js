@@ -1,27 +1,34 @@
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+
 module.exports = {
-	name: "moviesrole",
-	description: `Sets a role that is allowed to add movies to the servers list. Can also clear this role by using moviesrole clear`,
-	usage: "[roleName]",
-	args: true,
-	admin: true,
-	async execute(message, args, main) {
-		let addMoviesRole = args.join(' ');
-		addMoviesRole = (addMoviesRole.match(/<@&([0-9]{17,21})>/) || [])[1] || (message.guild.roles.cache.find(r => (addMoviesRole !== "clear" && addMoviesRole !== "remove") && r.name === addMoviesRole) || {}).id || addMoviesRole;
+	data: new SlashCommandBuilder()
+		.setName("moviesrole")
+		.setDescription("Sets a role that is allowed to add movies to the servers list. Clear this role by using 'clear'")
+		.addStringOption((option) => option.setName("allowall").setDescription("Clear the set roles and allow anyone to add movies.").addChoices({ name: "Allow All to Add", value: "all" }))
+		.addRoleOption((option) => option.setName("role").setDescription("Select a role to allow only them and admins to add movies."))
+		.setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+	async execute(interaction, main, settings) {
+		const allowAll = interaction.options.getString("allowall");
+		const newAddRole = interaction.options.getRole("role");
+		const currentRole = settings.addMoviesRole;
+		var addMoviesRole;
 
-		if (!message.guild.roles.resolve(addMoviesRole) && addMoviesRole !== "clear" && addMoviesRole !== "remove") {
-			return message.channel.send(`Please provide a valid role you'd like to set in the format ${this.name} [roleName], or to clear settings use ${this.name} clear`);
-		} else {
-			addMoviesRole = (addMoviesRole === "clear" || addMoviesRole === "remove") ? null : addMoviesRole;
+		if (allowAll == "all") addMoviesRole = null;
+		if (newAddRole) addMoviesRole = newAddRole.id;
 
-			//Update the settings with the role user provided, or clear it and set to NULL.
-			return main.setting.updateOne({ guildID: message.guild.id }, { addMoviesRole }, err => {
+		if (!allowAll && !newAddRole) return interaction.editReply(`Current role is ${currentRole == null ? "allowing everyone to add movies." : "<@&" + currentRole + ">"}`);
+
+		//Update the settings with the role user provided, or clear it and set to NULL.
+		return await main.setting
+			.updateOne({ guildID: interaction.guild.id }, { addMoviesRole }, (err) => {
 				if (!err) {
-					return message.channel.send(addMoviesRole ? `Users with administrator or the role <@&${addMoviesRole}> will now be able to add movies.` : "Setting for role allowed to add movies has been cleared. Anyone will be able to add movies now.");
+					return interaction.editReply(
+						addMoviesRole ? `Users with administrator or the role <@&${addMoviesRole}> will now be able to add movies.` : "Setting for role allowed to add movies has been cleared. Anyone will be able to add movies now."
+					);
 				} else {
-					return message.channel.send("Couldn't set role for adding permissions, something went wrong");
+					return interaction.editReply("Couldn't set role for adding permissions, something went wrong");
 				}
-			});
-
-		}
-	}
+			})
+			.clone();
+	},
 };
