@@ -31,7 +31,7 @@ export function Homepage(props) {
 					Used in <b><CountUp start={3500} end={serverCount} duration={2} /></b> servers
 				</h3>
 				<br />
-				<Button href='https://discord.com/api/oauth2/authorize?client_id=709271563110973451&permissions=1073835072&scope=bot' target='_blank' rel='noopener noreferrer' variant='primary' size='lg'>
+				<Button href='https://discord.com/api/oauth2/authorize?client_id=709271563110973451&permissions=2147560512&scope=applications.commands%20bot' target='_blank' rel='noopener noreferrer' variant='primary' size='lg'>
 					ADD TO DISCORD <FontAwesomeIcon icon={faDiscord} />
 				</Button>
 			</Jumbotron>
