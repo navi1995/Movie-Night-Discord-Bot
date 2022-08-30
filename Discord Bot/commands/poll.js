@@ -16,7 +16,7 @@ module.exports = {
 		let searchOptions = main.searchMovieDatabaseObject(interaction.guild.id, "", true);
 		let movieEmbed = new EmbedBuilder().setTitle("Poll has begun!").setColor("#6441a3");
 		let movieArray = [];
-		const pollSize = (interaction.options.getInteger("seconds") || 5) <= 10 ? interaction.options.getInteger("seconds") || 5 : 10;
+		const pollSize = (interaction.options.getInteger("size") || 5) <= 10 ? interaction.options.getInteger("size") || 5 : 10;
 		const pollTimeInMs = ((interaction.options.getInteger("time") || 60000) <= main.maxPollTime ? interaction.options.getInteger("time") || 60000 : main.maxPollTime) * 1000;
 		const pollMessage = interaction.options.getString("message") || "Poll has begun!";
 
