@@ -8,7 +8,8 @@ module.exports = {
 		.setDescription("Begins a poll with a random assortment of movies depending on length of setting for poll size.")
 		.addIntegerOption((option) => option.setName("size").setDescription("Number of movies included in the poll. Max is 10"))
 		.addStringOption((option) => option.setName("message").setDescription("Sets the message that will be sent for the poll."))
-		.addIntegerOption((option) => option.setName("time").setDescription("How long in seconds the poll will last. Max poll times may be in effect to help server load.")),
+		.addIntegerOption((option) => option.setName("time").setDescription("How long in seconds the poll will last. Max poll times may be in effect to help server load."))
+		.addStringOption((option) => option.setName("multiplevotes").setDescription("Whether or not votes for multiple options are allowed or not.").addChoices({ name: "Enforce one vote per member", value: "disallow" }, { name: "Allow Multiple", value: "allow" })),
 	async execute(interaction, main, settings) {
 		let embeddedMessages = [];
 		let totalCount = 0;
@@ -19,10 +20,10 @@ module.exports = {
 		const pollSize = (interaction.options.getInteger("size") || 5) <= 10 ? interaction.options.getInteger("size") || 5 : 10;
 		const pollTimeInMs = ((interaction.options.getInteger("time") || 60000) <= main.maxPollTime ? interaction.options.getInteger("time") || 60000 : main.maxPollTime) * 1000;
 		const pollMessage = interaction.options.getString("message") || "Poll has begun!";
-
+		const multipleVotes = interaction.options.getString("multiplevotes") || "disallow";
 		//Check this logic
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set.
-		if (!interaction.member.permissions.has("Administrator") && (!settings.pollRole || !interaction.member.roles.cache.has(settings.pollRole))) {
+		if (!interaction.member.permissions.has("Administrator") && settings.pollRole != "all" && (!settings.pollRole || !interaction.member.roles.cache.has(settings.pollRole))) {
 			return interaction.editReply(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : "a set role using the `pollrole` command."}`);
 		}
 
@@ -85,20 +86,23 @@ module.exports = {
 							}); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 
 							console.log("Poll started. GuildID: " + message.guild.id + " " + new Date());
-							collector.on("collect", async (messageReact, user) => {
-								console.log("Collect" + " " + new Date());
-								let duplicateReactions = message.reactions.cache.filter((reaction) => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
+							
+							if (multipleVotes == "disallow") {
+								collector.on("collect", async (messageReact, user) => {
+									console.log("Collect" + " " + new Date());
+									let duplicateReactions = message.reactions.cache.filter((reaction) => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
 
-								//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
-								//This block of code exists before the reactions are added to ensure as the bot adds reactions to the message, users are not able to duplicate votes during this time.
-								for (let reaction of duplicateReactions.values()) {
-									try {
-										await reaction.users.remove(user.id);
-									} catch (e) {
-										console.error("Error removing reaction", e);
+									//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
+									//This block of code exists before the reactions are added to ensure as the bot adds reactions to the message, users are not able to duplicate votes during this time.
+									for (let reaction of duplicateReactions.values()) {
+										try {
+											await reaction.users.remove(user.id);
+										} catch (e) {
+											console.error("Error removing reaction", e);
+										}
 									}
-								}
-							});
+								});
+							}
 
 							for (let i = 1; i <= totalCount; i++) {
 								try {
