@@ -8,12 +8,12 @@ module.exports = {
 	async execute(interaction, main) {
 		const movieSearch = interaction.options.getString("movie");
 
-		return main.searchNewMovie(movieSearch, interaction).then(([newMovie]) => {
+		return main.searchNewMovie(movieSearch, interaction).then(async ([newMovie]) => {
 			//No need for else, searchNewMovie alerts user if no movie found.
-			return newMovie && interaction.editReply({ embeds: [main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)", true)] });
-		}).catch(err => {
+			return newMovie && await interaction.editReply({ embeds: [main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)", true)] });
+		}).catch(async err => {
 			console.error("Search.js", err);
-			return interaction.editReply("Something went wrong.");
+			return await interaction.editReply("Something went wrong.");
 		});
 	}	
 };

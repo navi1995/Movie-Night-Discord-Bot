@@ -19,22 +19,21 @@ module.exports = {
 		if (clear == "all") deleteMoviesRole = "all";
 		if (role) deleteMoviesRole = role.id;
 
-		if (!clear && !role) return interaction.editReply(`Current role is ${currentRole == null ? "admins only" : currentRole == "all" ? "allow everyone." : "<@&" + currentRole + ">"}`);
+		if (!clear && !role) return await interaction.editReply(`Current role is ${currentRole == null ? "admins only" : currentRole == "all" ? "allow everyone." : "<@&" + currentRole + ">"}`);
 
 		return await main.setting
-			.updateOne({ guildID: interaction.guild.id }, { deleteMoviesRole }, (err) => {
-				if (!err) {
-					return interaction.editReply(
-						deleteMoviesRole
-							? deleteMoviesRole == "all"
-								? "All users will now be able to delete movies."
-								: `Users with administrator or the role <@&${deleteMoviesRole}> will now be able to delete movies.`
-							: "Setting for role allowed to delete movies has been cleared. Only Admins will be able to delete now."
-					);
-				} else {
-					return interaction.editReply("Couldn't set role for delete permissions, something went wrong");
-				}
+			.updateOne({ guildID: interaction.guild.id }, { deleteMoviesRole })
+			.then(async () => {
+				return await interaction.editReply(
+					deleteMoviesRole
+						? deleteMoviesRole == "all"
+							? "All users will now be able to delete movies."
+							: `Users with administrator or the role <@&${deleteMoviesRole}> will now be able to delete movies.`
+						: "Setting for role allowed to delete movies has been cleared. Only Admins will be able to delete now."
+				);
 			})
-			.clone();
+			.catch(async () => {
+				return await interaction.editReply("Couldn't set role for delete permissions, something went wrong");
+			});
 	},
 };

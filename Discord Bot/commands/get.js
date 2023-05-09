@@ -17,13 +17,10 @@ module.exports = {
 		if (!search || !search.length) {
 			//return to avoid hitting logic below.
 			return main.movieModel
-				.find(searchOptions, async (error, movies) => {
-					if (error) {
-						return interaction.editReply("Could not return list of movies, an error occured.");
-					}
-
+				.find(searchOptions)
+				.then(async (movies) => {
 					if (!movies || !movies.length) {
-						return interaction.editReply("List of unviewed movies is currently empty.");
+						return await interaction.editReply("List of unviewed movies is currently empty.");
 					} else {
 						for (let movie of movies) {
 							let stringConcat = `**[${number++}. ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
@@ -45,28 +42,27 @@ module.exports = {
 					embeddedMessages.push(movieEmbed);
 
 					let messagesCount = 0;
-					
+
 					for (let embeddedMessage of embeddedMessages) {
 						messagesCount == 0 ? await interaction.editReply({ embeds: [embeddedMessage] }) : await interaction.followUp({ embeds: [embeddedMessage] });
 						messagesCount++;
 					}
 				})
-				.clone()
-				.lean();
+				.catch(async () => {
+					return await interaction.editReply("Could not return list of movies, an error occured.");
+				});
 		}
 
 		searchOptions = main.searchMovieDatabaseObject(interaction.guild.id, search || null);
 
 		//25 embed limit for fields
 		return main.movieModel
-			.findOne(searchOptions, (error, movie) => {
-				if (movie) {
-					return interaction.editReply({ embeds: [main.buildSingleMovieEmbed(movie)] });
-				} else {
-					return interaction.editReply("Could not find movie in your list. Perhaps try using the search command instead?");
-				}
+			.findOne(searchOptions)
+			.then(async (movie) => {
+				return await interaction.editReply({ embeds: [main.buildSingleMovieEmbed(movie)] });
 			})
-			.lean()
-			.clone();
+			.catch(async () => {
+				return await interaction.editReply("Could not find movie in your list. Perhaps try using the search command instead?");
+			});
 	},
 };

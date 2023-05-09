@@ -9,7 +9,9 @@ module.exports = {
 		.addIntegerOption((option) => option.setName("size").setDescription("Number of movies included in the poll. Max is 10"))
 		.addStringOption((option) => option.setName("message").setDescription("Sets the message that will be sent for the poll."))
 		.addIntegerOption((option) => option.setName("time").setDescription("How long in seconds the poll will last. Max poll times may be in effect to help server load."))
-		.addStringOption((option) => option.setName("multiplevotes").setDescription("Whether or not votes for multiple options are allowed or not.").addChoices({ name: "Enforce one vote per member", value: "disallow" }, { name: "Allow Multiple", value: "allow" })),
+		.addStringOption((option) =>
+			option.setName("multiplevotes").setDescription("Whether or not votes for multiple options are allowed or not.").addChoices({ name: "Enforce one vote per member", value: "disallow" }, { name: "Allow Multiple", value: "allow" })
+		),
 	async execute(interaction, main, settings) {
 		let embeddedMessages = [];
 		let totalCount = 0;
@@ -24,7 +26,7 @@ module.exports = {
 		//Check this logic
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set.
 		if (!interaction.member.permissions.has("Administrator") && settings.pollRole != "all" && (!settings.pollRole || !interaction.member.roles.cache.has(settings.pollRole))) {
-			return interaction.editReply(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : "a set role using the `pollrole` command."}`);
+			return await interaction.editReply(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : "a set role using the `pollrole` command."}`);
 		}
 
 		await interaction.editReply(
@@ -37,13 +39,10 @@ module.exports = {
 
 		//2048 limit
 		await main.movieModel
-			.find(searchOptions, async (error, docs) => {
-				if (error) {
-					return interaction.followUp("Could not  return list of movies, an error occured.");
-				}
-
+			.find(searchOptions)
+			.then(async (docs) => {
 				if (!docs.length) {
-					return interaction.followUp("Cannot start poll. List of unviewed movies is empty.");
+					return await interaction.followUp("Cannot start poll. List of unviewed movies is empty.");
 				} else if (docs && docs.length) {
 					//Gets random assortment of movies depending on poll size setting and number of movies in the servers list.
 					let movies = main.getRandomFromArray(docs, pollSize);
@@ -86,7 +85,7 @@ module.exports = {
 							}); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
 
 							console.log("Poll started. GuildID: " + message.guild.id + " " + new Date());
-							
+
 							if (multipleVotes == "disallow") {
 								collector.on("collect", async (messageReact, user) => {
 									console.log("Collect" + " " + new Date());
@@ -124,7 +123,7 @@ module.exports = {
 										const highestValidReactions = reactionsCache.filter((a) => emojiArray.includes(a.emoji.name));
 
 										if (!highestValidReactions.size) {
-											return interaction.followUp("Reactions may have been removed or another error occurred.");
+											return await interaction.followUp("Reactions may have been removed or another error occurred.");
 										}
 
 										const highestReact = highestValidReactions.reduce((p, c) => (p.count > c.count ? p : c));
@@ -135,27 +134,29 @@ module.exports = {
 											console.error(highestReact);
 											console.error(highestValidReactions);
 											if (highestReact) console.error(highestReact.emoji);
-											return interaction.followUp("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
+											return await interaction.followUp("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
 										}
 
 										let winner = movieArray[emojiArray.indexOf(highestReact.emoji.name)];
 
 										if (highestReact.count <= 1) {
-											return interaction.followUp("No votes were cast, so no movie has been chosen.");
+											return await interaction.followUp("No votes were cast, so no movie has been chosen.");
 										}
 
 										//If auto viewed is set, update movie to be entered into the VIEWED list.
 										if (settings.autoViewed) {
-											await main.movieModel.updateOne({ guildID: message.guild.id, movieID: winner.movieID }, { viewed: true, viewedDate: new Date() }, function (err) {
-												if (!err) {
+											await main.movieModel
+												.updateOne({ guildID: message.guild.id, movieID: winner.movieID }, { viewed: true, viewedDate: new Date() })
+												.then(async () => {
 													winner.viewed = true;
 													winner.viewedDate = new Date();
-												} else {
-													return interaction.followUp("Something went wrong, could not get winner. Try removing auto-view setting.");
-												}
-											}).clone();
+												})
+												.catch(async () => {
+													return await interaction.followUp("Something went wrong, could not get winner. Try removing auto-view setting.");
+												});
 										}
-										return interaction.followUp({ embeds: [main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count - 1} votes.`)] });
+
+										return await interaction.followUp({ embeds: [main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count - 1} votes.`)] });
 									})
 									.catch(function () {
 										console.log(`Poll was deleted. guild: ${message.guild.id}, channel: ${message.channel.id}, message ID: ${message.id}`);
@@ -166,8 +167,9 @@ module.exports = {
 					//If the message is NOT the last one in the embedded messages chain, just send the message. ELSE we wil be sending the message + handling reacts on it.
 				}
 			})
-			.clone()
-			.lean();
+			.catch(async () => {
+				return await interaction.followUp("Could not  return list of movies, an error occured.");
+			});
 	},
 };
 

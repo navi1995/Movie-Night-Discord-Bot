@@ -1,7 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const axios = require("axios");
 const { Client, Discord, GatewayIntentBits, Partials, Collection, EmbedBuilder, Options, LimitedCollection, ActivityType } = require("discord.js");
-const fetch = require("node-fetch");
 const moment = require("moment");
 const mongoose = require("mongoose");
 const { token, movieDbAPI, mongoLogin, topggAPI, testing, maxPollTime } = require("./config.json");
@@ -85,13 +85,13 @@ function uncacheGuild(guild) {
 
 client.on("guildCreate", async function (guild) {
 	//Whenever the bot is added to a guild, instantiate default settings into our database.
-	new setting({ guildID: guild.id }).save(guildCreateError);
+	new setting({ guildID: guild.id }).save().catch(guildCreateError);
 });
 
 client.on("guildDelete", function (guild) {
 	//Whenever the bot is removed from a guild, we remove all related data.
-	movieModel.deleteMany({ guildID: guild.id }, handleError);
-	setting.deleteMany({ guildID: guild.id }, handleError);
+	movieModel.deleteMany({ guildID: guild.id }).catch(handleError);
+	setting.deleteMany({ guildID: guild.id }).catch(handleError);
 });
 
 for (const file of commandFiles) {
@@ -112,17 +112,15 @@ client.on("interactionCreate", async (interaction) => {
 		await getSettings(interaction.guildId).then(function (settings) {
 			if (!settings) {
 				//If no settings exist (during downtime of bot) we instantiate some settings before processing command.
-				new setting({ guildID: interaction.guildId }).save(function (err, setting) {
-					if (err) {
-						console.error("Guild create", err);
-					} else {
-						guildSettings.set(interaction.guildId, setting);
-					}
+				new setting({ guildID: interaction.guildId }).save().then((setting) => {
+					guildSettings.set(interaction.guildId, setting);
+				}).catch((err) => {
+					console.error("Guild create", err);
 				});
 			} else {
 				guildSettings.set(interaction.guildId, settings);
 			}
-		});
+		}).catch(() => {});
 	}
 
 	//Defaults in case mongoDB connection is down
@@ -135,7 +133,7 @@ client.on("interactionCreate", async (interaction) => {
 	if (interaction.guild && !interaction.channel.permissionsFor(client.application.id).has("SendMessages")) {
 		uncacheGuild(interaction.guild);
 
-		return interaction.member
+		return await interaction.member
 			.send(
 				"This bot needs permissions for SENDING MESSAGES in the channel you've requested a command. Please update bots permissions for the channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions."
 			)
@@ -147,7 +145,7 @@ client.on("interactionCreate", async (interaction) => {
 	if (interaction.guild && !interaction.channel.permissionsFor(client.application.id).has(["AddReactions", "ManageMessages", "EmbedLinks", "ReadMessageHistory"])) {
 		uncacheGuild(interaction.guild);
 
-		return interaction.reply(
+		return await interaction.reply(
 			"Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions."
 		);
 	}
@@ -231,14 +229,14 @@ async function searchNewMovie(search, message) {
 
 	//If not a IMDB link, do a general search else we use a different endpoint.
 	let initialData = await (!isImdbSearch
-		? fetch(`https://api.themoviedb.org/3/search/movie?api_key=${movieDbAPI}&query=${encodeURIComponent(searchTerm)}&page=1`).then((response) => response.json())
-		: fetch(`https://api.themoviedb.org/3/find/${encodeURIComponent(searchTerm)}?api_key=${movieDbAPI}&external_source=imdb_id`).then((response) => response.json()));
+		? axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${movieDbAPI}&query=${encodeURIComponent(searchTerm)}&page=1`).then((response) => response.data)
+		: axios.get(`https://api.themoviedb.org/3/find/${encodeURIComponent(searchTerm)}?api_key=${movieDbAPI}&external_source=imdb_id`).then((response) => response.data));
 
 	failedSearch = !initialData || initialData.total_results == 0 || (initialData.movie_results && initialData.movie_results.length == 0);
 
 	//Get the FIRST result from the initial search
 	if (!failedSearch) {
-		data = await fetch(`https://api.themoviedb.org/3/movie/${isImdbSearch ? initialData.movie_results[0].id : initialData.results[0].id}?api_key=${movieDbAPI}`).then((response) => response.json());
+		data = await axios.get(`https://api.themoviedb.org/3/movie/${isImdbSearch ? initialData.movie_results[0].id : initialData.results[0].id}?api_key=${movieDbAPI}`).then((response) => response.data);
 	}
 
 	if (!data || failedSearch || data.success == "false") {
@@ -277,7 +275,7 @@ function getRandomFromArray(array, count) {
 }
 
 function getSettings(guildID) {
-	return setting.findOne({ guildID: guildID }).lean().exec();
+	return setting.findOne({ guildID: guildID }).exec();
 }
 
 //Namespace functions and variables for modules
