@@ -13,7 +13,6 @@ const { AutoPoster } = require("topgg-autoposter");
 // eslint-disable-next-line no-undef
 const commandsPath = path.join(__dirname, "commands");
 const commandFiles = fs.readdirSync("./commands").filter((file) => file.endsWith(".js"));
-const guildSettings = new Collection();
 const Schema = mongoose.Schema;
 const ObjectId = Schema.ObjectId;
 const Movie = new Schema({
@@ -83,10 +82,6 @@ function handleError(err, message) {
 	}
 }
 
-function uncacheGuild(guild) {
-	if (guild) guildSettings.delete(guild.id);
-}
-
 client.on("guildCreate", async function (guild) {
 	//Whenever the bot is added to a guild, instantiate default settings into our database.
 	new setting({ guildID: guild.id }).save().catch(guildCreateError);
@@ -108,35 +103,29 @@ for (const file of commandFiles) {
 client.on("interactionCreate", async (interaction) => {
 	if (!interaction.isChatInputCommand()) return;
 	const command = client.commands.get(interaction.commandName);
-	if (!command) return uncacheGuild(interaction.guild);
+	var fetchedSettings;
 
-	//Do not ask database for settings if we already have them stored, any updates to settings are handled within the settings modules.
-	//Currently after commands we clear out guildSettings to avoid memory leaks with discord.js memory caching.
-	if (interaction.guild && !guildSettings.has(interaction.guild.id)) {
 		await getSettings(interaction.guildId).then(function (settings) {
 			if (!settings) {
 				//If no settings exist (during downtime of bot) we instantiate some settings before processing command.
 				new setting({ guildID: interaction.guildId }).save().then((setting) => {
-					guildSettings.set(interaction.guildId, setting);
+					fetchedSettings = setting;
 				}).catch((err) => {
 					console.error("Guild create", err);
 				});
 			} else {
-				guildSettings.set(interaction.guildId, settings);
+				fetchedSettings = settings;
 			}
 		}).catch(() => {});
-	}
 
 	//Defaults in case mongoDB connection is down
-	const settings = (interaction.guild ? guildSettings.get(interaction.guildId) : null) || {
+	const settings = (interaction.guild ? fetchedSettings : null) || {
 		autoViewed: false,
 		addMoviesRole: null,
 	};
 
 	//If no permissions
 	if (interaction.guild && !interaction.channel.permissionsFor(client.application.id).has("SendMessages")) {
-		uncacheGuild(interaction.guild);
-
 		return await interaction.member
 			.send(
 				"This bot needs permissions for SENDING MESSAGES in the channel you've requested a command. Please update bots permissions for the channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions."
@@ -147,8 +136,6 @@ client.on("interactionCreate", async (interaction) => {
 	}
 
 	if (interaction.guild && !interaction.channel.permissionsFor(client.application.id).has(["AddReactions", "ManageMessages", "EmbedLinks", "ReadMessageHistory"])) {
-		uncacheGuild(interaction.guild);
-
 		return await interaction.reply(
 			"Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions."
 		);
@@ -159,10 +146,8 @@ client.on("interactionCreate", async (interaction) => {
 		console.log(command.data.name + " " + new Date());
 		await interaction.deferReply();
 		await command.execute(interaction, main, settings);
-		uncacheGuild(interaction.guild);
 	} catch (error) {
 		console.error("Problem executing command", error);
-		uncacheGuild(interaction.guild);
 		// return await interaction.editReply({ content: "There was an error trying to execute that command!" });
 	}
 });
@@ -288,7 +273,6 @@ main = {
 	buildSingleMovieEmbed,
 	searchNewMovie,
 	setting,
-	guildSettings,
 	getRandomFromArray,
 	client,
 	maxPollTime, //Testing 24 hour polls on GCloud
