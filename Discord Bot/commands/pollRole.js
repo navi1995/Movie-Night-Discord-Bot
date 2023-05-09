@@ -19,23 +19,20 @@ module.exports = {
 		if (clear == "all") pollRole = "all";
 		if (role) pollRole = role.id;
 
-		if (!clear && !role) return interaction.editReply(`Current role is ${currentRole == null ? "admins only" : currentRole == "all" ? "allow everyone." : "<@&" + currentRole + ">"}`);
+		if (!clear && !role) return await interaction.editReply(`Current role is ${currentRole == null ? "admins only" : currentRole == "all" ? "allow everyone." : "<@&" + currentRole + ">"}`);
 
 		//Update the settings with the role user provided, or clear it and set to NULL.
 		return main.setting
-			.updateOne({ guildID: interaction.guild.id }, { pollRole }, (err) => {
-				if (!err) {
-					return interaction.editReply(
-						pollRole && pollRole != "all"
-							? `Users with administrator or the role <@&${pollRole}> will now be able to run polls.`
-							: pollRole == "all"
-							? "Anyone will now be able to run polls"
-							: "Setting for role allowed to run polls has been cleared. Only admins may run polls now."
-					);
-				} else {
-					return interaction.editReply("Couldn't set role for adding permissions, something went wrong");
-				}
-			})
-			.clone();
+			.updateOne({ guildID: interaction.guild.id }, { pollRole }).then(async () => {
+				return await interaction.editReply(
+					pollRole && pollRole != "all"
+						? `Users with administrator or the role <@&${pollRole}> will now be able to run polls.`
+						: pollRole == "all"
+						? "Anyone will now be able to run polls"
+						: "Setting for role allowed to run polls has been cleared. Only admins may run polls now."
+				);
+			}).catch(async () => {
+				return await interaction.editReply("Couldn't set role for adding permissions, something went wrong");
+			});
 	},
 };

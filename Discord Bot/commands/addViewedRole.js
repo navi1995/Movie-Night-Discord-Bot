@@ -22,23 +22,22 @@ module.exports = {
 		if (clear == "all") viewedMoviesRole = "all";
 		if (role) viewedMoviesRole = role.id;
 
-		if (!clear && !role) return interaction.editReply(`Current role is ${currentRole == null ? "admins only" : currentRole == "all" ? "allow everyone." : "<@&" + currentRole + ">"}`);
+		if (!clear && !role) return await interaction.editReply(`Current role is ${currentRole == null ? "admins only" : currentRole == "all" ? "allow everyone." : "<@&" + currentRole + ">"}`);
 
 		//Update the settings with the role user provided, or clear it and set to NULL.
 		return await main.setting
-			.updateOne({ guildID: interaction.guild.id }, { viewedMoviesRole }, (err) => {
-				if (!err) {
-					return interaction.editReply(
-						viewedMoviesRole
-							? viewedMoviesRole == "all"
-								? "All users will now be able to toggle viewed status for movies."
-								: `Users with administrator or the role <@&${viewedMoviesRole}> will now be able to toggle viewed status for movies.`
-							: "Setting for role allowed to add movies has been cleared. Only admins will be able to delete now."
-					);
-				} else {
-					return interaction.editReply("Couldn't set role for adding permissions, something went wrong");
-				}
+			.updateOne({ guildID: interaction.guild.id }, { viewedMoviesRole })
+			.then(async () => {
+				return await interaction.editReply(
+					viewedMoviesRole
+						? viewedMoviesRole == "all"
+							? "All users will now be able to toggle viewed status for movies."
+							: `Users with administrator or the role <@&${viewedMoviesRole}> will now be able to toggle viewed status for movies.`
+						: "Setting for role allowed to add movies has been cleared. Only admins will be able to delete now."
+				);
 			})
-			.clone();
+			.catch(async () => {
+				return await interaction.editReply("Couldn't set role for adding permissions, something went wrong");
+			});
 	},
 };

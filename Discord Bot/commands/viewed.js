@@ -14,11 +14,10 @@ module.exports = {
 
 		//2048 limit
 		return main.movieModel
-			.find(searchOptions, async (error, docs) => {
-				if (error) return interaction.editReply("Something went wrong trying to find the movies");
-
+			.find(searchOptions)
+			.then(async (docs) => {
 				if (!docs || !docs.length) {
-					return interaction.editReply("List of viewed movies is currently empty.");
+					return await interaction.editReply("List of viewed movies is currently empty.");
 				}
 
 				for (let movie of docs) {
@@ -48,7 +47,8 @@ module.exports = {
 
 				return;
 			})
-			.clone()
-			.lean();
+			.catch(async () => {
+				return await interaction.editReply("Something went wrong trying to find the movies");
+			});
 	},
 };

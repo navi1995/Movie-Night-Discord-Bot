@@ -10,14 +10,15 @@ module.exports = {
 		const option = interaction.options.getString("switch");
 		const autoViewed = option === "on";
 
-		if (!option) return interaction.editReply(`Currently setting is: ${settings.autoViewed ? "on" : "off"}`);
+		if (!option) return await interaction.editReply(`Currently setting is: ${settings.autoViewed ? "on" : "off"}`);
 
-		return await main.setting.updateOne({ guildID: interaction.guild.id }, { autoViewed }, (err) => {
-			if (!err) {
-				return interaction.editReply(`Auto view has now been set to: ${autoViewed ? "on" : "off"}`);
-			} else {
-				return interaction.editReply("Couldn't set auto view, something went wrong");
-			}
-		}).clone();
+		return await main.setting
+			.updateOne({ guildID: interaction.guild.id }, { autoViewed })
+			.then(async () => {
+				return await interaction.editReply(`Auto view has now been set to: ${autoViewed ? "on" : "off"}`);
+			})
+			.catch(async () => {
+				return await interaction.editReply("Couldn't set auto view, something went wrong");
+			});
 	},
 };

@@ -11,11 +11,12 @@ module.exports = {
 		const searchOptions = main.searchMovieDatabaseObject(interaction.guild.id, movieSearch);
 
 		return main.movieModel
-			.findOne(searchOptions, (err, movie) => {
-				if (err || !movie) {
-					return interaction.editReply("Movie could not be found!");
+			.findOne(searchOptions)
+			.then(async (movie) => {
+				if (!movie) {
+					return await interaction.editReply("Movie could not be found!");
 				} else if ((settings.viewedMoviesRole && (interaction.member.roles.cache.has(settings.viewedMoviesRole) || settings.viewedMoviesRole == "all")) || interaction.member.permissions.has("Administrator")) {
-					return interaction.editReply(`Are you sure you want to set ${movie.name} to ${!movie.viewed ? "" : "un"}viewed?`).then(async () => {
+					return await interaction.editReply(`Are you sure you want to set ${movie.name} to ${!movie.viewed ? "" : "un"}viewed?`).then(async () => {
 						const botMessage = await interaction.fetchReply();
 						const filter = (reaction, user) => [emojis.yes, emojis.no].includes(reaction.emoji.name) && user.id == interaction.member.id;
 
@@ -33,25 +34,26 @@ module.exports = {
 								const reaction = collected.first();
 
 								if (reaction.emoji.name == emojis.yes) {
-									return movie.updateOne({ viewed: !movie.viewed, viewedDate: movie.viewed ? null : new Date() }, (err) => {
-										if (!err) {
-											return interaction.followUp(`${movie.name} has been set to ${!movie.viewed ? "" : "un"}viewed!`);
-										} else {
-											return interaction.followUp("Could not set movie to viewed, something went wrong.");
-										}
-									}).clone();
+									return movie
+										.updateOne({ viewed: !movie.viewed, viewedDate: movie.viewed ? null : new Date() }).then(async () => {
+											return await interaction.followUp(`${movie.name} has been set to ${!movie.viewed ? "" : "un"}viewed!`);
+										}).catch(async () => {
+											return await interaction.followUp("Could not set movie to viewed, something went wrong.");
+										});
 								} else {
-									return interaction.followUp(`${movie.name} has NOT been set to ${!movie.viewed ? "" : "un"}viewed.`);
+									return await interaction.followUp(`${movie.name} has NOT been set to ${!movie.viewed ? "" : "un"}viewed.`);
 								}
 							})
 							.catch(async () => {
-								return interaction.followUp("Couldn't get your response.");
+								return await interaction.followUp("Couldn't get your response.");
 							});
 					});
 				} else {
-					return interaction.editReply("Non-administrators can only set viewed if viewedrole has been set to all or a specific role.");
+					return await interaction.editReply("Non-administrators can only set viewed if viewedrole has been set to all or a specific role.");
 				}
 			})
-			.clone();
+			.catch(async () => {
+				return await interaction.editReply("Movie could not be found!");
+			});
 	},
 };

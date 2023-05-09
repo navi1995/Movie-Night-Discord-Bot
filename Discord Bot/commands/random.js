@@ -4,8 +4,9 @@ module.exports = {
 	data: new SlashCommandBuilder().setName("random").setDescription("Returns a random movie from the servers list of films to watch. Sets to viewed if autoview is on.").setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 	async execute(interaction, main, settings) {
 		//First we get total number of movies the guild has that are unviewed.
-		return main.movieModel.countDocuments({ guildID: interaction.guild.id, viewed: false }, (err, count) => {
-			if (!err) {
+		return main.movieModel
+			.countDocuments({ guildID: interaction.guild.id, viewed: false })
+			.then(async (count) => {
 				const random = Math.floor(Math.random() * count);
 				const searchOptions = main.searchMovieDatabaseObject(interaction.guild.id, "", true);
 
@@ -14,35 +15,31 @@ module.exports = {
 					.find(searchOptions)
 					.skip(random)
 					.limit(1)
-					.lean()
-					.exec(async (error, docs) => {
-						if (error) return interaction.editReply("Something went wrong while trying to find a movie");
+					.exec().then(async (docs) => {
 						if (docs && docs.length) {
 							const movieEmbed = main.buildSingleMovieEmbed(docs[0]);
 
 							if (settings.autoViewed) {
-								return main.movieModel
-									.updateOne({ guildID: interaction.guild.id, movieID: docs[0].movieID }, { viewed: true, viewedDate: new Date() }, async (err) => {
-										docs[0].viewed = true;
-										docs[0].viewedDate = new Date();
+								return main.movieModel.updateOne({ guildID: interaction.guild.id, movieID: docs[0].movieID }, { viewed: true, viewedDate: new Date() }).then(async () => {
+									docs[0].viewed = true;
+									docs[0].viewedDate = new Date();
 
-										if (err) {
-											return interaction.editReply("Could not set movie to viewed.");
-										} else {
-											return interaction.editReply({ embeds: [movieEmbed] });
-										}
-									})
-									.clone();
+									return await interaction.editReply({ embeds: [movieEmbed] });
+								}).catch(async () => {
+									return await interaction.editReply("Could not set movie to viewed.");
+								});
 							} else {
-								return interaction.editReply({ embeds: [movieEmbed] });
+								return await interaction.editReply({ embeds: [movieEmbed] });
 							}
 						} else {
-							return interaction.editReply("Your movie list is empty, so a random movie cannot be found.");
+							return await interaction.editReply("Your movie list is empty, so a random movie cannot be found.");
 						}
+					}).catch(async () => {
+						return await interaction.editReply("Something went wrong while trying to find a movie");
 					});
-			} else {
-				return interaction.editReply("Something went wrong.");
-			}
-		}).clone();
+			})
+			.catch(async () => {
+				return await interaction.editReply("Something went wrong.");
+			});
 	},
 };
