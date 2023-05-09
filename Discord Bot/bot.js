@@ -48,7 +48,11 @@ const setting = mongoose.model("Settings", Settings);
 let main;
 
 if (!testing) {
-	AutoPoster(topggAPI, client);
+	const poster = AutoPoster(topggAPI, client);
+
+	poster.on('error', (err) => {
+		console.error(err);
+	})
 }
 
 client.commands = new Collection();
