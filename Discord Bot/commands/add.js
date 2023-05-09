@@ -37,7 +37,7 @@ module.exports = {
 										console.log("Message deleted");
 										console.error(e);
 
-										return newMovie.remove();
+										return newMovie.deleteOne().catch(() => {});
 									}
 
 									//Wait for user to confirm if movie presented to them is what they wish to be added to the list or not.
@@ -51,14 +51,14 @@ module.exports = {
 											} else {
 												await interaction.followUp("Movie will not be added to the list. Try using an IMDB link instead?");
 
-												return newMovie.remove();
+												return newMovie.deleteOne().catch(() => {});
 											}
 										})
 										.catch(async (e) => {
 											console.log(e);
 											await interaction.followUp("Movie will not be added, you didn't respond in time. Try using an IMDB link instead?");
 
-											return newMovie.remove();
+											return newMovie.deleteOne().catch(() => {});
 										});
 								});
 							} else {
