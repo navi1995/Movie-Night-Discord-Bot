@@ -163,8 +163,7 @@ client.on("interactionCreate", async (interaction) => {
 	} catch (error) {
 		console.error("Problem executing command", error);
 		uncacheGuild(interaction.guild);
-
-		return interaction.editReply({ content: "There was an error trying to execute that command!" });
+		// return await interaction.editReply({ content: "There was an error trying to execute that command!" });
 	}
 });
 
