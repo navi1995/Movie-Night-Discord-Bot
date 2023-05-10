@@ -10,7 +10,9 @@ module.exports = {
 
 		return main.searchNewMovie(movieSearch, interaction).then(async ([newMovie]) => {
 			//No need for else, searchNewMovie alerts user if no movie found.
-			return newMovie && await interaction.editReply({ embeds: [main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)", true)] });
+			if (newMovie) {
+				return await interaction.editReply({ embeds: [main.buildSingleMovieEmbed(newMovie, "Movie Details (Not Added)", true)] });
+			}
 		}).catch(async err => {
 			console.error("Search.js", err);
 			return await interaction.editReply("Something went wrong.");
