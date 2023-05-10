@@ -210,7 +210,7 @@ async function searchNewMovie(search, message) {
 	let searchTerm = isImdbSearch ? search.match(/tt[0-9]{7,8}/g) : search;
 
 	if (!searchTerm) {
-		await message.channel.send("Please enter a valid search.");
+		await message.editReply("Please enter a valid search.");
 
 		return;
 	}
@@ -228,7 +228,7 @@ async function searchNewMovie(search, message) {
 	}
 
 	if (!data || failedSearch || data.success == "false") {
-		await message.channel.send("Couldn't find any movies. Sorry!");
+		await message.editReply("Couldn't find any movies. Sorry!");
 
 		return [null, data];
 	}
