@@ -179,7 +179,7 @@ function buildSingleMovieEmbed(movie, subtitle, hideSubmitted) {
 	const embed = new EmbedBuilder()
 		.setTitle(movie.name)
 		.setURL(`https://www.imdb.com/title/${movie.imdbID}`)
-		.setDescription(movie.overview)
+		.setDescription(movie.overview || "No description.")
 		.setImage(movie.posterURL)
 		.setColor("#6441a3")
 		.addFields([
