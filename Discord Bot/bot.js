@@ -161,6 +161,7 @@ function searchMovieDatabaseObject(guildID, movie, hideViewed) {
 		guildID: guildID,
 	};
 
+	// If Movie is array, do regex for every item
 	if (isImdbSearch) {
 		searchObj.imdbID = movie.match(/tt[0-9]{7,8}/g);
 	} else if (movie) {

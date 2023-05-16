@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const moment = require("moment");
 const emojis = require("../emojis.json");
 
@@ -14,9 +14,10 @@ module.exports = {
 		),
 	async execute(interaction, main, settings) {
 		let embeddedMessages = [];
+		const voteMenuOptions = [];
 		let totalCount = 0;
 		let description = "";
-		let searchOptions = main.searchMovieDatabaseObject(interaction.guild.id, "", true);
+		let searchOptions = main.searchMovieDatabaseObject(interaction.guild.id, "", true); //["300", "Interstellar", "Tissue"], true);//"", true);
 		let movieEmbed = new EmbedBuilder().setTitle("Poll has begun!").setColor("#6441a3");
 		let movieArray = [];
 		const pollSize = (interaction.options.getInteger("size") || 5) <= 10 ? interaction.options.getInteger("size") || 5 : 10;
@@ -50,9 +51,13 @@ module.exports = {
 					totalCount = movies.length;
 
 					for (let movie of movies) {
-						let stringConcat = `**[${emojis[movieArray.length + 1]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** submitted by ${movie.submittedBy} on ${moment(movie.submitted).format("DD MMM YYYY")}\n
-					**Release Date:** ${moment(movie.releaseDate).format("DD MMM YYYY")} **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
-
+						let stringConcat = `**[${emojis[movieArray.length + 1]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
+						voteMenuOptions.push(
+							new StringSelectMenuOptionBuilder()
+								.setLabel(movie.name)
+								.setDescription(emojis[movieArray.length + 1])
+								.setValue(emojis[movieArray.length + 1])
+						);
 						//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
 						if (description.length + stringConcat.length > 2048) {
 							movieEmbed.setDescription(description);
@@ -75,99 +80,111 @@ module.exports = {
 					if (i != embeddedMessages.length - 1) {
 						await interaction.followUp({ embeds: [embeddedMessage] });
 					} else {
-						let emojiArray = [];
+						const select = new StringSelectMenuBuilder().setCustomId("starter").setPlaceholder("Make a selection!").addOptions(voteMenuOptions);
 
-						await interaction.followUp({ embeds: [embeddedMessage] }).then(async (message) => {
-							//Polltime is stored in ms
-							let collector = message.createReactionCollector({
-								filter: (r, u) => u.id !== main.client.user.id && emojiArray.includes(r.emoji.name),
-								time: pollTimeInMs + totalCount * 1000,
-							}); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
+						const row = new ActionRowBuilder().addComponents(select);
 
-							console.log("Poll started. GuildID: " + message.guild.id + " " + new Date());
+						await interaction.followUp({ embeds: [embeddedMessage], components: [row] });
 
-							if (multipleVotes == "disallow") {
-								collector.on("collect", async (messageReact, user) => {
-									console.log("Collect" + " " + new Date());
-									let duplicateReactions = message.reactions.cache.filter((reaction) => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
+						const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: pollTimeInMs });
 
-									//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
-									//This block of code exists before the reactions are added to ensure as the bot adds reactions to the message, users are not able to duplicate votes during this time.
-									for (let reaction of duplicateReactions.values()) {
-										try {
-											await reaction.users.remove(user.id);
-										} catch (e) {
-											console.error("Error removing reaction", e);
-										}
-									}
-								});
-							}
-
-							for (let i = 1; i <= totalCount; i++) {
-								try {
-									await message.react(emojis[i]);
-									emojiArray.push(emojis[i]);
-								} catch (e) {
-									console.log("Poll message deleted" + " " + new Date());
-									collector.stop();
-								}
-							}
-
-							collector.on("end", async () => {
-								console.log("Poll end.  GuildID: " + message.guild.id + " " + new Date());
-								//Refetch message due to discord.js caching.
-								await message
-									.fetch()
-									.then(async (updatedMessage) => {
-										const reactionsCache = updatedMessage.reactions.cache;
-										const highestValidReactions = reactionsCache.filter((a) => emojiArray.includes(a.emoji.name));
-
-										if (!highestValidReactions.size) {
-											return await interaction.followUp("Reactions may have been removed or another error occurred.");
-										}
-
-										const highestReact = highestValidReactions.reduce((p, c) => (p.count > c.count ? p : c));
-
-										if (!highestReact || !highestReact.emoji) {
-											console.error("Could not collect reactions");
-											console.error(emojiArray);
-											console.error(highestReact);
-											console.error(highestValidReactions);
-											if (highestReact) console.error(highestReact.emoji);
-											return await interaction.followUp("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
-										}
-
-										let winner = movieArray[emojiArray.indexOf(highestReact.emoji.name)];
-
-										if (highestReact.count <= 1) {
-											return await interaction.followUp("No votes were cast, so no movie has been chosen.");
-										}
-
-										//If auto viewed is set, update movie to be entered into the VIEWED list.
-										if (settings.autoViewed) {
-											await main.movieModel
-												.updateOne({ guildID: message.guild.id, movieID: winner.movieID }, { viewed: true, viewedDate: new Date() })
-												.then(async () => {
-													winner.viewed = true;
-													winner.viewedDate = new Date();
-												})
-												.catch(async () => {
-													return await interaction.followUp("Something went wrong, could not get winner. Try removing auto-view setting.");
-												});
-										}
-
-										return await interaction.followUp({ embeds: [main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count - 1} votes.`)] });
-									})
-									.catch(function () {
-										console.log(`Poll was deleted. guild: ${message.guild.id}, channel: ${message.channel.id}, message ID: ${message.id}`);
-									});
-							});
+						collector.on("collect", async (i) => {
+							const selection = i.values[0];
+							await i.reply(`${i.user} has selected ${selection}!`);
 						});
+
+						// await interaction.followUp({ embeds: [embeddedMessage] }).then(async (message) => {
+						// 	//Polltime is stored in ms
+						// 	let collector = message.createReactionCollector({
+						// 		filter: (r, u) => u.id !== main.client.user.id && emojiArray.includes(r.emoji.name),
+						// 		time: pollTimeInMs + totalCount * 1000,
+						// 	}); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
+
+						// 	console.log("Poll started. GuildID: " + message.guild.id + " " + new Date());
+
+						// 	if (multipleVotes == "disallow") {
+						// 		collector.on("collect", async (messageReact, user) => {
+						// 			console.log("Collect" + " " + new Date());
+						// 			let duplicateReactions = message.reactions.cache.filter((reaction) => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
+
+						// 			//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
+						// 			//This block of code exists before the reactions are added to ensure as the bot adds reactions to the message, users are not able to duplicate votes during this time.
+						// 			for (let reaction of duplicateReactions.values()) {
+						// 				try {
+						// 					await reaction.users.remove(user.id);
+						// 				} catch (e) {
+						// 					console.error("Error removing reaction", e);
+						// 				}
+						// 			}
+						// 		});
+						// 	}
+
+						// 	for (let i = 1; i <= totalCount; i++) {
+						// 		try {
+						// 			await message.react(emojis[i]);
+						// 			emojiArray.push(emojis[i]);
+						// 		} catch (e) {
+						// 			console.log("Poll message deleted" + " " + new Date());
+						// 			collector.stop();
+						// 		}
+						// 	}
+
+						// 	collector.on("end", async () => {
+						// 		console.log("Poll end.  GuildID: " + message.guild.id + " " + new Date());
+						// 		//Refetch message due to discord.js caching.
+						// 		await message
+						// 			.fetch()
+						// 			.then(async (updatedMessage) => {
+						// 				const reactionsCache = updatedMessage.reactions.cache;
+						// 				const highestValidReactions = reactionsCache.filter((a) => emojiArray.includes(a.emoji.name));
+
+						// 				if (!highestValidReactions.size) {
+						// 					return await interaction.followUp("Reactions may have been removed or another error occurred.");
+						// 				}
+
+						// 				const highestReact = highestValidReactions.reduce((p, c) => (p.count > c.count ? p : c));
+
+						// 				if (!highestReact || !highestReact.emoji) {
+						// 					console.error("Could not collect reactions");
+						// 					console.error(emojiArray);
+						// 					console.error(highestReact);
+						// 					console.error(highestValidReactions);
+						// 					if (highestReact) console.error(highestReact.emoji);
+						// 					return await interaction.followUp("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
+						// 				}
+
+						// 				let winner = movieArray[emojiArray.indexOf(highestReact.emoji.name)];
+
+						// 				if (highestReact.count <= 1) {
+						// 					return await interaction.followUp("No votes were cast, so no movie has been chosen.");
+						// 				}
+
+						// 				//If auto viewed is set, update movie to be entered into the VIEWED list.
+						// 				if (settings.autoViewed) {
+						// 					await main.movieModel
+						// 						.updateOne({ guildID: message.guild.id, movieID: winner.movieID }, { viewed: true, viewedDate: new Date() })
+						// 						.then(async () => {
+						// 							winner.viewed = true;
+						// 							winner.viewedDate = new Date();
+						// 						})
+						// 						.catch(async () => {
+						// 							return await interaction.followUp("Something went wrong, could not get winner. Try removing auto-view setting.");
+						// 						});
+						// 				}
+
+						// 				return await interaction.followUp({ embeds: [main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count - 1} votes.`)] });
+						// 			})
+						// 			.catch(function () {
+						// 				console.log(`Poll was deleted. guild: ${message.guild.id}, channel: ${message.channel.id}, message ID: ${message.id}`);
+						// 			});
+						// 	});
+						// });
 					}
 					//If the message is NOT the last one in the embedded messages chain, just send the message. ELSE we wil be sending the message + handling reacts on it.
 				}
 			})
-			.catch(async () => {
+			.catch(async (err) => {
+				console.log(err);
 				return await interaction.followUp("Could not  return list of movies, an error occured.");
 			});
 	},
