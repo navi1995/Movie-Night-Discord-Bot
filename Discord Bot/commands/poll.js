@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const moment = require("moment");
 const emojis = require("../emojis.json");
 
@@ -15,6 +15,7 @@ module.exports = {
 	async execute(interaction, main, settings) {
 		let embeddedMessages = [];
 		const voteMenuOptions = [];
+		let votes = {};
 		let totalCount = 0;
 		let description = "";
 		let searchOptions = main.searchMovieDatabaseObject(interaction.guild.id, "", true); //["300", "Interstellar", "Tissue"], true);//"", true);
@@ -22,7 +23,7 @@ module.exports = {
 		let movieArray = [];
 		const pollSize = (interaction.options.getInteger("size") || 5) <= 10 ? interaction.options.getInteger("size") || 5 : 10;
 		const pollTimeInMs = ((interaction.options.getInteger("time") || 60000) <= main.maxPollTime ? interaction.options.getInteger("time") || 60000 : main.maxPollTime) * 1000;
-		const pollMessage = interaction.options.getString("message") || "Poll has begun!";
+		const pollAnnounceMessage = interaction.options.getString("message") || "Poll has begun!";
 		const multipleVotes = interaction.options.getString("multiplevotes") || "disallow";
 		//Check this logic
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set.
@@ -32,9 +33,9 @@ module.exports = {
 
 		await interaction.editReply(
 			pollTimeInMs >= main.maxPollTime * 1000
-				? pollMessage +
+				? pollAnnounceMessage +
 						`\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO ${secondsToHms(main.maxPollTime)} DUE TO SERVER COSTS AND ISSUES. Developers are constantly trying to increase this while also trying to keep server stability.)`
-				: pollMessage,
+				: pollAnnounceMessage,
 			{ allowedMentions: {} }
 		);
 
@@ -53,11 +54,13 @@ module.exports = {
 					for (let movie of movies) {
 						let stringConcat = `**[${emojis[movieArray.length + 1]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
 						voteMenuOptions.push(
-							new StringSelectMenuOptionBuilder()
-								.setLabel(movie.name)
-								.setDescription(emojis[movieArray.length + 1])
-								.setValue(emojis[movieArray.length + 1])
+							new ButtonBuilder()
+								.setLabel("0")
+								.setCustomId(`${movieArray.length + 1}`)
+								.setStyle(ButtonStyle.Secondary)
+								.setEmoji(emojis[movieArray.length + 1])
 						);
+						votes[movieArray.length + 1] = { voters: [], movieID: movie.movieID };
 						//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
 						if (description.length + stringConcat.length > 2048) {
 							movieEmbed.setDescription(description);
@@ -80,54 +83,28 @@ module.exports = {
 					if (i != embeddedMessages.length - 1) {
 						await interaction.followUp({ embeds: [embeddedMessage] });
 					} else {
-						const select = new StringSelectMenuBuilder().setCustomId("starter").setPlaceholder("Make a selection!").addOptions(voteMenuOptions);
+						// This needs to be an array if > 5 options
+						const row1 = new ActionRowBuilder().addComponents(voteMenuOptions.slice(0, 5));
+						const components = [row1];
 
-						const row = new ActionRowBuilder().addComponents(select);
+						if (voteMenuOptions.slice(5, 10).length != 0){
+							components.push(new ActionRowBuilder().addComponents(voteMenuOptions.slice(5, 10)))
+						}
 
-						await interaction.followUp({ embeds: [embeddedMessage], components: [row] });
-
-						const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: pollTimeInMs });
-
-						collector.on("collect", async (i) => {
-							const selection = i.values[0];
-							await i.reply(`${i.user} has selected ${selection}!`);
+						let pollMessage = await interaction.followUp({ 
+							embeds: [embeddedMessage], 
+							components: components
 						});
 
-						// await interaction.followUp({ embeds: [embeddedMessage] }).then(async (message) => {
-						// 	//Polltime is stored in ms
-						// 	let collector = message.createReactionCollector({
-						// 		filter: (r, u) => u.id !== main.client.user.id && emojiArray.includes(r.emoji.name),
-						// 		time: pollTimeInMs + totalCount * 1000,
-						// 	}); //Add one second per option of react (takes 1 second for each react to be sent to Discord)
-
-						// 	console.log("Poll started. GuildID: " + message.guild.id + " " + new Date());
-
-						// 	if (multipleVotes == "disallow") {
-						// 		collector.on("collect", async (messageReact, user) => {
-						// 			console.log("Collect" + " " + new Date());
-						// 			let duplicateReactions = message.reactions.cache.filter((reaction) => reaction.users.cache.has(user.id) && reaction.emoji.name != messageReact.emoji.name);
-
-						// 			//We remove any previous reactions user has added, to ensure the latest vote remains and user can only vote for once movie.
-						// 			//This block of code exists before the reactions are added to ensure as the bot adds reactions to the message, users are not able to duplicate votes during this time.
-						// 			for (let reaction of duplicateReactions.values()) {
-						// 				try {
-						// 					await reaction.users.remove(user.id);
-						// 				} catch (e) {
-						// 					console.error("Error removing reaction", e);
-						// 				}
-						// 			}
-						// 		});
-						// 	}
-
-						// 	for (let i = 1; i <= totalCount; i++) {
-						// 		try {
-						// 			await message.react(emojis[i]);
-						// 			emojiArray.push(emojis[i]);
-						// 		} catch (e) {
-						// 			console.log("Poll message deleted" + " " + new Date());
-						// 			collector.stop();
-						// 		}
-						// 	}
+						await main.pollModel.create({
+							guildID: interaction.guildId,
+							messageID: pollMessage.id,
+							channelID: pollMessage.channelId,
+							votes: votes,
+							endDateTime: moment().add(pollTimeInMs, 'ms'),
+							ended: false,
+							allowMultipleVotes: multipleVotes == "allow"
+						});
 
 						// 	collector.on("end", async () => {
 						// 		console.log("Poll end.  GuildID: " + message.guild.id + " " + new Date());
@@ -180,7 +157,6 @@ module.exports = {
 						// 	});
 						// });
 					}
-					//If the message is NOT the last one in the embedded messages chain, just send the message. ELSE we wil be sending the message + handling reacts on it.
 				}
 			})
 			.catch(async (err) => {
