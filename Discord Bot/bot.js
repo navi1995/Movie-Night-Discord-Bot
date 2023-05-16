@@ -1,9 +1,10 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const axios = require("axios");
-const { Client, Discord, GatewayIntentBits, Partials, Collection, EmbedBuilder, Options, LimitedCollection, ActivityType } = require("discord.js");
+const { Client, Discord, ButtonBuilder, GatewayIntentBits, Partials, Collection, EmbedBuilder, Options, LimitedCollection, ActivityType } = require("discord.js");
 const moment = require("moment");
 const mongoose = require("mongoose");
+const cron = require('node-cron');
 const { token, movieDbAPI, mongoLogin, topggAPI, testing, maxPollTime } = require("./config.json");
 const client = new Client({
 	intents: [GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.Guilds],
@@ -42,8 +43,21 @@ const Settings = new Schema({
 	viewedMoviesRole: { type: String, default: null },
 	//If deleteMoviesRole = null, allow only admins delete. = "all" then remove restrictions. If specific role then admins + role
 });
+const Polls = new Schema({
+    guildID: { type: String, index: true},
+    messageID: { type: String, index: true },
+    channelID: String,
+    votes: Object, // { key = index, value = { movieName, emoji, [voters] }}
+	endDateTime: Date,
+    ended: {
+        type: Boolean,
+        default: false
+    },
+	allowMultipleVotes: Boolean
+});
 const movieModel = mongoose.model("Movie", Movie);
 const setting = mongoose.model("Settings", Settings);
+const pollModel = mongoose.model("Polls", Polls);
 let main;
 
 if (!testing) {
@@ -63,11 +77,32 @@ function setMessage() {
 	});
 }
 
-client.once("ready", () => {
+client.once("ready", async () => {
 	//Every hour update activity to avoid getting it cleared.
 	setMessage();
 	setInterval(setMessage, 1000 * 60 * 60);
 	console.log("Ready!");
+
+	cron.schedule('* * * * *', () => {
+		console.log("Running a task every minute.");
+
+		pollModel.find({ ended: false, endDateTime: { $lte: moment() }})
+			.then(async (polls) => {
+				console.log("Polls to be ended", polls);
+				
+				polls.forEach(async poll => {
+					var ch = await client.channels.fetch(poll.channelID);
+
+					await ch.send({ content: "This poll has ended: " + poll.messageID});
+
+					poll.ended = true;
+					await poll.save();
+				});
+			})
+			.catch(async (err) => {
+				console.err(err, "CRON");
+			})
+	})
 });
 
 function guildCreateError(err) {
@@ -89,6 +124,7 @@ client.on("guildCreate", async function (guild) {
 
 client.on("guildDelete", function (guild) {
 	//Whenever the bot is removed from a guild, we remove all related data.
+	pollModel.deleteMany({guildID: guild.id}).catch(handleError);
 	movieModel.deleteMany({ guildID: guild.id }).catch(handleError);
 	setting.deleteMany({ guildID: guild.id }).catch(handleError);
 });
@@ -99,6 +135,46 @@ for (const file of commandFiles) {
 
 	client.commands.set(command.data.name, command);
 }
+
+client.on("interactionCreate", async(interaction) => {
+	if (!interaction.isButton()) return;
+
+	const poll = await pollModel.findOne({ messageID: interaction.message.id });
+
+	if (!poll) return;
+
+	await interaction.deferReply({ ephemeral: true});
+
+	if (poll.ended) return await interaction.editReply("Poll has already ended.");
+
+	await interaction.deleteReply();
+	
+	if (!poll.allowMultipleVotes) {
+		Object.keys(poll.votes)
+			.filter(key => poll.votes[key].voters.includes(interaction.user.id))
+			.forEach(idx => poll.votes[idx].voters = poll.votes[idx].voters.filter(x => x != interaction.user.id));		
+	}
+	
+	poll.votes[interaction.customId].voters.push(interaction.user.id);
+	poll.markModified("votes");
+
+	var comps = interaction.message.components.map(row => {
+		row.components = row.components?.map(v => {
+			return new ButtonBuilder()
+				.setLabel(`${poll.votes[v.customId].voters.length || 0}`)
+				.setCustomId(v.customId)
+				.setStyle(v.style)
+				.setEmoji(v.emoji)
+		});
+
+		return row;
+	});
+
+    await interaction.message.edit({
+        components: comps
+    });
+	await poll.save();
+});
 
 client.on("interactionCreate", async (interaction) => {
 	if (!interaction.isChatInputCommand()) return;
@@ -277,4 +353,5 @@ main = {
 	getRandomFromArray,
 	client,
 	maxPollTime, //Testing 24 hour polls on GCloud
+	pollModel
 };
