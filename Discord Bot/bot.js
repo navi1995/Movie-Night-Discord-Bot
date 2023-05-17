@@ -133,10 +133,10 @@ client.once("ready", async () => {
 						}
 					} catch (err) {
 						console.log("Error in posting poll results.", err);
-						var ch = await client.channels.fetch(poll.channelID);
+						// var ch = await client.channels.fetch(poll.channelID);
 
 						await poll.deleteOne();
-						await ch.send("Could not post poll results due to some issue. Did you delete the original poll?");
+						// await ch.send("Could not post poll results due to some issue. Did you delete the original poll?");
 					}
 				});
 			})
