@@ -87,7 +87,6 @@ client.once("ready", async () => {
 		pollModel
 			.find({ ended: false, endDateTime: { $lte: moment() } })
 			.then(async (polls) => {
-				console.log("Polls to be ended", polls.length, Date.now());
 
 				polls.forEach(async (poll) => {
 					try {
@@ -95,6 +94,7 @@ client.once("ready", async () => {
 						var ch = await client.channels.fetch(poll.channelID);
 
 						if (ch) {
+							console.log("Processing poll", poll.id)
 							var msg = await ch.messages.fetch(poll.messageID);
 							let message = "";
 							const maxCount = Object.values(poll.votes).reduce((max, value) => Math.max(max, value.voters.length), 0);
