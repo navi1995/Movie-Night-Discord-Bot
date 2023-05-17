@@ -4,7 +4,7 @@ const axios = require("axios");
 const { Client, Discord, ButtonBuilder, GatewayIntentBits, Partials, Collection, EmbedBuilder, Options, LimitedCollection, ActivityType } = require("discord.js");
 const moment = require("moment");
 const mongoose = require("mongoose");
-const cron = require('node-cron');
+const cron = require("node-cron");
 const { token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Client({
 	intents: [GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.Guilds],
@@ -44,16 +44,16 @@ const Settings = new Schema({
 	//If deleteMoviesRole = null, allow only admins delete. = "all" then remove restrictions. If specific role then admins + role
 });
 const Polls = new Schema({
-    guildID: { type: String, index: true},
-    messageID: { type: String, index: true },
-    channelID: String,
-    votes: Object, // { key = index, value = { movieName, emoji, [voters] }}
+	guildID: { type: String, index: true },
+	messageID: { type: String, index: true },
+	channelID: String,
+	votes: Object, // { key = index, value = { movieName, emoji, [voters] }}
 	endDateTime: Date,
-    ended: {
-        type: Boolean,
-        default: false
-    },
-	allowMultipleVotes: Boolean
+	ended: {
+		type: Boolean,
+		default: false,
+	},
+	allowMultipleVotes: Boolean,
 });
 const movieModel = mongoose.model("Movie", Movie);
 const setting = mongoose.model("Settings", Settings);
@@ -63,9 +63,9 @@ let main;
 if (!testing) {
 	const poster = AutoPoster(topggAPI, client);
 
-	poster.on('error', (err) => {
+	poster.on("error", (err) => {
 		console.error(err);
-	})
+	});
 }
 
 client.commands = new Collection();
@@ -83,53 +83,66 @@ client.once("ready", async () => {
 	setInterval(setMessage, 1000 * 60 * 60);
 	console.log("Ready!");
 
-	cron.schedule('* * * * *', () => {
-		pollModel.find({ ended: false, endDateTime: { $lte: moment() }})
+	cron.schedule("* * * * *", () => {
+		pollModel
+			.find({ ended: false, endDateTime: { $lte: moment() } })
 			.then(async (polls) => {
-				console.log("Polls to be ended", polls.length);
-				
-				polls.forEach(async poll => {
-					var ch = await client.channels.fetch(poll.channelID);
-					var msg = await ch.messages.fetch(poll.messageID);
-					let message = "";
-					const maxCount = Object.values(poll.votes).reduce((max, value) => Math.max(max, value.voters.length), 0);
-					const maxKeys = Object.keys(poll.votes).filter(key => poll.votes[key].voters.length === maxCount);
+				console.log("Polls to be ended", polls.length, Date.now());
 
-					if (maxCount == 0) {
-						return await msg.reply("No votes were made, so no winner has been chosen.");
-					}
+				polls.forEach(async (poll) => {
+					try {
+						// var ch = client.channels.cache.get(poll.channelID);
+						var ch = await client.channels.fetch(poll.channelID);
 
-					if (maxKeys.length > 1) {
-						message = "A tie was found! A random winner from them will be chosen. ";
-					}
+						if (ch) {
+							var msg = await ch.messages.fetch(poll.messageID);
+							let message = "";
+							const maxCount = Object.values(poll.votes).reduce((max, value) => Math.max(max, value.voters.length), 0);
+							const maxKeys = Object.keys(poll.votes).filter((key) => poll.votes[key].voters.length === maxCount);
 
-					var movieID = poll.votes[maxKeys[0]].movieID;
+							if (maxCount == 0) {
+								await msg.reply("No votes were made, so no winner has been chosen.");
+								return await poll.updateOne({ ended: true });
+							}
 
-					movieModel.findOne({ movieID: movieID }).then(async (movie) => {
-						var settings = await getSettings(poll.guildID);
+							if (maxKeys.length > 1) {
+								message = "A tie was found! A random winner from them will be chosen. ";
+							}
 
-						if (settings.autoViewed) {
-							movie.viewed = true;
-							movie.viewedDate = new Date();
+							var movieID = poll.votes[maxKeys[0]].movieID;
 
-							await movie.save();
+							movieModel
+								.findOne({ movieID: movieID })
+								.then(async (movie) => {
+									var settings = await getSettings(poll.guildID);
+
+									if (settings.autoViewed) {
+										await movie.updateOne({ viewed: true, viewedDate: new Date() });
+									}
+									await msg.reply({ embeds: [main.buildSingleMovieEmbed(movie, message + `A winner has been chosen! ${movie.name} with ${maxCount} votes.`)] });
+
+									return await poll.updateOne({ ended: true });
+								})
+								.catch(async (err) => {
+									console.log("Error in posting poll results.", err);
+									var ch = await client.channels.fetch(poll.channelID);
+
+									await poll.deleteOne();
+									await ch.send("Could not post poll results due to some issue.");
+								});
 						}
-						await msg.reply({ embeds: [main.buildSingleMovieEmbed(movie, message + `A winner has been chosen! ${movie.name} with ${maxCount} votes.`)] });
-						poll.ended = true;
-
-						return await poll.save();
-					}).catch(async (err) => {
+					} catch (err) {
 						console.log("Error in posting poll results.", err);
 						var ch = await client.channels.fetch(poll.channelID);
 
 						await poll.deleteOne();
-						await ch.send("Could not post poll results due to some issue.");
-					});
+						await ch.send("Could not post poll results due to some issue. Did you delete the original poll?");
+					}
 				});
 			})
 			.catch(async (err) => {
 				console.err(err, "CRON");
-			})
+			});
 	});
 });
 
@@ -152,7 +165,7 @@ client.on("guildCreate", async function (guild) {
 
 client.on("guildDelete", function (guild) {
 	//Whenever the bot is removed from a guild, we remove all related data.
-	pollModel.deleteMany({guildID: guild.id}).catch(handleError);
+	pollModel.deleteMany({ guildID: guild.id }).catch(handleError);
 	movieModel.deleteMany({ guildID: guild.id }).catch(handleError);
 	setting.deleteMany({ guildID: guild.id }).catch(handleError);
 });
@@ -164,10 +177,10 @@ for (const file of commandFiles) {
 	client.commands.set(command.data.name, command);
 }
 
-client.on("interactionCreate", async(interaction) => {
+client.on("interactionCreate", async (interaction) => {
 	if (!interaction.isButton()) return;
 
-	const poll = await pollModel.findOne({ messageID: interaction.message.id });
+	let poll = await pollModel.findOne({ messageID: interaction.message.id });
 
 	if (!poll) return;
 	if (poll.ended) {
@@ -175,37 +188,36 @@ client.on("interactionCreate", async(interaction) => {
 	}
 
 	await interaction.deferUpdate();
-	
+
 	if (!poll.allowMultipleVotes) {
 		Object.keys(poll.votes)
-			.filter(key => key != interaction.customId && poll.votes[key].voters.includes(interaction.user.id))
-			.forEach(idx => poll.votes[idx].voters = poll.votes[idx].voters.filter(x => x != interaction.user.id));		
+			.filter((key) => key != interaction.customId && poll.votes[key].voters.includes(interaction.user.id))
+			.forEach(async (idx) => {
+				await pollModel.updateOne({ messageID: interaction.message.id }, { $pull: { [`votes.${idx}.voters`]: interaction.user.id } });
+			});
 	}
 
 	if (poll.votes[interaction.customId].voters.includes(interaction.user.id)) {
-		poll.votes[interaction.customId].voters = poll.votes[interaction.customId].voters.filter(x => x != interaction.user.id);
+		await pollModel.updateOne({ messageID: interaction.message.id }, { $pull: { [`votes.${interaction.customId}.voters`]: interaction.user.id } });
 	} else {
-		poll.votes[interaction.customId].voters.push(interaction.user.id);
+		await pollModel.updateOne({ messageID: interaction.message.id }, { $push: { [`votes.${interaction.customId}.voters`]: interaction.user.id } });
 	}
 
-	poll.markModified("votes");
+	poll = await pollModel.findOne({ messageID: interaction.message.id });
 
-	var comps = interaction.message.components.map(row => {
-		row.components = row.components?.map(v => {
-			return new ButtonBuilder()
-				.setLabel(`${poll.votes[v.customId].voters.length || 0}`)
-				.setCustomId(v.customId)
-				.setStyle(v.style)
-				.setEmoji(v.emoji)
+	var comps = await (
+		await interaction.message.fetch(true)
+	).components.map((row) => {
+		row.components = row.components?.map((v) => {
+			return ButtonBuilder.from(v).setLabel(`${poll.votes[v.customId].voters.length || 0}`);
 		});
 
 		return row;
 	});
 
-    await interaction.message.edit({
-        components: comps
-    });
-	await poll.save();
+	await interaction.message.edit({
+		components: comps,
+	});
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -213,18 +225,23 @@ client.on("interactionCreate", async (interaction) => {
 	const command = client.commands.get(interaction.commandName);
 	var fetchedSettings;
 
-		await getSettings(interaction.guildId).then(function (settings) {
+	await getSettings(interaction.guildId)
+		.then(function (settings) {
 			if (!settings) {
 				//If no settings exist (during downtime of bot) we instantiate some settings before processing command.
-				new setting({ guildID: interaction.guildId }).save().then((setting) => {
-					fetchedSettings = setting;
-				}).catch((err) => {
-					console.error("Guild create", err);
-				});
+				new setting({ guildID: interaction.guildId })
+					.save()
+					.then((setting) => {
+						fetchedSettings = setting;
+					})
+					.catch((err) => {
+						console.error("Guild create", err);
+					});
 			} else {
 				fetchedSettings = settings;
 			}
-		}).catch(() => {});
+		})
+		.catch(() => {});
 
 	//Defaults in case mongoDB connection is down
 	const settings = (interaction.guild ? fetchedSettings : null) || {
@@ -384,5 +401,5 @@ main = {
 	setting,
 	getRandomFromArray,
 	client,
-	pollModel
+	pollModel,
 };
