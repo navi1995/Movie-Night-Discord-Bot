@@ -5,7 +5,7 @@ const { Client, Discord, ButtonBuilder, GatewayIntentBits, Partials, Collection,
 const moment = require("moment");
 const mongoose = require("mongoose");
 const cron = require('node-cron');
-const { token, movieDbAPI, mongoLogin, topggAPI, testing, maxPollTime } = require("./config.json");
+const { token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Client({
 	intents: [GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.Guilds],
 	allowedMentions: { parse: ["users", "roles"] }, // allowedMentions to prevent unintended role and everyone pings
@@ -73,7 +73,7 @@ mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true }
 
 function setMessage() {
 	client.user.setPresence({
-		activities: [{ name: `Reinvite me for slash cmds!`, type: ActivityType.Watching }],
+		activities: [{ name: `Polls wont crash anymore!`, type: ActivityType.Watching }],
 	});
 }
 
@@ -84,26 +84,47 @@ client.once("ready", async () => {
 	console.log("Ready!");
 
 	cron.schedule('* * * * *', () => {
-		console.log("Running a task every minute.");
-
 		pollModel.find({ ended: false, endDateTime: { $lte: moment() }})
 			.then(async (polls) => {
-				console.log("Polls to be ended", polls);
+				console.log("Polls to be ended", polls.length);
 				
 				polls.forEach(async poll => {
 					var ch = await client.channels.fetch(poll.channelID);
+					var msg = await ch.messages.fetch(poll.messageID);
 					let message = "";
 					const maxCount = Object.values(poll.votes).reduce((max, value) => Math.max(max, value.voters.length), 0);
 					const maxKeys = Object.keys(poll.votes).filter(key => poll.votes[key].voters.length === maxCount);
 
-					if (maxKeys.length > 1) {
-						message = "A tie was found! A random winner from them will be chosen.";
+					if (maxCount == 0) {
+						return await msg.reply("No votes were made, so no winner has been chosen.");
 					}
 
-					await ch.send({ content: "This poll has ended and the winner is..." + poll.votes[maxKeys[0]].movieID});
+					if (maxKeys.length > 1) {
+						message = "A tie was found! A random winner from them will be chosen. ";
+					}
 
-					poll.ended = true;
-					await poll.save();
+					var movieID = poll.votes[maxKeys[0]].movieID;
+
+					movieModel.findOne({ movieID: movieID }).then(async (movie) => {
+						var settings = await getSettings(poll.guildID);
+
+						if (settings.autoViewed) {
+							movie.viewed = true;
+							movie.viewedDate = new Date();
+
+							await movie.save();
+						}
+						await msg.reply({ embeds: [main.buildSingleMovieEmbed(movie, message + `A winner has been chosen! ${movie.name} with ${maxCount} votes.`)] });
+						poll.ended = true;
+
+						return await poll.save();
+					}).catch(async (err) => {
+						console.log("Error in posting poll results.", err);
+						var ch = await client.channels.fetch(poll.channelID);
+
+						await poll.deleteOne();
+						await ch.send("Could not post poll results due to some issue.");
+					});
 				});
 			})
 			.catch(async (err) => {
@@ -149,20 +170,24 @@ client.on("interactionCreate", async(interaction) => {
 	const poll = await pollModel.findOne({ messageID: interaction.message.id });
 
 	if (!poll) return;
+	if (poll.ended) {
+		return await interaction.reply({ content: "Poll has already ended.", ephemeral: true });
+	}
 
-	await interaction.deferReply({ ephemeral: true});
-
-	if (poll.ended) return await interaction.editReply("Poll has already ended.");
-
-	await interaction.deleteReply();
+	await interaction.deferUpdate();
 	
 	if (!poll.allowMultipleVotes) {
 		Object.keys(poll.votes)
-			.filter(key => poll.votes[key].voters.includes(interaction.user.id))
+			.filter(key => key != interaction.customId && poll.votes[key].voters.includes(interaction.user.id))
 			.forEach(idx => poll.votes[idx].voters = poll.votes[idx].voters.filter(x => x != interaction.user.id));		
 	}
-	
-	poll.votes[interaction.customId].voters.push(interaction.user.id);
+
+	if (poll.votes[interaction.customId].voters.includes(interaction.user.id)) {
+		poll.votes[interaction.customId].voters = poll.votes[interaction.customId].voters.filter(x => x != interaction.user.id);
+	} else {
+		poll.votes[interaction.customId].voters.push(interaction.user.id);
+	}
+
 	poll.markModified("votes");
 
 	var comps = interaction.message.components.map(row => {
@@ -359,6 +384,5 @@ main = {
 	setting,
 	getRandomFromArray,
 	client,
-	maxPollTime, //Testing 24 hour polls on GCloud
 	pollModel
 };
