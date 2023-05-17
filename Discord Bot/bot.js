@@ -92,8 +92,15 @@ client.once("ready", async () => {
 				
 				polls.forEach(async poll => {
 					var ch = await client.channels.fetch(poll.channelID);
+					let message = "";
+					const maxCount = Object.values(poll.votes).reduce((max, value) => Math.max(max, value.voters.length), 0);
+					const maxKeys = Object.keys(poll.votes).filter(key => poll.votes[key].voters.length === maxCount);
 
-					await ch.send({ content: "This poll has ended: " + poll.messageID});
+					if (maxKeys.length > 1) {
+						message = "A tie was found! A random winner from them will be chosen.";
+					}
+
+					await ch.send({ content: "This poll has ended and the winner is..." + poll.votes[maxKeys[0]].movieID});
 
 					poll.ended = true;
 					await poll.save();
@@ -102,7 +109,7 @@ client.once("ready", async () => {
 			.catch(async (err) => {
 				console.err(err, "CRON");
 			})
-	})
+	});
 });
 
 function guildCreateError(err) {
@@ -211,9 +218,9 @@ client.on("interactionCreate", async (interaction) => {
 			});
 	}
 
-	if (interaction.guild && !interaction.channel.permissionsFor(client.application.id).has(["AddReactions", "ManageMessages", "EmbedLinks", "ReadMessageHistory"])) {
+	if (interaction.guild && !interaction.channel.permissionsFor(client.application.id).has(["AddReactions", "ManageMessages", "EmbedLinks", "ReadMessageHistory", "ViewChannel"])) {
 		return await interaction.reply(
-			"Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions."
+			"Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY, VIEW CHANNEL\nAdmins may need to adjust the hierarchy of permissions."
 		);
 	}
 

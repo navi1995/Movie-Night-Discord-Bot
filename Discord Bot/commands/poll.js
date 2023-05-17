@@ -60,7 +60,7 @@ module.exports = {
 								.setStyle(ButtonStyle.Secondary)
 								.setEmoji(emojis[movieArray.length + 1])
 						);
-						votes[movieArray.length + 1] = { voters: [], movieID: movie.movieID };
+						votes[movieArray.length + 1] = { voters: [], movieID: movie.movieID, movieName: movie.name };
 						//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
 						if (description.length + stringConcat.length > 2048) {
 							movieEmbed.setDescription(description);
@@ -112,13 +112,6 @@ module.exports = {
 						// 		await message
 						// 			.fetch()
 						// 			.then(async (updatedMessage) => {
-						// 				const reactionsCache = updatedMessage.reactions.cache;
-						// 				const highestValidReactions = reactionsCache.filter((a) => emojiArray.includes(a.emoji.name));
-
-						// 				if (!highestValidReactions.size) {
-						// 					return await interaction.followUp("Reactions may have been removed or another error occurred.");
-						// 				}
-
 						// 				const highestReact = highestValidReactions.reduce((p, c) => (p.count > c.count ? p : c));
 
 						// 				if (!highestReact || !highestReact.emoji) {
