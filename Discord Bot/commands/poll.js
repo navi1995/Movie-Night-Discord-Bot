@@ -86,7 +86,7 @@ module.exports = {
 							components.push(new ActionRowBuilder().addComponents(voteMenuOptions.slice(5, 10)))
 						}
 
-						embeddedMessage.setFooter({ text: `Poll will end ${endTime.format('DD MMM YYYY HH:mm')} server time (PDT)` });
+						embeddedMessage.setFooter({ text: `Poll will end ${endTime.format('DD MMM YYYY HH:mm')} UTC time)` });
 
 						let pollMessage = await interaction.followUp({ 
 							embeds: [embeddedMessage], 
