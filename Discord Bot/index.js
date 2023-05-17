@@ -2,7 +2,7 @@ const { token } = require("./config.json");
 const { ShardingManager } = require('discord.js');
 const manager = new ShardingManager('./bot.js', { 
 	token,
-	mode: "process",
+	mode: "worker",
 	respawn: true
  });
 
