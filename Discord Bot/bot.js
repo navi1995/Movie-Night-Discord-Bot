@@ -1,10 +1,11 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const axios = require("axios");
-const { Client, Discord, GatewayIntentBits, Partials, Collection, EmbedBuilder, Options, LimitedCollection, ActivityType } = require("discord.js");
+const { Client, Discord, ButtonBuilder, GatewayIntentBits, Partials, Collection, EmbedBuilder, Options, LimitedCollection, ActivityType } = require("discord.js");
 const moment = require("moment");
 const mongoose = require("mongoose");
-const { token, movieDbAPI, mongoLogin, topggAPI, testing, maxPollTime } = require("./config.json");
+const cron = require('node-cron');
+const { token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Client({
 	intents: [GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.Guilds],
 	allowedMentions: { parse: ["users", "roles"] }, // allowedMentions to prevent unintended role and everyone pings
@@ -42,8 +43,21 @@ const Settings = new Schema({
 	viewedMoviesRole: { type: String, default: null },
 	//If deleteMoviesRole = null, allow only admins delete. = "all" then remove restrictions. If specific role then admins + role
 });
+const Polls = new Schema({
+    guildID: { type: String, index: true},
+    messageID: { type: String, index: true },
+    channelID: String,
+    votes: Object, // { key = index, value = { movieName, emoji, [voters] }}
+	endDateTime: Date,
+    ended: {
+        type: Boolean,
+        default: false
+    },
+	allowMultipleVotes: Boolean
+});
 const movieModel = mongoose.model("Movie", Movie);
 const setting = mongoose.model("Settings", Settings);
+const pollModel = mongoose.model("Polls", Polls);
 let main;
 
 if (!testing) {
@@ -59,15 +73,64 @@ mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true }
 
 function setMessage() {
 	client.user.setPresence({
-		activities: [{ name: `Reinvite me for slash cmds!`, type: ActivityType.Watching }],
+		activities: [{ name: `Polls wont crash anymore!`, type: ActivityType.Watching }],
 	});
 }
 
-client.once("ready", () => {
+client.once("ready", async () => {
 	//Every hour update activity to avoid getting it cleared.
 	setMessage();
 	setInterval(setMessage, 1000 * 60 * 60);
 	console.log("Ready!");
+
+	cron.schedule('* * * * *', () => {
+		pollModel.find({ ended: false, endDateTime: { $lte: moment() }})
+			.then(async (polls) => {
+				console.log("Polls to be ended", polls.length);
+				
+				polls.forEach(async poll => {
+					var ch = await client.channels.fetch(poll.channelID);
+					var msg = await ch.messages.fetch(poll.messageID);
+					let message = "";
+					const maxCount = Object.values(poll.votes).reduce((max, value) => Math.max(max, value.voters.length), 0);
+					const maxKeys = Object.keys(poll.votes).filter(key => poll.votes[key].voters.length === maxCount);
+
+					if (maxCount == 0) {
+						return await msg.reply("No votes were made, so no winner has been chosen.");
+					}
+
+					if (maxKeys.length > 1) {
+						message = "A tie was found! A random winner from them will be chosen. ";
+					}
+
+					var movieID = poll.votes[maxKeys[0]].movieID;
+
+					movieModel.findOne({ movieID: movieID }).then(async (movie) => {
+						var settings = await getSettings(poll.guildID);
+
+						if (settings.autoViewed) {
+							movie.viewed = true;
+							movie.viewedDate = new Date();
+
+							await movie.save();
+						}
+						await msg.reply({ embeds: [main.buildSingleMovieEmbed(movie, message + `A winner has been chosen! ${movie.name} with ${maxCount} votes.`)] });
+						poll.ended = true;
+
+						return await poll.save();
+					}).catch(async (err) => {
+						console.log("Error in posting poll results.", err);
+						var ch = await client.channels.fetch(poll.channelID);
+
+						await poll.deleteOne();
+						await ch.send("Could not post poll results due to some issue.");
+					});
+				});
+			})
+			.catch(async (err) => {
+				console.err(err, "CRON");
+			})
+	});
 });
 
 function guildCreateError(err) {
@@ -89,6 +152,7 @@ client.on("guildCreate", async function (guild) {
 
 client.on("guildDelete", function (guild) {
 	//Whenever the bot is removed from a guild, we remove all related data.
+	pollModel.deleteMany({guildID: guild.id}).catch(handleError);
 	movieModel.deleteMany({ guildID: guild.id }).catch(handleError);
 	setting.deleteMany({ guildID: guild.id }).catch(handleError);
 });
@@ -99,6 +163,50 @@ for (const file of commandFiles) {
 
 	client.commands.set(command.data.name, command);
 }
+
+client.on("interactionCreate", async(interaction) => {
+	if (!interaction.isButton()) return;
+
+	const poll = await pollModel.findOne({ messageID: interaction.message.id });
+
+	if (!poll) return;
+	if (poll.ended) {
+		return await interaction.reply({ content: "Poll has already ended.", ephemeral: true });
+	}
+
+	await interaction.deferUpdate();
+	
+	if (!poll.allowMultipleVotes) {
+		Object.keys(poll.votes)
+			.filter(key => key != interaction.customId && poll.votes[key].voters.includes(interaction.user.id))
+			.forEach(idx => poll.votes[idx].voters = poll.votes[idx].voters.filter(x => x != interaction.user.id));		
+	}
+
+	if (poll.votes[interaction.customId].voters.includes(interaction.user.id)) {
+		poll.votes[interaction.customId].voters = poll.votes[interaction.customId].voters.filter(x => x != interaction.user.id);
+	} else {
+		poll.votes[interaction.customId].voters.push(interaction.user.id);
+	}
+
+	poll.markModified("votes");
+
+	var comps = interaction.message.components.map(row => {
+		row.components = row.components?.map(v => {
+			return new ButtonBuilder()
+				.setLabel(`${poll.votes[v.customId].voters.length || 0}`)
+				.setCustomId(v.customId)
+				.setStyle(v.style)
+				.setEmoji(v.emoji)
+		});
+
+		return row;
+	});
+
+    await interaction.message.edit({
+        components: comps
+    });
+	await poll.save();
+});
 
 client.on("interactionCreate", async (interaction) => {
 	if (!interaction.isChatInputCommand()) return;
@@ -135,9 +243,9 @@ client.on("interactionCreate", async (interaction) => {
 			});
 	}
 
-	if (interaction.guild && !interaction.channel.permissionsFor(client.application.id).has(["AddReactions", "ManageMessages", "EmbedLinks", "ReadMessageHistory"])) {
+	if (interaction.guild && !interaction.channel.permissionsFor(client.application.id).has(["AddReactions", "ManageMessages", "EmbedLinks", "ReadMessageHistory", "ViewChannel"])) {
 		return await interaction.reply(
-			"Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY\nAdmins may need to adjust the hierarchy of permissions."
+			"Bot cannot correctly run commands in this channel. \nPlease update bots permissions for this channel to include: \nSEND MESSAGES, ADD REACTION, MANAGE MESSAGES, EMBED LINKS, READ MESSAGE HISTORY, VIEW CHANNEL\nAdmins may need to adjust the hierarchy of permissions."
 		);
 	}
 
@@ -161,6 +269,7 @@ function searchMovieDatabaseObject(guildID, movie, hideViewed) {
 		guildID: guildID,
 	};
 
+	// If Movie is array, do regex for every item
 	if (isImdbSearch) {
 		searchObj.imdbID = movie.match(/tt[0-9]{7,8}/g);
 	} else if (movie) {
@@ -275,5 +384,5 @@ main = {
 	setting,
 	getRandomFromArray,
 	client,
-	maxPollTime, //Testing 24 hour polls on GCloud
+	pollModel
 };
