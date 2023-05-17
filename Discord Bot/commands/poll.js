@@ -80,10 +80,13 @@ module.exports = {
 					} else {
 						const row1 = new ActionRowBuilder().addComponents(voteMenuOptions.slice(0, 5));
 						const components = [row1];
+						const endTime = moment().add(pollTimeInMinutes, 'm').set('ms', 0)
 
 						if (voteMenuOptions.slice(5, 10).length != 0){
 							components.push(new ActionRowBuilder().addComponents(voteMenuOptions.slice(5, 10)))
 						}
+
+						embeddedMessage.setFooter({ text: `Poll will end ${endTime.format('DD MMM YYYY HH:mm')} server time (PDT)` });
 
 						let pollMessage = await interaction.followUp({ 
 							embeds: [embeddedMessage], 
