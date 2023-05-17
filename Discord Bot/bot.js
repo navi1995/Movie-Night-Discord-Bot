@@ -112,7 +112,7 @@ client.once("ready", async () => {
 							var movieID = poll.votes[maxKeys[0]].movieID;
 
 							movieModel
-								.findOne({ movieID: movieID })
+								.findOne({ guildID: poll.guildID, movieID: movieID })
 								.then(async (movie) => {
 									var settings = await getSettings(poll.guildID);
 
