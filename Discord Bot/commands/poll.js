@@ -8,7 +8,7 @@ module.exports = {
 		.setDescription("Begins a poll with a random assortment of movies depending on length of setting for poll size.")
 		.addIntegerOption((option) => option.setName("size").setDescription("Number of movies included in the poll. Max is 10"))
 		.addStringOption((option) => option.setName("message").setDescription("Sets the message that will be sent for the poll."))
-		.addIntegerOption((option) => option.setName("time").setDescription("How long in seconds the poll will last. Max poll times may be in effect to help server load."))
+		.addIntegerOption((option) => option.setName("time").setDescription("How long in MINUTES the poll will last. Default is 60"))
 		.addStringOption((option) =>
 			option.setName("multiplevotes").setDescription("Whether or not votes for multiple options are allowed or not.").addChoices({ name: "Enforce one vote per member", value: "disallow" }, { name: "Allow Multiple", value: "allow" })
 		),
@@ -20,9 +20,9 @@ module.exports = {
 		let description = "";
 		let searchOptions = main.searchMovieDatabaseObject(interaction.guild.id, "", true); //["300", "Interstellar", "Tissue"], true);//"", true);
 		let movieEmbed = new EmbedBuilder().setTitle("Poll has begun!").setColor("#6441a3");
-		let movieArray = [];
+		let movieCount = 0;
 		const pollSize = (interaction.options.getInteger("size") || 5) <= 10 ? interaction.options.getInteger("size") || 5 : 10;
-		const pollTimeInMs = ((interaction.options.getInteger("time") || 60000) <= main.maxPollTime ? interaction.options.getInteger("time") || 60000 : main.maxPollTime) * 1000;
+		const pollTimeInMinutes = interaction.options.getInteger("time") || 60
 		const pollAnnounceMessage = interaction.options.getString("message") || "Poll has begun!";
 		const multipleVotes = interaction.options.getString("multiplevotes") || "disallow";
 		//Check this logic
@@ -31,13 +31,7 @@ module.exports = {
 			return await interaction.editReply(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : "a set role using the `pollrole` command."}`);
 		}
 
-		await interaction.editReply(
-			pollTimeInMs >= main.maxPollTime * 1000
-				? pollAnnounceMessage +
-						`\n (PLEASE NOTE, POLL TIME IS CURRENTLY BEING LIMITED TO ${secondsToHms(main.maxPollTime)} DUE TO SERVER COSTS AND ISSUES. Developers are constantly trying to increase this while also trying to keep server stability.)`
-				: pollAnnounceMessage,
-			{ allowedMentions: {} }
-		);
+		await interaction.editReply(pollAnnounceMessage);
 
 		//2048 limit
 		await main.movieModel
@@ -52,15 +46,16 @@ module.exports = {
 					totalCount = movies.length;
 
 					for (let movie of movies) {
-						let stringConcat = `**[${emojis[movieArray.length + 1]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
+						let stringConcat = `**[${emojis[movieCount + 1]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
 						voteMenuOptions.push(
 							new ButtonBuilder()
 								.setLabel("0")
-								.setCustomId(`${movieArray.length + 1}`)
+								.setCustomId(`${movieCount + 1}`)
 								.setStyle(ButtonStyle.Secondary)
-								.setEmoji(emojis[movieArray.length + 1])
+								.setEmoji(emojis[movieCount + 1])
 						);
-						votes[movieArray.length + 1] = { voters: [], movieID: movie.movieID, movieName: movie.name };
+						votes[movieCount + 1] = { voters: [], movieID: movie.movieID, movieName: movie.name };
+
 						//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
 						if (description.length + stringConcat.length > 2048) {
 							movieEmbed.setDescription(description);
@@ -70,7 +65,7 @@ module.exports = {
 						}
 
 						description += stringConcat;
-						movieArray.push(movie); //Store position of movie in list.
+						movieCount++; //Store position of movie in list.
 					}
 				}
 
@@ -83,7 +78,6 @@ module.exports = {
 					if (i != embeddedMessages.length - 1) {
 						await interaction.followUp({ embeds: [embeddedMessage] });
 					} else {
-						// This needs to be an array if > 5 options
 						const row1 = new ActionRowBuilder().addComponents(voteMenuOptions.slice(0, 5));
 						const components = [row1];
 
@@ -101,72 +95,18 @@ module.exports = {
 							messageID: pollMessage.id,
 							channelID: pollMessage.channelId,
 							votes: votes,
-							endDateTime: moment().add(pollTimeInMs, 'ms'),
+							endDateTime: moment().add(pollTimeInMinutes, 'm').set('ms', 0),
 							ended: false,
 							allowMultipleVotes: multipleVotes == "allow"
 						});
-
-						// 	collector.on("end", async () => {
-						// 		console.log("Poll end.  GuildID: " + message.guild.id + " " + new Date());
-						// 		//Refetch message due to discord.js caching.
-						// 		await message
-						// 			.fetch()
-						// 			.then(async (updatedMessage) => {
-						// 				const highestReact = highestValidReactions.reduce((p, c) => (p.count > c.count ? p : c));
-
-						// 				if (!highestReact || !highestReact.emoji) {
-						// 					console.error("Could not collect reactions");
-						// 					console.error(emojiArray);
-						// 					console.error(highestReact);
-						// 					console.error(highestValidReactions);
-						// 					if (highestReact) console.error(highestReact.emoji);
-						// 					return await interaction.followUp("Bot could not collect reactions. Please ensure the bot has permissions in this channel to ADD REACTIONS and MANAGE MESSAGES.");
-						// 				}
-
-						// 				let winner = movieArray[emojiArray.indexOf(highestReact.emoji.name)];
-
-						// 				if (highestReact.count <= 1) {
-						// 					return await interaction.followUp("No votes were cast, so no movie has been chosen.");
-						// 				}
-
-						// 				//If auto viewed is set, update movie to be entered into the VIEWED list.
-						// 				if (settings.autoViewed) {
-						// 					await main.movieModel
-						// 						.updateOne({ guildID: message.guild.id, movieID: winner.movieID }, { viewed: true, viewedDate: new Date() })
-						// 						.then(async () => {
-						// 							winner.viewed = true;
-						// 							winner.viewedDate = new Date();
-						// 						})
-						// 						.catch(async () => {
-						// 							return await interaction.followUp("Something went wrong, could not get winner. Try removing auto-view setting.");
-						// 						});
-						// 				}
-
-						// 				return await interaction.followUp({ embeds: [main.buildSingleMovieEmbed(winner, `A winner has been chosen! ${winner.name} with ${highestReact.count - 1} votes.`)] });
-						// 			})
-						// 			.catch(function () {
-						// 				console.log(`Poll was deleted. guild: ${message.guild.id}, channel: ${message.channel.id}, message ID: ${message.id}`);
-						// 			});
-						// 	});
-						// });
 					}
 				}
+
+				return;
 			})
 			.catch(async (err) => {
 				console.log(err);
-				return await interaction.followUp("Could not  return list of movies, an error occured.");
+				return await interaction.followUp("Could not create a poll, something went wrong.");
 			});
 	},
 };
-
-function secondsToHms(d) {
-	d = Number(d);
-	var h = Math.floor(d / 3600);
-	var m = Math.floor((d % 3600) / 60);
-	var s = Math.floor((d % 3600) % 60);
-
-	var hDisplay = h > 0 ? h + (h == 1 ? " hour" : " hours") : "";
-	var mDisplay = m > 0 ? m + (m == 1 ? " minute" : " minutes") : "";
-	var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
-	return [hDisplay, mDisplay, sDisplay].filter(Boolean).join(", ");
-}
