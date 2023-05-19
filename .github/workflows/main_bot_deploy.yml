@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - master
-  workflow_dispatch:
-    inputs:
-      deploy-manually:
-        description: 'Deploy manually'
-        required: false
+  workflow_run:
+    workflows:
+      - Manual Review
+    types:
+      - completed
 
 jobs:
   check-version:
@@ -27,48 +27,58 @@ jobs:
           diff-search: true
           file-name: 'Discord Bot/package.json'
 
-      - name: Log when changed
+      - name: Log changes
         if: steps.check.outputs.changed == 'true'
-        run: 'echo "Version change found in commit ${{ steps.check.outputs.commit }}! New version: ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})"'
-      
-      - name: Log when unchanged
-        if: steps.check.outputs.changed == 'false'
-        run: 'echo "No version change :/"'
+        run: 'echo "Update in version: ${{steps.check.outputs.changed}}"'
 
-  deploy:
+  deploy_if_updated:
     needs: check-version
     runs-on: ubuntu-latest
-    if: needs.check-version.outputs.changed == 'true' || github.event.inputs.deploy-manually == 'true'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    if: needs.check-version.outputs.changed == 'true'
 
-      - id: 'auth'
-        uses: 'google-github-actions/auth@v1'
-        with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+    steps: *deployment_steps
 
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+  manual_deploy:
+    needs: check-version
+    runs-on: ubuntu-latest
+    environment: Production
+    if: needs.check-version.outputs.changed != 'true'
 
-      - name: Configure Google Cloud SDK
-        run: |
-          echo "${{ secrets.GCP_SA_KEY }}" > credentials.json
-          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-          gcloud config set compute/zone ${{ secrets.GCP_COMPUTE_ZONE }}
+    steps: *deployment_steps
+    
+#Reusable deployment step
+deployment_steps: &deployment_steps
+  - name: Checkout code
+    uses: actions/checkout@v3
 
-      - name: SSH to Compute Engine instance
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.GCP_INSTANCE_IP }}
-          username: ${{ secrets.GCP_INSTANCE_USERNAME }}
-          key: ${{ secrets.GCP_SSH_KEY }}
+  - name: Test
+    run: 'echo deployed'
+  # - id: 'auth'
+  #   uses: 'google-github-actions/auth@v1'
+  #   with:
+  #     credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-          # Commands to execute on the instance
-          script: |
-            cd Movie-Night-Discord-Bot/Discord\ Bot/
-            git pull origin master --rebase --autostash
-            npm install --production
-            pm2 restart index.js
+  # - name: Set up Google Cloud SDK
+  #   uses: google-github-actions/setup-gcloud@v1
+  #   with:
+  #     project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+  # - name: Configure Google Cloud SDK
+  #   run: |
+  #     echo "${{ secrets.GCP_SA_KEY }}" > credentials.json
+  #     gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+  #     gcloud config set compute/zone ${{ secrets.GCP_COMPUTE_ZONE }}
+
+  # - name: SSH to Compute Engine instance
+  #   uses: appleboy/ssh-action@master
+  #   with:
+  #     host: ${{ secrets.GCP_INSTANCE_IP }}
+  #     username: ${{ secrets.GCP_INSTANCE_USERNAME }}
+  #     key: ${{ secrets.GCP_SSH_KEY }}
+
+  #     # Commands to execute on the instance
+  #     script: |
+  #       cd Movie-Night-Discord-Bot/Discord\ Bot/
+  #       git pull origin master --rebase --autostash
+  #       npm install --production
+  #       pm2 restart index.js
