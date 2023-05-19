@@ -31,7 +31,7 @@ jobs:
   deploy:
     needs: check-version
     runs-on: ubuntu-latest
-    if: needs.check_version.check.outputs.changed == 'true'
+    if: needs.check_version.outputs.changed == 'true'
 
     steps:
       - name: Checkout code
