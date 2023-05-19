@@ -1,6 +1,6 @@
 {
   "name": "movie-night-bot",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Discord bot for commands related to organising movie nights!",
   "main": "index.js",
   "scripts": {
