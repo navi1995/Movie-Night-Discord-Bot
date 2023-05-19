@@ -19,7 +19,7 @@ jobs:
       - name: Get previous app version
         id: get-previous-version
         run: |
-          echo "prev_version=$(git show HEAD:'Discord Bot/package.json' | grep -o '"version": "[^"]*' | awk -F'"' '{print $4}'" >> $GITHUB_ENV
+          echo "prev_version=$(git show HEAD:'Discord Bot/package.json' | grep -o '"version": "[^"]*' | awk -F'"' '{print $4}')" >> $GITHUB_ENV
 
       - name: Set new app version
         id: set-version
