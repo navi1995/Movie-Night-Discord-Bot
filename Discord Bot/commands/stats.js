@@ -6,8 +6,8 @@ module.exports = {
 		.setDescription("Gets number of guilds and members the bot is in"),
 	async execute(interaction, main) {
 		const promises = [
-			main.client.cluster.fetchClientValues('guilds.cache.size'),
-			main.client.cluster.broadcastEval(c => c.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)),
+			main.client.shard.fetchClientValues('guilds.cache.size'),
+			main.client.shard.broadcastEval(c => c.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)),
 		];
 		
 		return Promise.all(promises)

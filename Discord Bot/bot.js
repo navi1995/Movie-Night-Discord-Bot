@@ -1,15 +1,15 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const axios = require("axios");
-const { ClusterClient, getInfo } = require('discord-hybrid-sharding');
+// const { ClusterClient, getInfo } = require('discord-hybrid-sharding');
 const { Client, ButtonBuilder, GatewayIntentBits, Collection, EmbedBuilder, ActivityType } = require("discord.js");
 const moment = require("moment");
 const mongoose = require("mongoose");
 const cron = require("node-cron");
 const { token, movieDbAPI, mongoLogin, topggAPI, testing } = require("./config.json");
 const client = new Client({
-	shards: getInfo().SHARD_LIST, // An array of shards that will get spawned
-    shardCount: getInfo().TOTAL_SHARDS, // Total number of shards
+	// shards: getInfo().SHARD_LIST, // An array of shards that will get spawned
+    // shardCount: getInfo().TOTAL_SHARDS, // Total number of shards
 	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessageReactions],
 	allowedMentions: { parse: ["users", "roles"] }, // allowedMentions to prevent unintended role and everyone pings
 });
@@ -63,15 +63,15 @@ const setting = mongoose.model("Settings", Settings);
 const pollModel = mongoose.model("Polls", Polls);
 let main;
 
-// if (!testing) {
-// 	const poster = AutoPoster(topggAPI, client);
+if (!testing) {
+	const poster = AutoPoster(topggAPI, client);
 
-// 	poster.on("error", (err) => {
-// 		console.error(err);
-// 	});
-// }
+	poster.on("error", (err) => {
+		console.error(err);
+	});
+}
 
-client.cluster = new ClusterClient(client);
+// client.cluster = new ClusterClient(client);
 client.commands = new Collection();
 mongoose.connect(mongoLogin, { useNewUrlParser: true, useUnifiedTopology: true });
 
