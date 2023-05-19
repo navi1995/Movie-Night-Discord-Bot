@@ -44,18 +44,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
 
       - name: Configure Google Cloud SDK
         run: |
           echo "${{ secrets.GCP_SA_KEY }}" > credentials.json
           gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
           gcloud config set compute/zone ${{ secrets.GCP_COMPUTE_ZONE }}
-          gcloud auth activate-service-account --key-file=credentials.json
 
       - name: SSH to Compute Engine instance
         uses: appleboy/ssh-action@master
