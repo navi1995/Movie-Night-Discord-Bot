@@ -16,12 +16,8 @@ jobs:
       - name: Determine version change
         id: version-check
         run: |
-          CHANGED=$(git diff --name-only HEAD^ HEAD)
-          if [[ $CHANGED =~ "package.json" ]]; then
-            echo "::set-output name=version_changed::true"
-          else
-            echo "::set-output name=version_changed::false"
-          fi
+          git log --oneline --graph --decorate --all -n 10
+          git diff --name-only HEAD^ HEAD
 
   deploy:
     needs: check-version
