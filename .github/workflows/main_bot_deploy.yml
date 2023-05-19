@@ -9,40 +9,44 @@ jobs:
   check-version:
     runs-on: ubuntu-latest
 
+    outputs:
+      should_deploy: ${{ steps.compare-versions.outputs.should_deploy }}
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Get previous app version
         id: get-previous-version
         run: |
-          echo "::set-output name=prev_version::$(git show HEAD:'Discord Bot/package.json' | awk '/\"version\":/{print $2}' | tr -d '",')"
+          echo "prev_version=$(git show HEAD:'Discord Bot/package.json' | awk '/\"version\":/{print $2}' | tr -d '",')" >> $GITHUB_ENV
 
       - name: Set new app version
         id: set-version
         run: |
-          echo "::set-output name=version::$(node -p "require('./Discord Bot/package.json').version")"
+          echo "version=$(node -p "require('./Discord Bot/package.json').version")" >> $GITHUB_ENV
 
       - name: Compare app versions
         id: compare-versions
         run: |
-          current_version="${{ needs.get-previous-version.outputs.prev_version }}"
-          new_version="${{ needs.set-version.outputs.version }}"
+          current_version="${{ env.prev_version }}"
+          new_version="${{ env.version }}"
           if [ "$current_version" != "$new_version" ]; then
             echo "App version has increased. Proceeding with deployment..."
-            echo "::set-output name=should_deploy::true"
+            echo "should_deploy=true" >> $GITHUB_ENV
           else
             echo "App version has not changed. Skipping deployment..."
-            echo "::set-output name=should_deploy::false"
+            echo "should_deploy=false" >> $GITHUB_ENV
           fi
 
   deploy:
     needs: check-version
+    if: ${{ needs.check-version.outputs.should_deploy == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
