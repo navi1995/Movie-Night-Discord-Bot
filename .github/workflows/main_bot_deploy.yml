@@ -13,33 +13,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get previous app version
-        id: get-previous-version
+      - name: Determine version change
+        id: version-check
         run: |
-          echo "::set-output name=prev_version::$(git show HEAD:'Discord Bot/package.json' | awk '/\"version\":/{print $2}' | tr -d '",')"
-
-      - name: Set new app version
-        id: set-version
-        run: |
-          echo "::set-output name=version::$(node -p "require('./Discord Bot/package.json').version")"
-
-      - name: Compare app versions
-        id: compare-versions
-        run: |
-          current_version="${{ needs.get-previous-version.outputs.prev_version }}"
-          new_version="${{ needs.set-version.outputs.version }}"
-          if [ "$current_version" != "$new_version" ]; then
-            echo "App version has increased. Proceeding with deployment..."
-            echo "::set-output name=should_deploy::true"
+          CHANGED=$(git diff --name-only HEAD^ HEAD)
+          if [[ $CHANGED =~ "package.json" ]]; then
+            echo "::set-output name=version_changed::true"
           else
-            echo "App version has not changed. Skipping deployment..."
-            echo "::set-output name=should_deploy::false"
+            echo "::set-output name=version_changed::false"
           fi
 
   deploy:
     needs: check-version
-    if: ${{ needs.check-version.outputs.should_deploy == 'true' }}
     runs-on: ubuntu-latest
+    if: needs.check_version.outputs.version_changed == 'true'
 
     steps:
       - name: Checkout code
