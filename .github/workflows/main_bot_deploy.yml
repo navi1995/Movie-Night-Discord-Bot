@@ -16,8 +16,8 @@ jobs:
       - name: Determine version change
         id: version-check
         run: |
-          PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
-          CHANGED=$(git diff --name-only $PREVIOUS_COMMIT HEAD)
+          PREVIOUS_COMMIT=$(git rev-parse HEAD)
+          CHANGED=$(git diff --name-only $PREVIOUS_COMMIT HEAD --)
           if [[ $CHANGED =~ "package.json" ]]; then
             echo "::set-output name=version_changed::true"
           else
