@@ -5,8 +5,7 @@ const { ShardingManager } = require("discord.js");
 const manager = new ShardingManager('./bot.js', {
 	token,
 	mode: "worker",
-	respawn: true,
-	totalShards: 2
+	respawn: true
  });
 // const manager = new ClusterManager("./bot.js", {
 // 	totalShards: "auto", // or 'auto
