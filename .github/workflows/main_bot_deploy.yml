@@ -3,7 +3,7 @@ name: Deploy to Google Compute Engine
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   check-version:

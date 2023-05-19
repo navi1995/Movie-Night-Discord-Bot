@@ -8,10 +8,8 @@ const { ClusterManager } = require("discord-hybrid-sharding");
 // 	totalShards: 2
 //  });
 const manager = new ClusterManager("./bot.js", {
-	totalShards: "auto", // or 'auto'
-	/// Check below for more options
+	totalShards: "auto", // or 'auto
 	shardsPerClusters: 5,
-	// totalClusters: 2,
 	mode: "worker", // you can also choose "worker"
 	token: token
 });
