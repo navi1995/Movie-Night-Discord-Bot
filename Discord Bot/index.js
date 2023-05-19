@@ -11,7 +11,7 @@ const manager = new ClusterManager("./bot.js", {
 	totalShards: "auto", // or 'auto'
 	/// Check below for more options
 	shardsPerClusters: 5,
-	totalClusters: 2,
+	// totalClusters: 2,
 	mode: "worker", // you can also choose "worker"
 	token: token
 });
