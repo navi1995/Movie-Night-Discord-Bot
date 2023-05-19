@@ -1,0 +1,72 @@
+name: Deploy to Google Compute Engine
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get previous app version
+        id: get-previous-version
+        run: |
+          echo "::set-output name=prev_version::$(git show HEAD:'Discord Bot/package.json' | awk '/\"version\":/{print $2}' | tr -d '",')"
+
+      - name: Set new app version
+        id: set-version
+        run: |
+          echo "::set-output name=version::$(node -p "require('./Discord Bot/package.json').version")"
+
+      - name: Compare app versions
+        id: compare-versions
+        run: |
+          current_version="${{ needs.get-previous-version.outputs.prev_version }}"
+          new_version="${{ needs.set-version.outputs.version }}"
+          if [ "$current_version" != "$new_version" ]; then
+            echo "App version has increased. Proceeding with deployment..."
+            echo "::set-output name=should_deploy::true"
+          else
+            echo "App version has not changed. Skipping deployment..."
+            echo "::set-output name=should_deploy::false"
+          fi
+
+  deploy:
+    needs: check-version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.4.0
+        with:
+          version: '343.0.0'
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Google Cloud SDK
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" > credentials.json
+          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+          gcloud config set compute/zone ${{ secrets.GCP_COMPUTE_ZONE }}
+          gcloud auth activate-service-account --key-file=credentials.json
+
+      - name: SSH to Compute Engine instance
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.GCP_INSTANCE_IP }}
+          username: ${{ secrets.GCP_INSTANCE_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+
+          # Commands to execute on the instance
+          script: |
+            cd Movie-Night-Discord-Bot/Discord\ Bot/
+            git pull origin main --rebase --autostash
+            npm install --production
+            pm2 restart index.js
