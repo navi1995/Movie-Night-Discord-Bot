@@ -12,6 +12,7 @@ on:
 
 jobs:
   check-version:
+    name: Check If Version Bumped
     runs-on: ubuntu-latest
     outputs:
       changed: ${{ steps.check.outputs.changed }}
@@ -32,6 +33,7 @@ jobs:
         run: 'echo "Update in version: ${{steps.check.outputs.changed}}"'
 
   deploy_if_updated:
+    name: Deploy to Prod
     needs: check-version
     if: needs.check-version.outputs.changed == 'true'
     uses: ./.github/workflows/deployment_steps.yml
@@ -39,6 +41,7 @@ jobs:
       environment: Automated
 
   manual_deploy:
+    name: Manual Deployment if no version bump
     needs: check-version
     if: needs.check-version.outputs.changed != 'true'
     uses: ./.github/workflows/deployment_steps.yml
