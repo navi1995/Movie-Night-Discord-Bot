@@ -1,4 +1,5 @@
-const { token } = require("./config.json");
+const { token, topggAPI, testing } = require("./config.json");
+const { AutoPoster } = require('topgg-autoposter')
 const { ClusterManager } = require("discord-hybrid-sharding");
 // const { ShardingManager } = require("discord.js");
 // const manager = new ShardingManager('./bot.js', {
@@ -13,6 +14,14 @@ const manager = new ClusterManager("./bot.js", {
 	mode: "worker", // you can also choose "worker"
 	token: token
 });
+
+if (!testing) {
+	const poster = AutoPoster(topggAPI, manager);
+
+	poster.on("error", (err) => {
+		console.error(err);
+	});
+}
 
 manager.on("clusterCreate", (cluster) => console.log(`Launched Cluster ${cluster.id}`));
 manager.spawn({ timeout: -1 });

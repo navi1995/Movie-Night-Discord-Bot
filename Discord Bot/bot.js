@@ -63,13 +63,13 @@ const setting = mongoose.model("Settings", Settings);
 const pollModel = mongoose.model("Polls", Polls);
 let main;
 
-if (!testing) {
-	const poster = AutoPoster(topggAPI, client);
+// if (!testing) {
+// 	const poster = AutoPoster(topggAPI, client);
 
-	poster.on("error", (err) => {
-		console.error(err);
-	});
-}
+// 	poster.on("error", (err) => {
+// 		console.error(err);
+// 	});
+// }
 
 client.cluster = new ClusterClient(client);
 client.commands = new Collection();
