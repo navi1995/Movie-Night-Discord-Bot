@@ -4,10 +4,15 @@ on:
   push:
     branches:
       - master
+  workflow_run:
+    workflows: 
+      - "Deploy to Google Compute Engine"
+    types:
+      - completed
   workflow_dispatch:
     inputs:
-      deploy-manually:
-        description: 'Deploy manually'
+      trigger-job:
+        description: 'Trigger Job'
         required: false
 
 jobs:
@@ -38,7 +43,7 @@ jobs:
   deploy:
     needs: check-version
     runs-on: ubuntu-latest
-    if: needs.check-version.outputs.changed == 'true' || github.event.inputs.deploy-manually == 'true'
+    if: needs.check-version.outputs.changed == 'true' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.name == 'Deploy to Google Compute Engine')
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
