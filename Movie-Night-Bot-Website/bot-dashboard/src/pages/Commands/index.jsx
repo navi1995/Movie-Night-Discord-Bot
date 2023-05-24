@@ -1,11 +1,11 @@
 import React from 'react';
-import { Container, Jumbotron, Table } from 'react-bootstrap';
+import { Container, Table } from 'react-bootstrap';
 import { FooterComponent } from '../../components/footer';
 
 export function Commands(props) {
 	return (
 		<div className='commands-page'>
-			<Jumbotron style={{ backgroundColor: 'rgb(44, 41, 41)', color: 'white', paddingBottom: '100px' }} className='text-center'>
+			<div style={{ backgroundColor: 'rgb(44, 41, 41)', color: 'white', paddingBottom: '100px' }} className='jumbotron text-center'>
 				<h1 className='display-1'>
 					Movie Night Bot <br />
 					For Discord
@@ -15,7 +15,7 @@ export function Commands(props) {
 					Commands
 				</h3>
 				<br />
-			</Jumbotron>
+			</div>
 			<Container>
 				<h3>The default prefix is --</h3>
 				<h6>Login to dashboard and hover over guild to check prefix.</h6>

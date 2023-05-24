@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+const axios = require('axios');
 const DISCORD_API = 'http://discord.com/api/v6';
 const User = require('../database/schemas/User');
 const GuildCount = require('../database/schemas/GuildCount');
@@ -12,8 +12,7 @@ async function getUserGuilds(discordID) {
 
 	const decryptedToken = decrypt(user.get('accessToken')).toString(CryptoJS.enc.Utf8);
 	
-	return fetch(`${DISCORD_API}/users/@me/guilds`, {
-		method: 'GET',
+	return axios.get(`${DISCORD_API}/users/@me/guilds`, {
 		headers: {
 			Authorization: `Bearer ${decryptedToken}`
 		}
@@ -23,12 +22,10 @@ async function getUserGuilds(discordID) {
 			
 			return user.get('guilds');
 		} else {
-			return response.json(); 
+			return response.data; 
 		}		
 	}).then(function(data) {
-		User.updateOne({ discordID }, { guilds: data }, function(err) {
-			console.log(err);
-		});
+		User.updateOne({ discordID }, { guilds: data }).catch(() => {});
 		
 		return data;
 	});
@@ -37,8 +34,7 @@ async function getUserGuilds(discordID) {
 async function getGuildCount() {
 	const guildCount = await GuildCount.findOne({});
 
-	return fetch('https://top.gg/api/bots/709271563110973451/stats', {
-		method: 'GET',
+	return axios.get('https://top.gg/api/bots/709271563110973451/stats', {
 		headers: {
 			'Authorization': process.env.TOP_API
 		}
@@ -48,14 +44,12 @@ async function getGuildCount() {
 			
 			return guildCount.get('count');
 		} else {
-			return response.json(); 
+			return response.data; 
 		}		
 	}).then(function(data) {
 		const count = (typeof data == 'number') ? data : data.server_count;
 
-		GuildCount.findOneAndUpdate({}, { count: count }, {upsert: true}, function(err) {
-			console.log(err);
-		});
+		GuildCount.findOneAndUpdate({}, { count: count }, {upsert: true}).catch(() => {});
 		
 		return count;
 	});

@@ -25,6 +25,10 @@ html {
   background-position: center;
   border-bottom: 1px solid #03a9f4;
   border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 2rem;
 }
 
 @keyframes slide {
@@ -148,6 +152,10 @@ h5 + p {
   border-color: #03a9f4;
   color: #fff;
   background-color: #03a9f4;
+}
+
+.ml-auto {
+  margin-left: auto;
 }
 
 @media (min-width: 1200px) {

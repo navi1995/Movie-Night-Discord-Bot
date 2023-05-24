@@ -15,7 +15,7 @@ const MovieSchema = new mongoose.Schema({
 	submittedBy: String,
 	submitted: { type: Date, default: Date.now },
 	viewed: { type: Boolean, default: false },
-	viewedDate: { type: Date, default: null }
+	viewedDate: { type: Date, default: null },
 });
 
 module.exports = mongoose.model('Movie', MovieSchema);

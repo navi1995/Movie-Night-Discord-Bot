@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, CardGroup, Card, Button, Row, Col, Container, Jumbotron } from 'react-bootstrap';
+import { Image, CardGroup, Card, Button, Row, Col, Container } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList, faListOl, faRandom,  faCog, faCheckSquare, faBullhorn, faEye, faTrophy, faBrush } from '@fortawesome/free-solid-svg-icons';
 import { faThumbsUp } from '@fortawesome/free-regular-svg-icons';
@@ -21,7 +21,7 @@ export function Homepage(props) {
 	}, []);
 	return (
 		<div>
-			<Jumbotron style={{ backgroundColor: 'rgb(44, 41, 41)', color: 'white', marginBottom: '-30px', paddingBottom: '100px' }} className='text-center'>
+			<div style={{ backgroundColor: 'rgb(44, 41, 41)', color: 'white', marginBottom: '-30px', paddingBottom: '100px !important'}} className='jumbotron text-center'>
 				<h1 className='display-1'>
 					Movie Night Bot <br />
 					For Discord
@@ -31,10 +31,10 @@ export function Homepage(props) {
 					Used in <b><CountUp start={3500} end={serverCount} duration={2} /></b> servers
 				</h3>
 				<br />
-				<Button href='https://discord.com/api/oauth2/authorize?client_id=709271563110973451&permissions=2147560512&scope=applications.commands%20bot' target='_blank' rel='noopener noreferrer' variant='primary' size='lg'>
+				<Button href='https://discord.com/api/oauth2/authorize?client_id=709271563110973451&permissions=2147560512&scope=applications.commands%20bot' target='_blank' rel='noopener noreferrer' variant='primary' size='lg' style={{ width: '400px', marginLeft: 'auto', marginRight: 'auto'}}>
 					ADD TO DISCORD <FontAwesomeIcon icon={faDiscord} />
 				</Button>
-			</Jumbotron>
+			</div>
 			<Container>
 				<CardGroup className='text-center Box-Shadow'>
 					<Card>
