@@ -27,7 +27,7 @@ app.use(session({
 	store: MongoStore.create({ mongoUrl: process.env.MONGO_LOGIN })
 }));
 app.use(cors({
-	origin: ['http://localhost:3000', 'http://localhost:3000/'],
+	origin: ['*'],
 	credentials: true
 }));
 app.use(passport.initialize());
