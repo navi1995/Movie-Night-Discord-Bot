@@ -23,7 +23,7 @@ export function FooterComponent(props) {
 							</h5>
 						</a>
 						<a href='https://ko-fi.com/navijador' target='_blank' rel='noopener noreferrer'>Support the Dev! https://ko-fi.com/navijador</a>
-						<div>© 2020 Movie Night Bot for Discord. Created by <a target='_blank' rel='noopener noreferrer' href='https://navijador.com'>Navi Jador</a></div>
+						<div>© 2023 Movie Night Bot for Discord. Created by <a target='_blank' rel='noopener noreferrer' href='https://navijador.com'>Navi Jador</a></div>
 					</div>
 				</Row>
 			</Container>

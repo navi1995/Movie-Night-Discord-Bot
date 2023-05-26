@@ -47,10 +47,10 @@ jobs:
           script: |
             cd /home/ec2-user/projects/Movie-Night-Discord-Bot
             git pull --rebase --autostash
-            cd /home/ec2-user/projects/Movie-Night-Discord-Bot/Movie-Night-Bot-Website/bot-dashboard/
-            npm ci --silent
-            sudo npm run build
             cd /home/ec2-user/projects/Movie-Night-Discord-Bot/Movie-Night-Bot-Website/backend/
-            npm ci --silent
+            npm install --production --silent
             pm2 restart app.js
+            cd /home/ec2-user/projects/Movie-Night-Discord-Bot/Movie-Night-Bot-Website/bot-dashboard/
+            npm install --production --silent
+            sudo npm run build
             sudo service nginx restart
