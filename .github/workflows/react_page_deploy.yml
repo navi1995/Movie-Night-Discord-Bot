@@ -1,0 +1,56 @@
+name: Deploy Frontend app to EC2
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  check-version:
+    name: Check If Version Bumped
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check if version has been updated
+        id: check
+        uses: EndBug/version-check@v2
+        with:
+          diff-search: true
+          file-name: 'Movie-Night-Bot-Website/bot-dashboard/package.json'
+
+      - name: Log changes
+        if: steps.check.outputs.changed == 'true'
+        run: 'echo "Update in version: ${{steps.check.outputs.changed}}"'
+
+  deploy_if_updated:
+    name: Deploy to Prod
+    runs-on: ubuntu-latest
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /home/ec2-user/projects/Movie-Night-Discord-Bot
+            git pull --rebase --autostash
+            cd Movie-Night-Discord-Bot/Movie-Night-Bot-Website/bot-dashboard/
+            npm ci --silent
+            npm run build
+            cd Movie-Night-Discord-Bot/Movie-Night-Bot-Website/backend/
+            npm ci --silent
+            pm2 restart app.js
+            sudo service nginx restart

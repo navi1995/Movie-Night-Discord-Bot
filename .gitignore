@@ -24,3 +24,6 @@ Movie-Night-Bot-Website/bot-dashboard/.env-build
 Movie-Night-Bot-Website/backend/database/.DS_Store
 Movie-Night-Bot-Website/.DS_Store
 config.json
+
+/.terraform/
+/commands.md

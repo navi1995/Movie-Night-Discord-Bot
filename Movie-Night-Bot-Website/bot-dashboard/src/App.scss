@@ -6,7 +6,9 @@ $card-bg: #36393f;
 $footer-bg: $card-bg;
 $font-color-primary: #fff;
 $font-color-secondary: #999999;
-$border-primary: #03a9f4;
+// $border-primary: #03a9f4;
+$border-primary: #f2872ecc;
+$button-hover: rgb(255 116 0);
 $glyph-primary: $border-primary;
 
 .navbar {
@@ -36,10 +38,14 @@ html {
 	background-position: center;
 	border-bottom: 1px solid $border-primary;
 	border-radius: 0;
-	display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin-bottom: 2rem;
+	// display: flex;
+    // flex-direction: column;
+    // justify-content: center;
+    // margin-bottom: 2rem;
+}
+
+.ml-auto {
+	margin-left: auto;
 }
 
 @keyframes slide {
@@ -163,10 +169,6 @@ h5 {
 	border-color: $glyph-primary;
 	color: $font-color-primary;
 	background-color: $glyph-primary;
-}
-
-.ml-auto {
-	margin-left: auto;
 }
 
 //Need media queries to adjust, to ensure we dont use % padding for small sizes.
@@ -358,7 +360,7 @@ h5 {
 
 .card:hover, .movie:hover {
 	.viewed-icon {
-		color: rgba(3, 169, 244, 1);
+		color: $button-hover;
 		transition: color 0.5s linear;
 		z-index: 3;
 	}
@@ -424,12 +426,26 @@ h5 {
 }
 
 .dropdown-menu {
-	display: block;
+	display: flex;
+	flex-direction: column;
 	visibility: hidden;
 	transform: translateY(-1em);
 	opacity: 0;
 	z-index: 1;
 	transition: all 0.3s ease-in-out 0s, visibility 0s linear 0.3s, z-index 0s linear 0.01s;
+
+	.dropdown-item {
+		display: flex;
+		
+		.guild-name {
+			flex-grow: 1;
+		} 
+
+		.invite-icon {
+			float: right;
+			margin-left: 15px;
+		}
+	}
 }
 
 .dropdown-menu.show {
@@ -450,25 +466,22 @@ h5 {
 	}
 }
 
+button.btn-primary:hover, a.btn-primary:hover {
+	background-color: $button-hover;
+	border-color: $border-primary;
+} 
+
 .toast.show {
 	background-color: #202225;
 }
 
 .commands-page {
-	table {
-		font-size: 16px;
-		font-weight:600;
+	.col h5 {
+		background-color: $border-primary;
+	}
 
-		td:nth-child(1) {
-			text-align: center;
-			line-height: 1.6;
-		}
-
-		td:nth-child(2) {
-			font-size: 16px;
-			line-height: 1.6;
-			vertical-align: middle;
-		}
+	.col .card {
+		background-color: #1d1f2cd1;
 	}
 }
 

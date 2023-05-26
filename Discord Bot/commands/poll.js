@@ -1,4 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { Movie, Poll } = require("../../Models/schema");
+const { testing } = require("./../config.json");
+const { buildAndPostListEmbed, getRandomFromArray, movieSearchOptionsForDb } = require("../helpers/helperFunctions");
 const moment = require("moment");
 const emojis = require("../emojis.json");
 
@@ -12,20 +15,16 @@ module.exports = {
 		.addStringOption((option) =>
 			option.setName("multiplevotes").setDescription("Whether or not votes for multiple options are allowed or not.").addChoices({ name: "Enforce one vote per member", value: "disallow" }, { name: "Allow Multiple", value: "allow" })
 		),
-	async execute(interaction, main, settings) {
-		let embeddedMessages = [];
+	async execute(interaction, settings) {
 		const voteMenuOptions = [];
 		let votes = {};
-		let totalCount = 0;
-		let description = "";
-		let searchOptions = main.searchMovieDatabaseObject(interaction.guild.id, "", true); //["300", "Interstellar", "Tissue"], true);//"", true);
-		let movieEmbed = new EmbedBuilder().setTitle("Poll has begun!").setColor("#6441a3");
-		let movieCount = 0;
+		let searchOptions = movieSearchOptionsForDb(interaction.guild.id, "", true); //["300", "Interstellar", "Tissue"], true);//"", true);
+		let movieCount = 1;
 		const pollSize = (interaction.options.getInteger("size") || 5) <= 10 ? interaction.options.getInteger("size") || 5 : 10;
-		const pollTimeInMinutes = interaction.options.getInteger("time") || 60
+		const pollTimeInMinutes = interaction.options.getInteger("time") || 60;
 		const pollAnnounceMessage = interaction.options.getString("message") || "Poll has begun!";
 		const multipleVotes = interaction.options.getString("multiplevotes") || "disallow";
-		//Check this logic
+
 		//Check if user has set a role for "Add" permissions, as only admins and this role will be able to add movies if set.
 		if (!interaction.member.permissions.has("Administrator") && settings.pollRole != "all" && (!settings.pollRole || !interaction.member.roles.cache.has(settings.pollRole))) {
 			return await interaction.editReply(`Polls can only be started by administrators or users with the ${settings.pollRole ? `role <@&${settings.pollRole}>` : "a set role using the `pollrole` command."}`);
@@ -34,82 +33,49 @@ module.exports = {
 		await interaction.editReply(pollAnnounceMessage);
 
 		//2048 limit
-		await main.movieModel
-			.find(searchOptions)
-			.then(async (docs) => {
-				if (!docs.length) {
-					return await interaction.followUp("Cannot start poll. List of unviewed movies is empty.");
-				} else if (docs && docs.length) {
-					//Gets random assortment of movies depending on poll size setting and number of movies in the servers list.
-					let movies = main.getRandomFromArray(docs, pollSize);
+		const docs = await Movie.find(searchOptions);
 
-					totalCount = movies.length;
+		if (!docs.length) {
+			return await interaction.followUp("Cannot start poll. List of unviewed movies is empty.");
+		} else if (docs && docs.length) {
+			//Gets random assortment of movies depending on poll size setting and number of movies in the servers list.
+			let movies = getRandomFromArray(docs, pollSize);
 
-					for (let movie of movies) {
-						let stringConcat = `**[${emojis[movieCount + 1]} ${movie.name}](https://www.imdb.com/title/${movie.imdbID})** **Runtime:** ${movie.runtime} Minutes **Rating:** ${movie.rating}\n\n`;
-						voteMenuOptions.push(
-							new ButtonBuilder()
-								.setLabel("0")
-								.setCustomId(`${movieCount + 1}`)
-								.setStyle(ButtonStyle.Secondary)
-								.setEmoji(emojis[movieCount + 1])
-						);
-						votes[movieCount + 1] = { voters: [], movieID: movie.movieID, movieName: movie.name };
+			for (let movie of movies) {
+				voteMenuOptions.push(new ButtonBuilder().setLabel("0").setCustomId(`${movieCount}`).setStyle(ButtonStyle.Secondary).setEmoji(emojis[movieCount]));
+				votes[movieCount] = { voters: [], movieID: movie.movieID, movieName: movie.name };
+				movieCount++; //Store position of movie in list.
+			}
 
-						//If the length of message has become longer than DISCORD API max, we split the message into a seperate embedded message.
-						if (description.length + stringConcat.length > 2048) {
-							movieEmbed.setDescription(description);
-							embeddedMessages.push(movieEmbed);
-							description = "";
-							movieEmbed = new EmbedBuilder().setTitle("Poll has begun! (Cont...)").setColor("#6441a3");
-						}
+			const embeddedMessage = await buildAndPostListEmbed(movies, "Poll has begun!", interaction, { emojiMode: true, returnFinalEmbedWithoutPosting: true });
 
-						description += stringConcat;
-						movieCount++; //Store position of movie in list.
-					}
-				}
+			const row1 = new ActionRowBuilder().addComponents(voteMenuOptions.slice(0, 5));
+			const components = [row1];
+			const endTime = moment().add(pollTimeInMinutes, "m").set("ms", 0);
 
-				movieEmbed.setDescription(description);
-				embeddedMessages.push(movieEmbed);
+			if (voteMenuOptions.slice(5, 10).length != 0) {
+				components.push(new ActionRowBuilder().addComponents(voteMenuOptions.slice(5, 10)));
+			}
 
-				for (let i = 0; i < embeddedMessages.length; i++) {
-					let embeddedMessage = embeddedMessages[i];
+			embeddedMessage.setFooter({ text: `Poll will end ${endTime.format("DD MMM YYYY HH:mm")} UTC time` });
 
-					if (i != embeddedMessages.length - 1) {
-						await interaction.followUp({ embeds: [embeddedMessage] });
-					} else {
-						const row1 = new ActionRowBuilder().addComponents(voteMenuOptions.slice(0, 5));
-						const components = [row1];
-						const endTime = moment().add(pollTimeInMinutes, 'm').set('ms', 0)
-
-						if (voteMenuOptions.slice(5, 10).length != 0){
-							components.push(new ActionRowBuilder().addComponents(voteMenuOptions.slice(5, 10)))
-						}
-
-						embeddedMessage.setFooter({ text: `Poll will end ${endTime.format('DD MMM YYYY HH:mm')} UTC time)` });
-
-						let pollMessage = await interaction.followUp({ 
-							embeds: [embeddedMessage], 
-							components: components
-						});
-
-						await main.pollModel.create({
-							guildID: interaction.guildId,
-							messageID: pollMessage.id,
-							channelID: pollMessage.channelId,
-							votes: votes,
-							endDateTime: moment().add(pollTimeInMinutes, 'm').set('ms', 0),
-							ended: false,
-							allowMultipleVotes: multipleVotes == "allow"
-						});
-					}
-				}
-
-				return;
-			})
-			.catch(async (err) => {
-				console.log(err);
-				return await interaction.followUp("Could not create a poll, something went wrong.");
+			let pollMessage = await interaction.followUp({
+				embeds: [embeddedMessage],
+				components: components,
 			});
+
+			await Poll.create({
+				guildID: interaction.guildId,
+				messageID: pollMessage.id,
+				channelID: pollMessage.channelId,
+				votes: votes,
+				endDateTime: moment().add(pollTimeInMinutes, "m").set("ms", 0),
+				ended: false,
+				allowMultipleVotes: multipleVotes == "allow",
+				testEnvironment: testing,
+			});
+		}
+
+		return;
 	},
 };

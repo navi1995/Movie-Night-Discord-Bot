@@ -55,8 +55,13 @@ export function NavbarComponent(props) {
 							<NavDropdown active={isDashboardActive()} title={<div className='dropdown-avatar'><img alt='' className='rounded-circle' src={currentGuild.icon ? `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}?size=256` : '/images/default.png'} />{currentGuild.name || ''}</div>}>
 								{guilds.map(guild => (
 									(guild.isBotInServer 
-										? <NavDropdown.Item as={NavLink} to={{pathname: `/dashboard/${guild.id}`}} active={currentGuild.id === guild.id} key={guild.id}><img alt='' className='rounded-circle' src={guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}?size=256` : '/images/default.png'} />{guild.name}</NavDropdown.Item>
-										: <NavDropdown.Item target='_blank' rel='noopener noreferrer' href={`https://discord.com/oauth2/authorize?client_id=709271563110973451&permissions=1073835072&scope=bot&redirect_uri=${encodeURIComponent(process.env.REACT_APP_BASE_URL + 'menu')}&guild_id=${guild.id}`} active={currentGuild.id === guild.id} key={guild.id}><img alt='' className='rounded-circle' src={guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}?size=256` : '/images/default.png'} />{guild.name}<FontAwesomeIcon style={{marginTop: '6px'}} size='xs' pull='right' icon={faPlus} /></NavDropdown.Item>
+										? <NavDropdown.Item as={NavLink} to={{pathname: `/dashboard/${guild.id}`}} active={currentGuild.id === guild.id} key={guild.id}><img alt='' className='rounded-circle' src={guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}?size=256` : '/images/default.png'} />
+											<div class="guild-name">{guild.name}</div>
+										</NavDropdown.Item>
+										: <NavDropdown.Item target='_blank' rel='noopener noreferrer' href={`https://discord.com/oauth2/authorize?client_id=709271563110973451&permissions=1073835072&scope=bot&redirect_uri=${encodeURIComponent(process.env.REACT_APP_BASE_URL + 'menu')}&guild_id=${guild.id}`} active={currentGuild.id === guild.id} key={guild.id}><img alt='' className='rounded-circle' src={guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}?size=256` : '/images/default.png'} />
+											<div class="guild-name">{guild.name}</div>
+											<div class="invite-icon"><FontAwesomeIcon style={{marginTop: '6px'}} size='xs' pull='right' icon={faPlus} /></div>
+										</NavDropdown.Item>
 									)
 								))}
 							</NavDropdown>

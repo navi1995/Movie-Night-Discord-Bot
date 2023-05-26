@@ -1,4 +1,4 @@
-const { token, topggAPI } = require("./config.json");
+const { token } = require("./config.json");
 const { ClusterManager } = require("discord-hybrid-sharding");
 // const { ShardingManager } = require("discord.js");
 // const manager = new ShardingManager('./bot.js', {

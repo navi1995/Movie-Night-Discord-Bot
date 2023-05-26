@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, CardGroup, Card, Button, Row, Col, Container } from 'react-bootstrap';
+import { Image, CardGroup, Card, Button, Row, Col, Container, Jumbotron } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList, faListOl, faRandom,  faCog, faCheckSquare, faBullhorn, faEye, faTrophy, faBrush } from '@fortawesome/free-solid-svg-icons';
 import { faThumbsUp } from '@fortawesome/free-regular-svg-icons';
@@ -9,7 +9,7 @@ import { getBotServers } from '../../utils/utils';
 import CountUp from 'react-countup';
 
 export function Homepage(props) {
-	const [serverCount, setServerCount] = React.useState(17000);
+	const [serverCount, setServerCount] = React.useState(0);
 
 	React.useEffect(() => {
 		getBotServers().then(function(response) {
@@ -17,24 +17,25 @@ export function Homepage(props) {
 				setServerCount(response.data.count);
 			}
 		}).catch(function(err) {
+			setServerCount(36000)
 		});
 	}, []);
 	return (
 		<div>
-			<div style={{ backgroundColor: 'rgb(44, 41, 41)', color: 'white', marginBottom: '-30px', paddingBottom: '100px !important'}} className='jumbotron text-center'>
+			<Jumbotron style={{ backgroundColor: 'rgb(44, 41, 41)', color: 'white', marginBottom: '-30px', paddingBottom: '100px' }} className='text-center'>
 				<h1 className='display-1'>
 					Movie Night Bot <br />
 					For Discord
 				</h1>
 				<br />
 				<h3 id="serverCount" style={{color: 'white'}}>
-					Used in <b><CountUp start={3500} end={serverCount} duration={2} /></b> servers
+					{ serverCount === 0 ? (<b>Loading...</b>) : (<>Used in <b><CountUp start={0} end={serverCount} duration={2} /></b> servers</>) }
 				</h3>
 				<br />
 				<Button href='https://discord.com/api/oauth2/authorize?client_id=709271563110973451&permissions=2147560512&scope=applications.commands%20bot' target='_blank' rel='noopener noreferrer' variant='primary' size='lg' style={{ width: '400px', marginLeft: 'auto', marginRight: 'auto'}}>
 					ADD TO DISCORD <FontAwesomeIcon icon={faDiscord} />
 				</Button>
-			</div>
+			</Jumbotron>
 			<Container>
 				<CardGroup className='text-center Box-Shadow'>
 					<Card>
@@ -52,7 +53,7 @@ export function Homepage(props) {
 						</div>
 						<Card.Body>
 							<Card.Title>Poll Voting System</Card.Title>
-							<Card.Text>Users vote on polls through reactions, additional votes are automatically removed by the bot.</Card.Text>
+							<Card.Text>Users vote on polls with buttons.</Card.Text>
 						</Card.Body>
 					</Card>
 					<Card>
@@ -125,8 +126,8 @@ export function Homepage(props) {
 							</Col>
 							<Col className='feature-card'>
 								<FontAwesomeIcon icon={faThumbsUp} size='3x' color='#03a9f4' />
-								<h5>ONE VOTE PER PERSON</h5>
-								<p>The bot will automatically remove any previous votes if a user attempts to vote twice. One per person!</p>
+								<h5>ONE VOTE PER PERSON OR MULTIPLE!</h5>
+								<p>Settings allow people to vote for multiple movies, or one at most!</p>
 							</Col>
 						</Row>
 					</Col>
@@ -139,7 +140,7 @@ export function Homepage(props) {
 							<Col className='feature-card'>
 								<FontAwesomeIcon icon={faEye} size='3x' color='#03a9f4' />
 								<h5>Auto-View Setting</h5>
-								<p>Admins are able to set whether movies are automatically moved to the 'Viewed' list after a successful poll or roulette.</p>
+								<p>Admins are able to set whether movies are automatically moved to the 'Viewed' list after a successful poll.</p>
 							</Col>
 							<Col className='feature-card'>
 								<FontAwesomeIcon icon={faTrophy} size='3x' color='#03a9f4' />

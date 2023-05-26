@@ -1,13 +1,13 @@
-const { EmbedBuilder, SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName("stats")
 		.setDescription("Gets number of guilds and members the bot is in"),
-	async execute(interaction, main) {
+	async execute(interaction) {
 		const promises = [
-			main.client.shard.fetchClientValues('guilds.cache.size'),
-			main.client.shard.broadcastEval(c => c.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)),
+			interaction.client.shard.fetchClientValues('guilds.cache.size'),
+			interaction.client.shard.broadcastEval(c => c.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)),
 		];
 		
 		return Promise.all(promises)

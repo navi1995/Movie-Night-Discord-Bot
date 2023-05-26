@@ -44,4 +44,5 @@ jobs:
             cd Movie-Night-Discord-Bot/Discord\ Bot/
             git pull origin master --rebase --autostash
             npm install --production
+            node deploy-commands.js
             pm2 restart index.js 

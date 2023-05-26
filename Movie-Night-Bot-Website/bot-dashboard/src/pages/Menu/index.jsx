@@ -7,7 +7,7 @@ export function Menu(props) {
 	const [user] = React.useState(props.user || []);
 	const [guilds] = React.useState(props.guilds || []);
 	const [loading] = React.useState(props.loading);
-	
+
 	return (
 		<div className='menu-page'>
 			{!loading && (
@@ -26,10 +26,7 @@ export function Menu(props) {
 								}
 								<div className={'hover-toggle'}>
 									<ListGroup variant='flush'>
-										<ListGroup.Item>Prefix: {guild.settings.prefix}</ListGroup.Item>
 										<ListGroup.Item>Auto-View: {guild.settings.autoViewed ? 'On' : 'Off'}</ListGroup.Item>
-										<ListGroup.Item>Poll Size: {guild.settings.pollSize}</ListGroup.Item>
-										<ListGroup.Item>Poll Time: {guild.settings.pollTime/1000} seconds</ListGroup.Item>
 									</ListGroup>
 								</div>
 								<Card.Body>
