@@ -44,7 +44,7 @@ export function Menu(props) {
 					return !guild.isBotInServer;
 				}).map(guild => (
 					<Col xl={3} lg={4} md={4} sm={6} xs={6} className='clearfix py-3' key={guild.id}>
-						<a target='_blank' rel='noopener noreferrer' href={`https://discord.com/api/oauth2/authorize?client_id=709271563110973451&permissions=2147560512&scope=applications.commands%20bot&redirect_uri=${encodeURIComponent(process.env.REACT_APP_BASE_URL + 'menu')}&guild_id=${guild.id}`}>
+					<a target='_blank' rel='noopener noreferrer' href={`https://discord.com/oauth2/authorize?client_id=709271563110973451&permissions=1073835072&scope=bot&redirect_uri=${encodeURIComponent(process.env.REACT_APP_BASE_URL + 'menu')}&guild_id=${guild.id}`}>
 							<Card className='text-center' bg='dark'>
 								{ guild.icon 
 									? <Card.Img variant='top' src={`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}?size=256`} />
