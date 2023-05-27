@@ -3,7 +3,7 @@ const { Movie } = require("../../../Models/schema");
 const { movieSearchOptionsForDb } = require("../../helpers/helperFunctions");
 
 async function removeMovie(interaction, settings) {
-	const movieSearch = interaction.options.getString("movie");
+	const movieSearch = interaction.options.getString("search");
 	const searchOptions = movieSearchOptionsForDb(interaction.guild.id, movieSearch, true);
 
 	//If submitted film is by member trying to delete, allow it.

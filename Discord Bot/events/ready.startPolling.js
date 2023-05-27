@@ -54,7 +54,7 @@ module.exports = {
 
 					console.log("Error in posting poll results.", err);
 
-					// await poll.deleteOne();
+					await poll.deleteOne();
 				}
 			});
 		});

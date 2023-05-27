@@ -9,7 +9,7 @@ on:
 
 jobs:
   Deploy:
-    name:  
+    name: Start Bot
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
@@ -45,4 +45,5 @@ jobs:
             git pull origin master --rebase --autostash
             npm install --production
             node deploy-commands.js
+            pm2 reset all
             pm2 restart index.js 
