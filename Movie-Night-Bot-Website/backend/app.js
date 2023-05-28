@@ -47,6 +47,7 @@ app.use(
 		max: 50,
 	})
 );
+app.set("trust proxy", true);
 
 app.get("/logout", function (request, response, next) {
 	request.logout(function (err) {
