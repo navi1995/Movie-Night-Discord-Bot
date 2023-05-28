@@ -14,7 +14,6 @@ const app = express();
 const routes = require("./routes");
 const { getGuildCount } = require("./utils/api");
 const RateLimit = require("express-rate-limit");
-const csrf = require("lusca").csrf;
 
 mongoose.connect(process.env.MONGO_LOGIN, {
 	useNewUrlParser: true,
@@ -28,8 +27,7 @@ app.use(
 		resave: false,
 		saveUninitialized: false,
 		store: MongoStore.create({ mongoUrl: process.env.MONGO_LOGIN }),
-	}),
-	csrf()
+	})
 );
 app.use(
 	cors({
@@ -47,7 +45,6 @@ app.use(
 		max: 50,
 	})
 );
-app.set("trust proxy", true);
 
 app.get("/logout", function (request, response, next) {
 	request.logout(function (err) {
