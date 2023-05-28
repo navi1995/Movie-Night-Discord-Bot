@@ -3,7 +3,6 @@ import { Container, Button } from "react-bootstrap";
 
 export function ErrorComponent(props) {
 	const { message, func } = props;
-	console.log(message.toString());
 
 	return (
 		<div className="jumbotron container-fluid text-sm-center p-5 error-message">

@@ -87,7 +87,6 @@ export function Dashboard(props) {
 						throw response.data.message;
 					}
 
-					console.log(response.data);
 					setMovies(response.data);
 					setLoading(false);
 				})

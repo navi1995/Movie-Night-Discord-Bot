@@ -23,11 +23,9 @@ export function MovieComponent(props) {
 			onDelete("Deleting...");
 			deleteMovieAPI(movie)
 				.then(function (resp) {
-					console.log(resp);
 					afterDelete(movie.movieID, resp);
 				})
 				.catch(function (err, resp) {
-					console.log(err.response);
 					afterDelete(movie.movieID, err.response);
 				});
 		}
@@ -38,11 +36,9 @@ export function MovieComponent(props) {
 			onDelete(`Setting movie to ${!movie.viewed ? "viewed" : "unviewed"}...`);
 			toggleViewedAPI(movie)
 				.then(function (resp) {
-					console.log(resp);
 					afterViewed(movie.movieID, resp);
 				})
 				.catch(function (err, resp) {
-					console.log(err.response);
 					afterViewed(movie.movieID, err.response);
 				});
 		}
