@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const User = require("../database/schemas/User");
-const Movies = require("../database/schemas/Movies");
-const Settings = require("../database/schemas/Settings");
+const Movie = require("../database/schemas/Movie");
+const Setting = require("../database/schemas/Setting");
 const { Parser } = require("json2csv");
 const { getUserGuilds } = require("../utils/api");
 const { hasDeletePermissions, isUserInGuild } = require("../utils/utils");
@@ -12,7 +12,7 @@ router.get("/guilds", async (request, response) => {
 		const user = await User.findOne({ discordID: request.user.discordID });
 		const userGuilds = await getUserGuilds(user.discordID); //This updates the guilds against user in our mongoDB as well.
 		const userGuildIDs = userGuilds.map((guild) => guild.id);
-		const botGuilds = await Settings.find({ guildID: userGuildIDs });
+		const botGuilds = await Setting.find({ guildID: userGuildIDs });
 		//Add fields to show admin level, if bot is in each guild or not, as well as passing through settings.
 		const userGuildsMapped = userGuilds.reduce((reduction, guild) => {
 			const adminLevel = (guild.permissions_new & 0x00000008) == 0x00000008 ? "admin" : (guild.permissions_new & 0x00000020) == 0x00000020 ? "manage" : "user";
@@ -47,7 +47,7 @@ router.get("/movies/:guildID", async (request, response) => {
 	const userInGuild = isUserInGuild(user, guildID); //Check if user requesting is actually in the guild
 
 	if (userInGuild) {
-		const movies = await Movies.find(
+		const movies = await Movie.find(
 			{ guildID },
 			{
 				_id: 0,
@@ -69,7 +69,7 @@ router.get("/movies-csv/:guildID", async (request, response) => {
 	const userInGuild = isUserInGuild(user, guildID); //Check if user requesting is actually in the guild
 
 	if (userInGuild) {
-		const movies = await Movies.find(
+		const movies = await Movie.find(
 			{ guildID },
 			{
 				_id: 0,
@@ -102,7 +102,7 @@ router.post("/movies/delete", async (request, response) => {
 		return response.status(401).send({ message: "Incorrect Details Provided." });
 	}
 
-	const movie = await Movies.findOne({ guildID, movieID });
+	const movie = await Movie.findOne({ guildID, movieID });
 
 	if (movie && hasDeletePermissions(user, guildID, movie)) {
 		return movie
@@ -129,7 +129,7 @@ router.post("/movies/viewed", async (request, response) => {
 		return response.status(401).send({ message: "Incorrect Details Provided." });
 	}
 
-	const movie = await Movies.findOne({ guildID, movieID });
+	const movie = await Movie.findOne({ guildID, movieID });
 
 	if (movie && hasDeletePermissions(user, guildID, movie)) {
 		return movie

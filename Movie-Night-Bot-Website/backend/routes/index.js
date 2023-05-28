@@ -1,8 +1,17 @@
-const router = require('express').Router();
-const auth = require('./auth');
-const discord = require('./discord');
+const router = require("express").Router();
+const auth = require("./auth");
+const discord = require("./discord");
 
-router.use('/discord', discord);
-router.use('/auth', auth);
+// authentication middleware
+const authenticate = (req, res, next) => {
+	if (req.user) {
+		next();
+	} else {
+		res.status(401).send({ message: "Unauthorized" });
+	}
+};
+
+router.use("/discord", authenticate, discord);
+router.use("/auth", auth);
 
 module.exports = router;

@@ -1,43 +1,51 @@
-import axios from 'axios';
+import axios from "axios";
 
-export function getUserDetails() {
+export async function getUserDetails() {
 	return axios.get(`${process.env.REACT_APP_API_FULLURL}auth`, {
-		withCredentials: true
+		withCredentials: true,
 	});
 }
 
-export function getGuilds() {
+export async function getGuilds() {
 	return axios.get(`${process.env.REACT_APP_API_FULLURL}discord/guilds`, {
-		withCredentials: true
+		withCredentials: true,
 	});
 }
 
 export function getMovies(guildID) {
 	return axios.get(`${process.env.REACT_APP_API_FULLURL}discord/movies/${guildID}`, {
-		withCredentials: true
+		withCredentials: true,
 	});
 }
 
 export function getBotServers() {
-	return axios.get(`${process.env.REACT_APP_BASE_API_URL}count`)
+	return axios.get(`${process.env.REACT_APP_BASE_API_URL}count`);
 }
 
 export function deleteMovieAPI(movie) {
-	return axios.post(`${process.env.REACT_APP_API_FULLURL}discord/movies/delete`, { 
-		movieID: movie.movieID,
-		guildID: movie.guildID 
-	}, {
-		withCredentials: true
-	});
+	return axios.post(
+		`${process.env.REACT_APP_API_FULLURL}discord/movies/delete`,
+		{
+			movieID: movie.movieID,
+			guildID: movie.guildID,
+		},
+		{
+			withCredentials: true,
+		}
+	);
 }
 
 export function toggleViewedAPI(movie) {
-	return axios.post(`${process.env.REACT_APP_API_FULLURL}/discord/movies/viewed`, { 
-		movieID: movie.movieID,
-		guildID: movie.guildID 
-	}, {
-		withCredentials: true
-	});
+	return axios.post(
+		`${process.env.REACT_APP_API_FULLURL}/discord/movies/viewed`,
+		{
+			movieID: movie.movieID,
+			guildID: movie.guildID,
+		},
+		{
+			withCredentials: true,
+		}
+	);
 }
 
 export function exportToCSV(guildID) {

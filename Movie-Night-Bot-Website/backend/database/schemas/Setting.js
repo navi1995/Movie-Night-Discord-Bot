@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const ObjectId = mongoose.Schema.ObjectId;
 const SettingsSchema = new mongoose.Schema({
 	id: ObjectId,
@@ -10,4 +10,4 @@ const SettingsSchema = new mongoose.Schema({
 	viewedMoviesRole: { type: String, default: null },
 });
 
-module.exports = mongoose.model('Settings', SettingsSchema);
+module.exports = mongoose.model("Settings", SettingsSchema);

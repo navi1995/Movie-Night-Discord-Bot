@@ -41,6 +41,7 @@ jobs:
 
           # Commands to execute on the instance
           script: |
+            export NODE_ENV=production
             cd Movie-Night-Discord-Bot/Discord\ Bot/
             git pull origin master --rebase --autostash
             npm install --production

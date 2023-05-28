@@ -45,6 +45,7 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           port: 22
           script: |
+            export NODE_ENV=production
             cd /home/ec2-user/projects/Movie-Night-Discord-Bot
             git pull --rebase --autostash
             cd /home/ec2-user/projects/Movie-Night-Discord-Bot/Movie-Night-Bot-Website/backend/

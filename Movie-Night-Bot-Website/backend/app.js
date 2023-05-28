@@ -1,53 +1,66 @@
-require('dotenv').config();
-require('./strategies/discord');
+require("dotenv").config();
+require("./strategies/discord");
 
-const express = require('express');
+const express = require("express");
 // const path = require('path');
-const passport = require('passport');
-const morgan = require('morgan');
-const mongoose = require('mongoose');
-const session = require('express-session');
-const cors = require('cors')
-const MongoStore = require('connect-mongo');
+const passport = require("passport");
+const morgan = require("morgan");
+const mongoose = require("mongoose");
+const session = require("express-session");
+const cors = require("cors");
+const MongoStore = require("connect-mongo");
 const PORT = process.env.PORT || 3000;
 const app = express();
-const routes = require('./routes');
-const { getGuildCount } = require('./utils/api');
+const routes = require("./routes");
+const { getGuildCount } = require("./utils/api");
+const RateLimit = require("express-rate-limit");
+const csrf = require("lusca").csrf;
 
 mongoose.connect(process.env.MONGO_LOGIN, {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 });
 
-app.use(session({
-	secret: process.env.SESSION_SECRET,
-	cookie: { maxAge: 60000 * 60 * 24 },
-	resave: false,
-	saveUninitialized: false,
-	store: MongoStore.create({ mongoUrl: process.env.MONGO_LOGIN })
-}));
-app.use(cors({
-	origin: ['*'],
-	credentials: true
-}));
+app.use(
+	session({
+		secret: process.env.SESSION_SECRET,
+		cookie: { maxAge: 60000 * 60 * 24, secure: "auto" },
+		resave: false,
+		saveUninitialized: false,
+		store: MongoStore.create({ mongoUrl: process.env.MONGO_LOGIN }),
+	})
+);
+app.use(
+	cors({
+		origin: ["http://localhost:3000", "http://localhost:3000/"],
+		credentials: true,
+	})
+);
+app.use(csrf());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.json());
-app.use(morgan('combined'));
+app.use(morgan("combined"));
+app.use(
+	RateLimit({
+		windowMs: 1 * 60 * 1000, // 1 minute
+		max: 50,
+	})
+);
 
-app.get('/logout', function(request, response, next){
-	request.logout(function(err) {
+app.get("/logout", function (request, response, next) {
+	request.logout(function (err) {
 		if (err) return next(err);
 		response.redirect(process.env.REACT_APP_BASE_URL);
 	});
 });
 
-app.use('/api', routes);
+app.use("/api", routes);
 
-app.get('/count', async function(req, resp) {
+app.get("/count", async function (req, resp) {
 	const count = await getGuildCount();
 
-	resp.send({count});
+	resp.send({ count });
 });
 
 // app.use(express.static(path.join(__dirname, '..', process.env.WEB_FOLDER)));
@@ -65,5 +78,5 @@ app.get('/count', async function(req, resp) {
 // });
 
 app.listen(PORT, () => {
-	console.log(`Running on port ${PORT}`)
+	console.log(`Running on port ${PORT}`);
 });

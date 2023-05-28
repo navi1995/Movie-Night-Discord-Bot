@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const ObjectId = mongoose.Schema.ObjectId;
 const MovieSchema = new mongoose.Schema({
 	id: ObjectId,
@@ -18,4 +18,4 @@ const MovieSchema = new mongoose.Schema({
 	viewedDate: { type: Date, default: null },
 });
 
-module.exports = mongoose.model('Movie', MovieSchema);
+module.exports = mongoose.model("Movie", MovieSchema);
