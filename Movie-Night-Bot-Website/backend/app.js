@@ -28,7 +28,8 @@ app.use(
 		resave: false,
 		saveUninitialized: false,
 		store: MongoStore.create({ mongoUrl: process.env.MONGO_LOGIN }),
-	})
+	}),
+	csrf()
 );
 app.use(
 	cors({
@@ -36,7 +37,6 @@ app.use(
 		credentials: true,
 	})
 );
-app.use(csrf());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.json());
