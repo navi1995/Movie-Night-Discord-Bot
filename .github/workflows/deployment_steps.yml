@@ -47,4 +47,4 @@ jobs:
             npm install --production
             node deploy-commands.js
             pm2 reset all
-            pm2 restart index.js 
+            pm2 restart index.js --max-memory-restart 15000M
