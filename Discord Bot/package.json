@@ -16,7 +16,7 @@
     "discord-hybrid-sharding": "^2.1.2",
     "discord.js": "^14.11.0",
     "moment": "^2.29.4",
-    "mongoose": "^7.1.0",
+    "mongoose": "^7.3.3",
     "mquery": ">=5.0.0",
     "node-cron": "^3.0.2",
     "topgg-autoposter": "^2.0.1"
