@@ -7,7 +7,8 @@ module.exports = {
 		// If premium, keep.
 		//Whenever the bot is removed from a guild, we remove all related data.
 		Poll.deleteMany({ guildID: guild.id }).catch(handleError);
-		Movie.deleteMany({ guildID: guild.id }).catch(handleError);
+		// Poor people might lose all their movies
+		// Movie.deleteMany({ guildID: guild.id }).catch(handleError);
 		Setting.deleteMany({ guildID: guild.id }).catch(handleError); 
 	},
 };
